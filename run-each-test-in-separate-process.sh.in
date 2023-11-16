@@ -1,0 +1,70 @@
+#!/usr/bin/env sh
+
+case $1 in
+    -vv) PATTERN=""; verbose=2; shift; FLAGS=$@ ;;
+    -v ) PATTERN=""; verbose=1; shift; FLAGS=$@ ;;
+    *  ) PATTERN=$1; case $2 in
+                         -vv) verbose=2; shift; shift; FLAGS=$@ ;;
+                         -v ) verbose=1; shift; shift; FLAGS=$@ ;;
+                         *  ) verbose=0;               FLAGS=$@ ;;
+                     esac ;;
+esac
+
+
+NPASSED=0
+NFAILED=0
+FAILED=
+
+EXE=@install_prefix@/bin/@test_executable@
+
+while read -r testname
+do
+    OUTPUT=$($EXE "$testname" ${FLAGS} 2>&1)
+    STATUS=$?
+    OUTPUT=${OUTPUT//===============================================================================/}
+
+    if [ $verbose -eq 2 ]; then
+        printf "===============================================================================\n"
+    fi
+
+
+    if [ $STATUS -ne 0 ]; then
+        case $verbose in
+            2) printf "\\033[91m%s\n\n" "$OUTPUT" ;;
+            1) printf "\\033[91m    %s\n" "${testname}" ;;
+            0) printf "\\033[91mF" ;;
+        esac
+        FAILED=$FAILED"####################################################\n"
+        FAILED=$FAILED"# $testname\n"
+        FAILED=$FAILED"####################################################\n"
+        FAILED=$FAILED"\n${OUTPUT}\n\n\n\n"
+        NFAILED=$((NFAILED+1))
+    else
+        case $verbose in
+            2) printf "\\033[32m%s\n\n" "$OUTPUT" ;;
+            1) printf "\\033[32m    %s\n" "${testname}" ;;
+            0) printf "\\033[32m." ;;
+        esac
+        NPASSED=$((NPASSED+1))
+    fi
+done < <($EXE ${PATTERN} --list-tests --verbosity quiet)
+echo
+echo
+
+
+if ! [ -z "$FAILED" ]; then
+    printf "\\033[91m===========================================================================\n"
+    printf "\\033[32m Passed $NPASSED tests, \\033[91m Failed $NFAILED\n\n"
+    printf "\\033[91m Failures: \n\n$FAILED\n"
+    printf "\\033[91m===========================================================================\n"
+    printf "\\033[91mOVERALL: ============================== FAIL ==============================\n"
+    printf "\\033[91m===========================================================================\n"
+    printf "\\033[0m"
+    exit 1
+else
+    printf "\\033[32m Ran $NPASSED tests\n\n"
+    printf "\\033[32m===========================================================================\n"
+    printf "\\033[32mOVERALL: ============================== PASS ==============================\n"
+    printf "\\033[32m===========================================================================\n"
+    printf "\\033[0m"
+fi

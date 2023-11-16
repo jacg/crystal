@@ -1,0 +1,17 @@
+.DS_Store
+*.log
+tmp/
+.direnv/
+.cache/
+*~
+build
+install
+compile_commands.json
+/result
+/CMakeCache.txt
+/CMakeFiles/
+/Makefile
+/cmake_install.cmake
+G4History.macro
+**/.gdb_history
+**/Testing
