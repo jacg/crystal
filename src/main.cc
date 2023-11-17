@@ -1,8 +1,8 @@
+#include "config.hh"
 #include "materials.hh"
 
 #include <n4-all.hh>
 
-#include <G4GenericMessenger.hh>
 #include <G4PrimaryParticle.hh>
 #include <G4String.hh>
 #include <G4SystemOfUnits.hh>   // physical units such as `m` for metre
@@ -14,52 +14,6 @@
 
 #include <G4ThreeVector.hh>
 #include <cstdlib>
-
-enum class scintillator_type { lyso, bgo, csi };
-
-std::string scintillator_type_to_string(scintillator_type s) {
-  switch (s) {
-    case scintillator_type::lyso: return "LYSO";
-    case scintillator_type::bgo : return "BGO" ;
-    case scintillator_type::csi : return "CsI" ;
-  }
-}
-
-scintillator_type string_to_scintillator_type(const std::string& s) {
-  auto z = s;
-  for (auto& c: z) { c = std::toupper(c); }
-  if (z == "lyso") { return scintillator_type::lyso; }
-  if (z == "bgo" ) { return scintillator_type::bgo;  }
-  if (z == "csi" ) { return scintillator_type::csi;  }
-  throw "up"; // TODO think about failure propagation out of string_to_scintillator_type
-}
-
-struct config {
-  scintillator_type scintillator_type  {scintillator_type::csi};
-  G4ThreeVector     scint_size         {6*mm, 6*mm, 20*mm};
-  G4int             physics_verbosity  {0};
-  G4double          reflector_thickness{0.25*mm};
-  G4double          particle_energy    {511 * keV};
-  G4double          source_pos         {-50*mm};
-
-  void set_scint(const std::string& s) { scintillator_type = string_to_scintillator_type(s); }
-  config()
-  // The trailing slash after '/my_geometry' is CRUCIAL: without it, the
-  // messenger violates the principle of least surprise.
-  : msg{new G4GenericMessenger{this, "/my/", "docs: bla bla bla"}}
-  {
-    msg -> DeclareMethod          ("scint_type"         ,       &config::set_scint      );
-    msg -> DeclareProperty        ("scint_size"         ,        scint_size         );
-    msg -> DeclareProperty        ("reflector_thickness",        reflector_thickness);
-    msg -> DeclarePropertyWithUnit("particle_energy"    , "keV", particle_energy    );
-    msg -> DeclareProperty        ("physics_verbosity"  ,        physics_verbosity  );
-    msg -> DeclareProperty        ("source_pos"         ,        source_pos         );
-  }
-private:
-  G4GenericMessenger* msg;
-};
-
-config my;
 
 auto my_generator(const config& my) {
   return [&](G4Event *event) {
