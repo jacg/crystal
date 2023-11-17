@@ -19,7 +19,7 @@ auto my_generator(const config& my) {
   return [&](G4Event *event) {
     auto particle_type = n4::find_particle("gamma");
     auto vertex = new G4PrimaryVertex(0, 0, my.source_pos, 0);
-    auto tan = std::max(my.scint_size.x(), my.scint_size.y()) / (-my.scint_size.z() - my.reflector_thickness - my.source_pos);
+    auto tan = std::max(my.scint_size.x(), my.scint_size.y()) / 2 / (-my.scint_size.z() - my.reflector_thickness - my.source_pos);
     auto r = n4::random::direction().max_theta(std::atan(tan)).get();
     vertex -> SetPrimary(new G4PrimaryParticle(
                            particle_type,
