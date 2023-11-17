@@ -1,6 +1,7 @@
 #pragma once
 
 #include <G4GenericMessenger.hh>
+#include <G4Material.hh>
 #include <G4SystemOfUnits.hh>
 #include <G4UnitsTable.hh>
 #include <Randomize.hh>
@@ -51,3 +52,5 @@ private:
 };
 
 extern config my;
+
+G4Material* scintillator_material(scintillator_type type);

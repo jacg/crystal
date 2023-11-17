@@ -51,17 +51,6 @@ n4::actions* create_actions(const config& my, unsigned& n_event) {
  -> set(  new n4::stepping_action{my_stepping_action});
 }
 
-G4Material*   lyso_with_properties() { return n4::material("G4_WATER"); }
-G4Material*    bgo_with_properties() { return n4::material("G4_WATER"); }
-
-G4Material* scintillator_material(scintillator_type type) {
-  switch (type) {
-    case scintillator_type::csi : return  csi_with_properties();
-    case scintillator_type::lyso: return lyso_with_properties();
-    case scintillator_type::bgo : return  bgo_with_properties();
-  }
-}
-
 std::tuple<G4double, G4double, G4double> unpack(const G4ThreeVector& v) { return {v.x(), v.y(), v.z()}; }
 
 auto my_geometry(const config& my) {

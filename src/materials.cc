@@ -5,6 +5,10 @@
 
 #include <G4SystemOfUnits.hh>
 
+G4Material* lyso_with_properties() { return n4::material("G4_WATER"); }
+G4Material*  bgo_with_properties() { return n4::material("G4_WATER"); }
+
+
 using vec_double = std::vector<G4double>;
 
 // TODO: remove duplication of hc (defined in moth materials.cc and geometry.cc)
