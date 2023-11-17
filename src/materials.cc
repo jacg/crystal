@@ -23,12 +23,9 @@ G4Material* csi_with_properties() {
     auto    csi_abslength = n4::scale_by(m    , {5     , 5     , 5    , 5     });
     // Values from "Temperature dependence of pure CsI: scintillation light yield and decay time" by Amsler et al
     // "cold" refers to ~77K, i.e. liquid nitrogen temperature
-    G4double csi_scint_yield      = 1 / MeV; //my.csi_scint_yield;
-    G4double csi_scint_yield_cold = 50000 / MeV;
-    G4double csi_time_fast        =     6 * ns;
-    G4double csi_time_slow        =    28 * ns;
-    G4double csi_time_fast_cold   =  1015 * ns; // only one component at cold temps!
-    G4double csi_time_slow_cold   =  1015 * ns;
+    G4double csi_scint_yield =     1 / MeV; //my.csi_scint_yield; // 50000 / MeV in cold
+    G4double csi_time_fast   =  1015 * ns; // only one component at cold temps!
+    G4double csi_time_slow   =  1015 * ns;
     G4MaterialPropertiesTable *csi_mpt = n4::material_properties()
         .add("RINDEX"                 , csi_energies, csi_rindex)
         .add("SCINTILLATIONCOMPONENT1", csi_energies,  csi_scint)
