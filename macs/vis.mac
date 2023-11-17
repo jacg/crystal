@@ -22,6 +22,9 @@
 /vis/modeling/trajectories/drawByCharge-0/default/setStepPtsSize 4
 # (if too many tracks cause core dump => /tracking/storeTrajectory 0)
 
+# Hide trajectories
+#/vis/modeling/trajectories/drawByCharge-0/default/setDrawLine    false
+
 # To superimpose all of the events from a given run:
 /vis/scene/endOfEventAction accumulate
 
