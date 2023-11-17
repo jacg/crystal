@@ -1,7 +1,6 @@
 #include <n4-all.hh>
 
 #include <G4GenericMessenger.hh>
-
 #include <G4PrimaryParticle.hh>
 #include <G4String.hh>
 #include <G4SystemOfUnits.hh>   // physical units such as `m` for metre
@@ -15,20 +14,50 @@
 #include <G4ThreeVector.hh>
 #include <cstdlib>
 
+enum class scintillator_type { lyso, bgo, csi };
+
+std::string scintillator_type_to_string(scintillator_type s) {
+  switch (s) {
+    case scintillator_type::lyso: return "LYSO";
+    case scintillator_type::bgo : return "BGO" ;
+    case scintillator_type::csi : return "CsI" ;
+  }
+}
+
+scintillator_type string_to_scintillator_type(const std::string& s) {
+  auto z = s;
+  for (auto& c: z) { c = std::toupper(c); }
+  if (z == "lyso") { return scintillator_type::lyso; }
+  if (z == "bgo" ) { return scintillator_type::bgo;  }
+  if (z == "csi" ) { return scintillator_type::csi;  }
+  throw "up"; // TODO think about failure propagation out of string_to_scintillator_type
+}
+
 struct my {
-  G4double       straw_radius{0.1 * m};
-  G4double      bubble_radius{0.2 * m};
-  G4double      socket_rot   {-90 * deg};
-  G4String      particle_name{"geantino"};
+  scintillator_type scintillator_type {scintillator_type::csi};
+  G4ThreeVector     scint_size        {6*mm, 6*mm, 20*mm};
+  G4int             physics_verbosity {0};
   G4double      particle_energy{511 * keV};
-  G4ThreeVector particle_dir {};
+  void set_scint(const std::string& s) { scintillator_type = string_to_scintillator_type(s); }
+  my()
+  // The trailing slash after '/my_geometry' is CRUCIAL: without it, the
+  // messenger violates the principle of least surprise.
+  : msg{new G4GenericMessenger{this, "/my/", "docs: bla bla bla"}}
+  {
+    msg -> DeclareMethod          ("scint_type"        ,       &my::set_scint     );
+    msg -> DeclareProperty        ("scint_size"        ,        scint_size     );
+    msg -> DeclarePropertyWithUnit("particle_energy"   , "keV", particle_energy);
+    msg -> DeclareProperty        ("physics_verbosity" ,        physics_verbosity );
+  }
+private:
+  G4GenericMessenger* msg;
 };
 
 auto my_generator(const my& my) {
-  return [&](G4Event* event) {
-    auto particle_type = n4::find_particle(my.particle_name);
+  return [&](G4Event *event) {
+    auto particle_type = n4::find_particle("geantino");
     auto vertex = new G4PrimaryVertex();
-    auto r = my.particle_dir.mag2() > 0 ? my.particle_dir : G4RandomDirection();
+    auto r = G4RandomDirection();
     vertex -> SetPrimary(new G4PrimaryParticle(
                            particle_type,
                            r.x(), r.y(), r.z(),
@@ -58,23 +87,34 @@ n4::actions* create_actions(my& my, unsigned& n_event) {
  -> set(  new n4::stepping_action{my_stepping_action});
 }
 
+G4Material*  CsI_with_properties() { return n4::material("G4_WATER"); }
+G4Material* LYSO_with_properties() { return n4::material("G4_WATER"); }
+G4Material*  BGO_with_properties() { return n4::material("G4_WATER"); }
+
+G4Material* scintillator_material(scintillator_type type) {
+  switch (type) {
+    case scintillator_type::csi : return  CsI_with_properties();
+    case scintillator_type::lyso: return LYSO_with_properties();
+    case scintillator_type::bgo : return  BGO_with_properties();
+  }
+}
+
+std::tuple<G4double, G4double, G4double> unpack(const G4ThreeVector& v) { return {v.x(), v.y(), v.z()}; }
+
 auto my_geometry(const my& my) {
-  auto r_bub = my.bubble_radius;
-  auto r_str = my.straw_radius;
+  auto scintillator = scintillator_material(my.scintillator_type);
   auto water  = n4::material("G4_WATER");
   auto air    = n4::material("G4_AIR");
-  auto steel  = n4::material("G4_STAINLESS-STEEL");
-  auto world  = n4::box("world").cube(2*m).x(3*m).volume(water);
 
-  n4::sphere("bubble").r(r_bub)         .place(air).in(world).at  (1.3*m, 0.8*m, 0.3*m).now();
-  n4::tubs  ("straw" ).r(r_str).z(1.9*m).place(air).in(world).at_x(0.2*m              ).now();
+  auto [sx, sy, sz] = unpack(my.scint_size);
 
-  n4       ::sphere("socket-cap" ).r(0.3*m).phi_delta(180*deg)
-    .sub(n4::box   ("socket-hole").cube(0.4*m))
-    .name("socket")
-    .place(steel).in(world).rotate_x(my.socket_rot).at(1*m, 0, 0.7*m).now();
+  auto world  = n4::box("world").xyz(sx*1.1, sy*1.1, sz*1.1).place(water).now();
 
-  return n4::place(world).now();
+  n4::box("crystal")
+    .xyz(sx, sy, sz)
+    .place(scintillator).in(world).now();
+
+  return world;
 }
 
 int main(int argc, char* argv[]) {
@@ -82,32 +122,19 @@ int main(int argc, char* argv[]) {
 
   my my;
 
-  G4int physics_verbosity = 0;
-
-  // The trailing slash after '/my_geometry' is CRUCIAL: without it, the
-  // messenger violates the principle of least surprise.
-  auto messenger = new G4GenericMessenger{nullptr, "/my/", "docs: bla bla bla"};
-  messenger -> DeclarePropertyWithUnit("straw_radius"      , "m"  , my. straw_radius  );
-  messenger -> DeclarePropertyWithUnit("bubble_radius"     , "m"  , my.bubble_radius  );
-  messenger -> DeclarePropertyWithUnit("socket_rot"        , "deg", my.socket_rot     );
-  messenger -> DeclarePropertyWithUnit("particle_energy"   , "keV", my.particle_energy);
-  messenger -> DeclareProperty        ("particle"          ,        my.particle_name  );
-  messenger -> DeclareProperty        ("particle_direction",        my.particle_dir   );
-  messenger -> DeclareProperty        ("physics_verbosity" ,        physics_verbosity );
-
   n4::run_manager::create()
     .ui("crystal", argc, argv)
     .macro_path("macs")
-    .apply_command("/my/straw_radius 0.5 m")
+    //.apply_command("/my/scint_size 30 10 2 mm")
     .apply_early_macro("early-hard-wired.mac")
     .apply_cli_early() // CLI --early executed at this point
     // .apply_command(...) // also possible after apply_early_macro
 
-    .physics<FTFP_BERT>(physics_verbosity)
+    .physics<FTFP_BERT>(my.physics_verbosity)
     .geometry([&] { return my_geometry(my); })
     .actions(create_actions(my, n_event))
 
-    .apply_command("/my/particle e-")
+    //.apply_command("/my/particle e-")
     .apply_late_macro("late-hard-wired.mac")
     .apply_cli_late() // CLI --late executed at this point
     // .apply_command(...) // also possible after apply_late_macro
