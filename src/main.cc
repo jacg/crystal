@@ -34,9 +34,10 @@ scintillator_type string_to_scintillator_type(const std::string& s) {
 }
 
 struct my {
-  scintillator_type scintillator_type {scintillator_type::csi};
-  G4ThreeVector     scint_size        {6*mm, 6*mm, 20*mm};
-  G4int             physics_verbosity {0};
+  scintillator_type scintillator_type  {scintillator_type::csi};
+  G4ThreeVector     scint_size         {6*mm, 6*mm, 20*mm};
+  G4int             physics_verbosity  {0};
+  G4double          reflector_thickness{0.25*mm};
   G4double      particle_energy{511 * keV};
   void set_scint(const std::string& s) { scintillator_type = string_to_scintillator_type(s); }
   my()
@@ -44,10 +45,11 @@ struct my {
   // messenger violates the principle of least surprise.
   : msg{new G4GenericMessenger{this, "/my/", "docs: bla bla bla"}}
   {
-    msg -> DeclareMethod          ("scint_type"        ,       &my::set_scint     );
-    msg -> DeclareProperty        ("scint_size"        ,        scint_size     );
-    msg -> DeclarePropertyWithUnit("particle_energy"   , "keV", particle_energy);
-    msg -> DeclareProperty        ("physics_verbosity" ,        physics_verbosity );
+    msg -> DeclareMethod          ("scint_type"         ,       &my::set_scint      );
+    msg -> DeclareProperty        ("scint_size"         ,        scint_size         );
+    msg -> DeclareProperty        ("reflector_thickness",        reflector_thickness);
+    msg -> DeclarePropertyWithUnit("particle_energy"    , "keV", particle_energy    );
+    msg -> DeclareProperty        ("physics_verbosity"  ,        physics_verbosity  );
   }
 private:
   G4GenericMessenger* msg;
@@ -87,9 +89,10 @@ n4::actions* create_actions(my& my, unsigned& n_event) {
  -> set(  new n4::stepping_action{my_stepping_action});
 }
 
-G4Material*  CsI_with_properties() { return n4::material("G4_WATER"); }
-G4Material* LYSO_with_properties() { return n4::material("G4_WATER"); }
-G4Material*  BGO_with_properties() { return n4::material("G4_WATER"); }
+G4Material*    CsI_with_properties() { return n4::material("G4_WATER"); }
+G4Material*   LYSO_with_properties() { return n4::material("G4_WATER"); }
+G4Material*    BGO_with_properties() { return n4::material("G4_WATER"); }
+G4Material* teflon_with_properties() { return n4::material("G4_WATER"); }
 
 G4Material* scintillator_material(scintillator_type type) {
   switch (type) {
@@ -105,14 +108,22 @@ auto my_geometry(const my& my) {
   auto scintillator = scintillator_material(my.scintillator_type);
   auto water  = n4::material("G4_WATER");
   auto air    = n4::material("G4_AIR");
+  auto teflon = teflon_with_properties();
 
   auto [sx, sy, sz] = unpack(my.scint_size);
 
-  auto world  = n4::box("world").xyz(sx*1.1, sy*1.1, sz*1.1).place(water).now();
+  auto world  = n4::box("world").xyz(sx*2.1, sy*2.1, sz*2.1).place(water).now();
+  auto reflector = n4::box("reflector")
+    .x(sx + 2*my.reflector_thickness)
+    .y(sy + 2*my.reflector_thickness)
+    .z(sz +   my.reflector_thickness)
+    .place(teflon).at_z(-(sz + my.reflector_thickness) / 2)
+    .in(world).now();
 
   n4::box("crystal")
     .xyz(sx, sy, sz)
-    .place(scintillator).in(world).now();
+    .place(scintillator).at_z(my.reflector_thickness / 2)
+    .in(reflector).now();
 
   return world;
 }
