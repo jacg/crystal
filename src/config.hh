@@ -19,7 +19,7 @@ struct config {
   G4double          reflector_thickness{  0.25 * mm};
   G4double          particle_energy    {511    * keV};
   G4double          source_pos         {-50    * mm};
-  G4double          scint_yield        {50000    / MeV};
+  G4double          scint_yield        {50000  / MeV};
   G4long            seed               {123456789};
   G4bool            debug              {false};
 
