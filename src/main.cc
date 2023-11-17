@@ -1,5 +1,6 @@
 #include "config.hh"
 #include "materials.hh"
+#include "physics-list.hh"
 
 #include <n4-all.hh>
 
@@ -84,13 +85,6 @@ auto my_geometry(const config& my) {
     .in(reflector).now();
 
   return world;
-}
-
-auto physics_list() {
-  auto physics_list = new FTFP_BERT{my.physics_verbosity};
-  physics_list ->  ReplacePhysics(new G4EmStandardPhysics_option4{my.physics_verbosity});
-  physics_list -> RegisterPhysics(new G4OpticalPhysics{my.physics_verbosity});
-  return physics_list;
 }
 
 int main(int argc, char* argv[]) {
