@@ -34,7 +34,7 @@ scintillator_type string_to_scintillator_type(const std::string& s) {
   throw "up"; // TODO think about failure propagation out of string_to_scintillator_type
 }
 
-struct my {
+struct config {
   scintillator_type scintillator_type  {scintillator_type::csi};
   G4ThreeVector     scint_size         {6*mm, 6*mm, 20*mm};
   G4int             physics_verbosity  {0};
@@ -43,12 +43,12 @@ struct my {
   G4double          source_pos         {-50*mm};
 
   void set_scint(const std::string& s) { scintillator_type = string_to_scintillator_type(s); }
-  my()
+  config()
   // The trailing slash after '/my_geometry' is CRUCIAL: without it, the
   // messenger violates the principle of least surprise.
   : msg{new G4GenericMessenger{this, "/my/", "docs: bla bla bla"}}
   {
-    msg -> DeclareMethod          ("scint_type"         ,       &my::set_scint      );
+    msg -> DeclareMethod          ("scint_type"         ,       &config::set_scint      );
     msg -> DeclareProperty        ("scint_size"         ,        scint_size         );
     msg -> DeclareProperty        ("reflector_thickness",        reflector_thickness);
     msg -> DeclarePropertyWithUnit("particle_energy"    , "keV", particle_energy    );
@@ -59,7 +59,9 @@ private:
   G4GenericMessenger* msg;
 };
 
-auto my_generator(const my& my) {
+config my;
+
+auto my_generator(const config& my) {
   return [&](G4Event *event) {
     auto particle_type = n4::find_particle("gamma");
     auto vertex = new G4PrimaryVertex(0, 0, my.source_pos, 0);
@@ -74,7 +76,7 @@ auto my_generator(const my& my) {
   };
 }
 
-n4::actions* create_actions(my& my, unsigned& n_event) {
+n4::actions* create_actions(const config& my, unsigned& n_event) {
   auto my_stepping_action = [&] (const G4Step* step) {
     auto pt = step -> GetPreStepPoint();
     auto volume_name = pt -> GetTouchable() -> GetVolume() -> GetName();
@@ -107,7 +109,7 @@ G4Material* scintillator_material(scintillator_type type) {
 
 std::tuple<G4double, G4double, G4double> unpack(const G4ThreeVector& v) { return {v.x(), v.y(), v.z()}; }
 
-auto my_geometry(const my& my) {
+auto my_geometry(const config& my) {
   auto scintillator = scintillator_material(my.scintillator_type);
   auto air    = n4::material("G4_AIR");
   auto teflon = teflon_with_properties();
@@ -130,7 +132,7 @@ auto my_geometry(const my& my) {
   return world;
 }
 
-auto physics_list(const my& my) {
+auto physics_list() {
   auto physics_list = new FTFP_BERT{my.physics_verbosity};
   physics_list ->  ReplacePhysics(new G4EmStandardPhysics_option4{my.physics_verbosity});
   physics_list -> RegisterPhysics(new G4OpticalPhysics{my.physics_verbosity});
@@ -140,8 +142,6 @@ auto physics_list(const my& my) {
 int main(int argc, char* argv[]) {
   unsigned n_event = 0;
 
-  my my;
-
   n4::run_manager::create()
     .ui("crystal", argc, argv)
     .macro_path("macs")
@@ -150,7 +150,7 @@ int main(int argc, char* argv[]) {
     .apply_cli_early() // CLI --early executed at this point
     // .apply_command(...) // also possible after apply_early_macro
 
-    .physics([&] { return physics_list(my); })
+    .physics(physics_list)
     .geometry([&] { return my_geometry(my); })
     .actions(create_actions(my, n_event))
 
