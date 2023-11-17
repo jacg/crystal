@@ -79,5 +79,5 @@
 /vis/viewer/set/autoRefresh true
 /vis/verbose warnings
 
-# Shoot 100 particles
-#/run/beamOn 100
+/vis/viewer/centreOn world
+/vis/viewer/zoomTo   4
