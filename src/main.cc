@@ -39,7 +39,7 @@ struct my {
   G4ThreeVector     scint_size         {6*mm, 6*mm, 20*mm};
   G4int             physics_verbosity  {0};
   G4double          reflector_thickness{0.25*mm};
-  G4double      particle_energy{511 * keV};
+  G4double          particle_energy    {511 * keV};
   void set_scint(const std::string& s) { scintillator_type = string_to_scintillator_type(s); }
   my()
   // The trailing slash after '/my_geometry' is CRUCIAL: without it, the
