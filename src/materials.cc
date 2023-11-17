@@ -26,7 +26,7 @@ G4Material* csi_with_properties() {
     G4double csi_scint_yield =     1 / MeV; //my.csi_scint_yield; // 50000 / MeV in cold
     G4double csi_time_fast   =  1015 * ns; // only one component at cold temps!
     G4double csi_time_slow   =  1015 * ns;
-    G4MaterialPropertiesTable *csi_mpt = n4::material_properties()
+    auto mpt = n4::material_properties()
         .add("RINDEX"                 , csi_energies, csi_rindex)
         .add("SCINTILLATIONCOMPONENT1", csi_energies,  csi_scint)
         .add("SCINTILLATIONCOMPONENT2", csi_energies,  csi_scint)
@@ -39,16 +39,17 @@ G4Material* csi_with_properties() {
         .add("RESOLUTIONSCALE"           ,     1.0    )
         .done();
     csi -> GetIonisation() -> SetBirksConstant(0.00152 * mm/MeV);
-    csi -> SetMaterialPropertiesTable(csi_mpt);
+    csi -> SetMaterialPropertiesTable(mpt);
     return csi;
 }
 
 G4Material* air_with_properties() {
     auto air = n4::material("G4_AIR");
-    G4MaterialPropertiesTable *mpt_air = n4::material_properties()
-        .add("RINDEX", OPTPHOT_ENERGY_RANGE, {1, 1})
+    std::vector<double> x{1., 2.};
+    auto mpt = n4::material_properties()
+        .add("RINDEX", x, x)
         .done();
-    air -> SetMaterialPropertiesTable(mpt_air);
+    air -> SetMaterialPropertiesTable(mpt);
     return air;
 }
 
@@ -56,9 +57,9 @@ G4Material* teflon_with_properties() {
     auto teflon = n4::material("G4_TEFLON");
     // Values could be taken from "Optical properties of Teflon AF amorphous fluoropolymers" by Yang, French & Tokarsky (using AF2400, Fig.6)
     // but are also stated in the same paper as above
-    G4MaterialPropertiesTable *mpt_teflon = n4::material_properties()
-        .add("RINDEX", OPTPHOT_ENERGY_RANGE, {1.35, 1.35})
+    auto mpt = n4::material_properties()
+        .add("RINDEX", OPTPHOT_ENERGY_RANGE, 1.35)
         .done();
-    teflon -> SetMaterialPropertiesTable(mpt_teflon);
+    teflon -> SetMaterialPropertiesTable(mpt);
     return teflon;
 }
