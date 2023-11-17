@@ -34,7 +34,7 @@ geant4 = dependency( 'Geant4'
 
 my_app_deps    = [nain4, geant4]
 my_app_include = include_directories('.')
-my_app_sources = ['main.cc', 'config.cc', 'geometry.cc', 'materials.cc', 'physics-list.cc']
+my_app_sources = ['main.cc', 'actions.cc', 'config.cc', 'geometry.cc', 'materials.cc', 'physics-list.cc']
 
 geant4_include = geant4.get_variable(cmake    : 'Geant4_INCLUDE_DIRS')
 nain4_include  =  nain4.get_variable(pkgconfig: 'includedir'         )
