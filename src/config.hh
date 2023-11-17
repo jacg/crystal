@@ -21,6 +21,7 @@ struct config {
   G4double          source_pos         {-50    * mm};
   G4double          scint_yield        {50000    / MeV};
   G4long            seed               {123456789};
+  G4bool            debug              {false};
 
   config()
   // The trailing slash after '/my_geometry' is CRUCIAL: without it, the
@@ -39,6 +40,7 @@ struct config {
     msg -> DeclareProperty        ("physics_verbosity"   ,        physics_verbosity      );
     msg -> DeclareProperty        ("source_pos"          ,        source_pos             );
     msg -> DeclareMethod          ("seed"                ,       &config::set_random_seed);
+    msg -> DeclareProperty        ("debug"               ,        debug                  );
 
     set_random_seed(seed);
   }
