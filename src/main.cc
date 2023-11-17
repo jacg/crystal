@@ -10,7 +10,6 @@
 #include <G4Box.hh>             // for creating shapes in the geometry
 #include <G4Sphere.hh>          // for creating shapes in the geometry
 #include <FTFP_BERT.hh>         // our choice of physics list
-#include <G4RandomDirection.hh> // for launching particles in random directions
 
 
 #include <G4ThreeVector.hh>
@@ -61,7 +60,7 @@ auto my_generator(const my& my) {
   return [&](G4Event *event) {
     auto particle_type = n4::find_particle("geantino");
     auto vertex = new G4PrimaryVertex();
-    auto r = G4RandomDirection();
+    auto r = n4::random::direction();;
     vertex -> SetPrimary(new G4PrimaryParticle(
                            particle_type,
                            r.x(), r.y(), r.z(),
