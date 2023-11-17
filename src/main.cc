@@ -40,6 +40,8 @@ struct my {
   G4int             physics_verbosity  {0};
   G4double          reflector_thickness{0.25*mm};
   G4double          particle_energy    {511 * keV};
+  G4double          source_pos         {-50*mm};
+
   void set_scint(const std::string& s) { scintillator_type = string_to_scintillator_type(s); }
   my()
   // The trailing slash after '/my_geometry' is CRUCIAL: without it, the
@@ -51,6 +53,7 @@ struct my {
     msg -> DeclareProperty        ("reflector_thickness",        reflector_thickness);
     msg -> DeclarePropertyWithUnit("particle_energy"    , "keV", particle_energy    );
     msg -> DeclareProperty        ("physics_verbosity"  ,        physics_verbosity  );
+    msg -> DeclareProperty        ("source_pos"         ,        source_pos         );
   }
 private:
   G4GenericMessenger* msg;
@@ -59,8 +62,9 @@ private:
 auto my_generator(const my& my) {
   return [&](G4Event *event) {
     auto particle_type = n4::find_particle("geantino");
-    auto vertex = new G4PrimaryVertex();
-    auto r = n4::random::direction();;
+    auto vertex = new G4PrimaryVertex(0, 0, my.source_pos, 0);
+    auto tan = std::max(my.scint_size.x(), my.scint_size.y()) / (-my.scint_size.z() - my.reflector_thickness - my.source_pos);
+    auto r = n4::random::direction().max_theta(std::atan(tan)).get();
     vertex -> SetPrimary(new G4PrimaryParticle(
                            particle_type,
                            r.x(), r.y(), r.z(),
@@ -111,7 +115,7 @@ auto my_geometry(const my& my) {
 
   auto [sx, sy, sz] = unpack(my.scint_size);
 
-  auto world  = n4::box("world").xyz(sx*2.1, sy*2.1, sz*2.1).place(water).now();
+  auto world  = n4::box("world").xyz(sx*2, sy*2, (sz - my.source_pos)*2.1).place(water).now();
   auto reflector = n4::box("reflector")
     .x(sx + 2*my.reflector_thickness)
     .y(sy + 2*my.reflector_thickness)
