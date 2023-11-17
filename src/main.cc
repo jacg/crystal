@@ -61,7 +61,7 @@ private:
 
 auto my_generator(const my& my) {
   return [&](G4Event *event) {
-    auto particle_type = n4::find_particle("geantino");
+    auto particle_type = n4::find_particle("gamma");
     auto vertex = new G4PrimaryVertex(0, 0, my.source_pos, 0);
     auto tan = std::max(my.scint_size.x(), my.scint_size.y()) / (-my.scint_size.z() - my.reflector_thickness - my.source_pos);
     auto r = n4::random::direction().max_theta(std::atan(tan)).get();
@@ -109,13 +109,12 @@ std::tuple<G4double, G4double, G4double> unpack(const G4ThreeVector& v) { return
 
 auto my_geometry(const my& my) {
   auto scintillator = scintillator_material(my.scintillator_type);
-  auto water  = n4::material("G4_WATER");
   auto air    = n4::material("G4_AIR");
   auto teflon = teflon_with_properties();
 
   auto [sx, sy, sz] = unpack(my.scint_size);
 
-  auto world  = n4::box("world").xyz(sx*2, sy*2, (sz - my.source_pos)*2.1).place(water).now();
+  auto world  = n4::box("world").xyz(sx*2, sy*2, (sz - my.source_pos)*2.1).place(air).now();
   auto reflector = n4::box("reflector")
     .x(sx + 2*my.reflector_thickness)
     .y(sy + 2*my.reflector_thickness)
@@ -131,6 +130,13 @@ auto my_geometry(const my& my) {
   return world;
 }
 
+auto physics_list(const my& my) {
+  auto physics_list = new FTFP_BERT{my.physics_verbosity};
+  physics_list ->  ReplacePhysics(new G4EmStandardPhysics_option4{my.physics_verbosity});
+  physics_list -> RegisterPhysics(new G4OpticalPhysics{my.physics_verbosity});
+  return physics_list;
+}
+
 int main(int argc, char* argv[]) {
   unsigned n_event = 0;
 
@@ -144,7 +150,7 @@ int main(int argc, char* argv[]) {
     .apply_cli_early() // CLI --early executed at this point
     // .apply_command(...) // also possible after apply_early_macro
 
-    .physics<FTFP_BERT>(my.physics_verbosity)
+    .physics([&] { return physics_list(my); })
     .geometry([&] { return my_geometry(my); })
     .actions(create_actions(my, n_event))
 
