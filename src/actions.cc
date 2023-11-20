@@ -1,4 +1,5 @@
 #include "actions.hh"
+#include "config.hh"
 
 #include <n4-mandatory.hh>
 #include <n4-random.hh>
@@ -24,7 +25,7 @@ auto my_generator() {
   };
 }
 
-n4::actions* create_actions(const config& my, unsigned& n_event) {
+n4::actions* create_actions(unsigned& n_event) {
   auto my_stepping_action = [&] (const G4Step* step) {
     auto pt = step -> GetPreStepPoint();
     auto volume_name = pt -> GetTouchable() -> GetVolume() -> GetName();
