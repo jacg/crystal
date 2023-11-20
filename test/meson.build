@@ -11,6 +11,11 @@ project( 'crystal-tests'
 
 install_prefix = get_option('prefix')
 
+crystal  = dependency( 'crystal'
+                     , method  : 'pkg-config'
+                     , required: true
+                     )
+
 nain4  = dependency( 'nain4'
                    , method  : 'pkg-config'
                    , required: true
@@ -38,30 +43,30 @@ catch2 = dependency( 'catch2'
                    , method   : 'pkg-config'
                    , required : true)
 
-my_test_deps    = [nain4, geant4, catch2]
-my_test_include = include_directories('../src')
-my_test_sources = ['catch2-main-test.cc', 'test-materials.cc', '../src/materials.cc']
-c2_demo_sources = ['catch2-main-test.cc', 'test-catch2-demo.cc']
+crystal_test_deps    = [crystal, nain4, geant4, catch2]
+crystal_test_sources = ['catch2-main-test.cc', 'test-materials.cc' ]
+catch2_demo_sources  = ['catch2-main-test.cc', 'test-catch2-demo.cc']
 
-geant4_include = geant4.get_variable(cmake    : 'Geant4_INCLUDE_DIRS')
-nain4_include  =  nain4.get_variable(pkgconfig: 'includedir'         )
+geant4_include  =  geant4.get_variable(cmake    : 'Geant4_INCLUDE_DIRS')
+nain4_include   =   nain4.get_variable(pkgconfig: 'includedir'         )
+crystal_include = crystal.get_variable(pkgconfig: 'includedir'         )
 
 test_executable = 'crystal-test'
 demo_executable = 'catch2-demo-test'
 
-my_test_exe = executable( test_executable
-                        , my_test_sources
-                        , include_directories: [my_test_include, nain4_include, geant4_include]
-                        , dependencies       : my_test_deps
-                        , install            : true
-                        )
+crystal_test_exe = executable( test_executable
+                             , crystal_test_sources
+                             , include_directories: [nain4_include, geant4_include]
+                             , dependencies       : crystal_test_deps
+                             , install            : true
+                             )
 
-c2_demo_exe = executable( demo_executable
-                        , c2_demo_sources
-                        , include_directories: []
-                        , dependencies       : [catch2]
-                        , install            : true
-                        )
+catch2_demo_exe = executable( demo_executable
+                            , catch2_demo_sources
+                            , include_directories: []
+                            , dependencies       : [catch2]
+                            , install            : true
+                            )
 
 conf_data = configuration_data({
 'install_prefix'  : install_prefix,
