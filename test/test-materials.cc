@@ -1,3 +1,8 @@
+#include "G4LogicalVolume.hh"
+#include "G4ThreeVector.hh"
+#include "n4-inspect.hh"
+#include "n4-sequences.hh"
+#include <algorithm>
 #include <config.hh>
 #include <geometry.hh>
 #include <materials.hh>
@@ -13,9 +18,9 @@
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 
 #include <cmath>
+#include <numeric>
 
-// TODO test that teflon reflectivity is Lambertian not specular
-
+using Catch::Matchers::WithinAbs;
 using Catch::Matchers::WithinRel;
 
 
@@ -88,4 +93,92 @@ TEST_CASE("csi teflon reflectivity fraction", "[csi][teflon][reflectivity]") {
             << "   reflected: " << count_reflected << "   ratio: " <<  measured_reflectivity_percentage << " %" << std::endl;
 
   CHECK_THAT(measured_reflectivity_percentage, WithinRel(teflon_reflectivity_percentage, 1e-3));
+}
+
+
+TEST_CASE("csi teflon reflectivity lambertian", "[csi][teflon][reflectivity]") {
+  std::vector<G4LogicalVolume*> step_volumes;
+  std::vector<G4double> step_thetas;
+  std::vector<G4double> theta_in, theta_out;
+
+  auto record_data = [&step_volumes, &step_thetas] (const G4Step* step) {
+    auto track = step -> GetTrack();
+    if ( track -> GetCurrentStepNumber() < 3 ) {
+      auto next_volume = track -> GetNextVolume() -> GetLogicalVolume();
+      step_volumes.push_back(next_volume);
+      auto pos = step -> GetPostStepPoint() -> GetPosition();
+      auto p = step -> GetPreStepPoint()  -> GetMomentumDirection();
+      auto n = WithinRel(-my.scint_size.z()  , 1e-6).match(pos.z()) ? G4ThreeVector{ 0,  0,  1}
+             : WithinRel(-my.scint_size.x()/2, 1e-6).match(pos.x()) ? G4ThreeVector{ 1,  0,  0}
+             : WithinRel( my.scint_size.x()/2, 1e-6).match(pos.x()) ? G4ThreeVector{-1,  0,  0}
+             : WithinRel(-my.scint_size.y()/2, 1e-6).match(pos.y()) ? G4ThreeVector{ 0,  1,  0}
+             : WithinRel( my.scint_size.y()/2, 1e-6).match(pos.y()) ? G4ThreeVector{ 0, -1,  0}
+             :                                                        G4ThreeVector{ 0,  0, -1}; // Meaningless
+      auto theta = std::acos(p.dot(n));
+      step_thetas.push_back(theta);
+    }
+    else {
+      step -> GetTrack() -> SetTrackStatus(fStopAndKill);
+    }
+  };
+
+  auto reset_data = [&step_volumes, &step_thetas] (const G4Event*) {
+    step_volumes.clear();
+    step_thetas .clear();
+  };
+
+  auto check_validity = [&step_volumes, &step_thetas, &theta_in, &theta_out] (const G4Event* event) {
+    auto crystal   = n4::find_logical("crystal");
+    auto reflector = n4::find_logical("reflector");
+    if (step_matches(step_volumes, 0, reflector) &&
+        step_matches(step_volumes, 1, crystal)) {
+      theta_in .push_back(step_thetas[0]);
+      theta_out.push_back(step_thetas[1]);
+    }
+  };
+
+  auto test_action = [&] {
+    return (  new n4::actions{blue_light_towards_teflon()})
+      -> set((new n4::   event_action{}) -> begin(reset_data) -> end(check_validity))
+      -> set( new n4::stepping_action{record_data})
+      ;
+  };
+
+  n4::run_manager::create()
+    .fake_ui()
+    .physics(physics_list)
+    .geometry(crystal_geometry)
+    .actions(test_action)
+    .run(100000);
+
+  auto n = theta_in.size();
+
+  auto average = [n] (auto xs) { return std::accumulate(std::begin(xs), std::end(xs), 0.) / n; };
+
+  auto std_dev = [n] (std::vector<double>& dxs) {
+    std::vector<double> products(std::distance(begin(dxs), end(dxs)));
+    std::transform(begin(dxs), end(dxs), begin(products), [] (double x){return x*x;});
+
+    auto sum = std::accumulate(std::begin(products), std::end(products), 0.);
+    return std::sqrt(sum/(n-1));
+  };
+
+  auto average_theta_in  = average(theta_in );
+  auto average_theta_out = average(theta_out);
+
+  std::vector<double> dtheta_in, dtheta_out;
+  dtheta_in  .reserve(n);
+  dtheta_out .reserve(n);
+
+  std::for_each(std::begin(theta_in ), std::end(theta_in ), [&] (auto th) { dtheta_in .push_back(th - average_theta_in ); });
+  std::for_each(std::begin(theta_out), std::end(theta_out), [&] (auto th) { dtheta_out.push_back(th - average_theta_out); });
+
+  auto sigma_in  = std_dev(dtheta_in );
+  auto sigma_out = std_dev(dtheta_out);
+
+  auto correlation = 0.;
+  for (auto k=0; k<n; k++) { correlation += dtheta_in[k] * dtheta_out[k]; }
+  correlation /= n * sigma_in * sigma_out;
+
+  CHECK_THAT(correlation, WithinAbs(0, 1e-2));
 }
