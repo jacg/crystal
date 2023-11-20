@@ -81,7 +81,11 @@ TEST_CASE("csi teflon reflectivity fraction", "[csi][teflon][reflectivity]") {
     .actions(test_action)
     .run(100000);
 
-  std::cout << "\n\n-------------------- PHOTONS HITTING BOUNDARY: " << count_incoming << "   reflected: " << count_reflected << std::endl;
-  float teflon_reflectivity_percentage = 90; // TODO find correct value
-  CHECK(100.0 * count_reflected / count_incoming > teflon_reflectivity_percentage);
+  auto teflon_reflectivity_percentage   = 90; // TODO find correct value
+  auto measured_reflectivity_percentage = 100.0 * count_reflected / count_incoming;
+
+  std::cout << "\n\n-------------------- PHOTONS HITTING BOUNDARY    : " << count_incoming
+            << "   reflected: " << count_reflected << "   ratio: " <<  measured_reflectivity_percentage << " %" << std::endl;
+
+  CHECK(measured_reflectivity_percentage > teflon_reflectivity_percentage);
 }
