@@ -18,30 +18,29 @@
 
 using Catch::Matchers::WithinRel;
 
+
+
+auto blue_light_towards_teflon() {
+  auto particle_type = n4::find_particle("opticalphoton");
+  auto energy        = 2.5 * eV;
+  auto [x, y, z] = unpack(my.scint_size);
+
+  auto min_theta = std::atan(std::hypot(x,y) / z);
+  auto random_direction = n4::random::direction{}.min_theta(min_theta);
+
+  return [energy, z, particle_type, random_direction] (G4Event* event) {
+    auto r        = random_direction.get() * energy;
+    auto particle = new G4PrimaryParticle{particle_type, r.x(), r.y(), r.z()};
+    particle -> SetPolarization(random_direction.get());
+    auto vertex   = new G4PrimaryVertex{{0,0,-z/2}, 0};
+    vertex -> SetPrimary(particle);
+    event  -> AddPrimaryVertex(vertex);
+  };
+}
+
 TEST_CASE("csi teflon reflectivity fraction", "[csi][teflon][reflectivity]") {
 
   unsigned count_incoming = 0, count_reflected = 0;
-
-  auto particle_name  = "opticalphoton";
-  auto energy         = 2.5 * eV;
-
-  auto make_generator = [&] {
-    auto particle_type    = n4::find_particle(particle_name);
-
-    auto [x, y, z] = unpack(my.scint_size);
-
-    auto min_theta = std::atan(std::hypot(x,y) / z);
-    auto random_direction = n4::random::direction{}.min_theta(min_theta);
-
-    return [energy, z, particle_type, random_direction] (G4Event* event) {
-      auto r        = random_direction.get() * energy;
-      auto particle = new G4PrimaryParticle{particle_type, r.x(), r.y(), r.z()};
-      particle -> SetPolarization(random_direction.get());
-      auto vertex   = new G4PrimaryVertex{{0,0,-z/2}, 0};
-      vertex -> SetPrimary(particle);
-      event  -> AddPrimaryVertex(vertex);
-    };
-  };
 
   std::vector<G4LogicalVolume*> step_volumes;
 
@@ -66,7 +65,7 @@ TEST_CASE("csi teflon reflectivity fraction", "[csi][teflon][reflectivity]") {
   };
 
   auto test_action = [&] {
-    return (new n4::actions{make_generator()})
+    return (new n4::actions{blue_light_towards_teflon()})
       -> set((new n4::event_action)
              -> begin(reset_step_list)
              ->   end(classify_events))
