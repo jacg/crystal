@@ -76,8 +76,6 @@ TEST_CASE("csi teflon reflectivity fraction", "[csi][teflon][reflectivity]") {
 
   n4::run_manager::create()
     .fake_ui()
-    // .apply_command("/tracking/verbose 2")
-    // .apply_command("/event/verbose 2")
     .physics(physics_list)
     .geometry(crystal_geometry)
     .actions(test_action)
