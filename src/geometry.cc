@@ -6,7 +6,7 @@
 
 std::tuple<G4double, G4double, G4double> unpack(const G4ThreeVector& v) { return {v.x(), v.y(), v.z()}; }
 
-G4PVPlacement* my_geometry(const config& my) {
+G4PVPlacement* crystal_geometry(const config& my) {
   auto scintillator = scintillator_material(my.scintillator_type);
   auto air    = air_with_properties();
   auto teflon = teflon_with_properties();
