@@ -7,7 +7,7 @@
 #include <G4PrimaryVertex.hh>
 
 
-auto my_generator(const config& my) {
+auto my_generator() {
   auto tan = std::max(my.scint_size.x(), my.scint_size.y()) / 2 / (-my.scint_size.z() - my.reflector_thickness - my.source_pos);
   auto gen = n4::random::direction().max_theta(std::atan(tan));
 
@@ -39,7 +39,7 @@ n4::actions* create_actions(const config& my, unsigned& n_event) {
      std::cout << "end of event " << n_event << std::endl;
   };
 
-  return (new n4::        actions{my_generator(my)  })
+  return (new n4::        actions{my_generator()    })
  -> set( (new n4::   event_action{                  }) -> end(my_event_action) )
  -> set(  new n4::stepping_action{my_stepping_action});
 }
