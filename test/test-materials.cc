@@ -38,6 +38,10 @@ auto blue_light_towards_teflon() {
   };
 }
 
+bool step_matches(std::vector<G4LogicalVolume*>& step_volumes, size_t pos, G4LogicalVolume* value) {
+    return step_volumes.size() > pos && step_volumes[pos] == value;
+  };
+
 TEST_CASE("csi teflon reflectivity fraction", "[csi][teflon][reflectivity]") {
 
   unsigned count_incoming = 0, count_reflected = 0;
@@ -52,16 +56,13 @@ TEST_CASE("csi teflon reflectivity fraction", "[csi][teflon][reflectivity]") {
   };
 
   // Check whether step exists and if so, whether its value is as specified
-  auto step_matches = [&step_volumes] (size_t pos, G4LogicalVolume* value) {
-    return step_volumes.size() > pos && step_volumes[pos] == value;
-  };
 
   auto reset_step_list = [&step_volumes] (const G4Event*) { step_volumes.clear(); };
   auto classify_events = [&] (const G4Event*) {
     auto reflector = n4::find_logical("reflector");
     auto crystal   = n4::find_logical("crystal");
-    if (step_matches(0, reflector)) { count_incoming ++; } else { return; }
-    if (step_matches(1, crystal  )) { count_reflected++; }
+    if (step_matches(step_volumes, 0, reflector)) { count_incoming ++; } else { return; }
+    if (step_matches(step_volumes, 1, crystal  )) { count_reflected++; }
   };
 
   auto test_action = [&] {
