@@ -16,6 +16,8 @@
 
 // TODO test that teflon reflectivity is Lambertian not specular
 
+using Catch::Matchers::WithinRel;
+
 TEST_CASE("csi teflon reflectivity fraction", "[csi][teflon][reflectivity]") {
 
   unsigned count_incoming = 0, count_reflected = 0;
@@ -87,5 +89,5 @@ TEST_CASE("csi teflon reflectivity fraction", "[csi][teflon][reflectivity]") {
   std::cout << "\n\n-------------------- PHOTONS HITTING BOUNDARY    : " << count_incoming
             << "   reflected: " << count_reflected << "   ratio: " <<  measured_reflectivity_percentage << " %" << std::endl;
 
-  CHECK(measured_reflectivity_percentage > teflon_reflectivity_percentage);
+  CHECK_THAT(measured_reflectivity_percentage, WithinRel(teflon_reflectivity_percentage, 1e-3));
 }
