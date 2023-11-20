@@ -32,8 +32,8 @@ TEST_CASE("csi teflon reflectivity fraction", "[csi][teflon][reflectivity]") {
     auto random_direction = n4::random::direction{}.min_theta(min_theta);
 
     return [energy, z, particle_type, random_direction] (G4Event* event) {
-      auto r = random_direction.get();
-      auto particle = new G4PrimaryParticle{particle_type, r.x(), r.y(), r.z(), energy};
+      auto r        = random_direction.get() * energy;
+      auto particle = new G4PrimaryParticle{particle_type, r.x(), r.y(), r.z()};
       particle -> SetPolarization(random_direction.get());
       auto vertex   = new G4PrimaryVertex{{0,0,-z/2}, 0};
       vertex -> SetPrimary(particle);
