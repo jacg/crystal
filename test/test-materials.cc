@@ -163,15 +163,15 @@ TEST_CASE("csi teflon reflectivity lambertian", "[csi][teflon][reflectivity]") {
 
   auto n = theta_in.size();
 
-  auto average_theta_in  = n4::stats::mean(theta_in ).value();
-  auto average_theta_out = n4::stats::mean(theta_out).value();
+  auto mean_theta_in  = n4::stats::mean(theta_in ).value();
+  auto mean_theta_out = n4::stats::mean(theta_out).value();
 
   std::vector<double> dtheta_in, dtheta_out;
   dtheta_in  .reserve(n);
   dtheta_out .reserve(n);
 
-  std::for_each(std::begin(theta_in ), std::end(theta_in ), [&] (auto th) { dtheta_in .push_back(th - average_theta_in ); });
-  std::for_each(std::begin(theta_out), std::end(theta_out), [&] (auto th) { dtheta_out.push_back(th - average_theta_out); });
+  std::for_each(std::begin(theta_in ), std::end(theta_in ), [&] (auto th) { dtheta_in .push_back(th - mean_theta_in ); });
+  std::for_each(std::begin(theta_out), std::end(theta_out), [&] (auto th) { dtheta_out.push_back(th - mean_theta_out); });
 
   auto sigma_in  = n4::stats::std_dev_sample(dtheta_in ).value();
   auto sigma_out = n4::stats::std_dev_sample(dtheta_out).value();
