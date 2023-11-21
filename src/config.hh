@@ -7,14 +7,14 @@
 #include <Randomize.hh>
 
 
-enum class scintillator_type { lyso, bgo, csi };
+enum class scintillator_type_enum { lyso, bgo, csi };
 
-std::string scintillator_type_to_string(scintillator_type s);
+std::string scintillator_type_to_string(scintillator_type_enum s);
 
-scintillator_type string_to_scintillator_type(const std::string &s);
+scintillator_type_enum string_to_scintillator_type(const std::string &s);
 
 struct config {
-  scintillator_type scintillator_type  {scintillator_type::csi};
+  scintillator_type_enum scintillator_type  {scintillator_type_enum::csi};
   G4ThreeVector     scint_size         {6*mm, 6*mm, 20*mm};
   G4int             physics_verbosity  {0};
   G4double          reflector_thickness{  0.25 * mm};
@@ -53,4 +53,4 @@ private:
 
 extern config my;
 
-G4Material* scintillator_material(scintillator_type type);
+G4Material* scintillator_material(scintillator_type_enum type);
