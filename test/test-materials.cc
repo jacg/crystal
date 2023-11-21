@@ -49,7 +49,7 @@ bool step_matches(std::vector<G4LogicalVolume*>& step_volumes, size_t pos, G4Log
 
 // Shoot photons from within crystal in random directions towards teflon
 // reflector (avoiding the SiPM face which is not covered by teflon). Count
-// events in which the photon reaches the teflon in the first step. Cound how
+// events in which the photon reaches the teflon in the first step. Count how
 // many of those result in the photon returning into the crystal in the next
 // step. Check that the ratio of these counts is equal to the expected
 // reflectivity.
@@ -105,13 +105,35 @@ TEST_CASE("csi teflon reflectivity fraction", "[csi][teflon][reflectivity]") {
   CHECK_THAT(measured_reflectivity_percentage, WithinRel(teflon_reflectivity_percentage, 1e-3));
 }
 
-
+// Shoot photons from within crystal in random directions towards teflon
+// reflector (avoiding the SiPM face which is not covered by teflon). Ignore
+// events in which the photon does not reach the teflon in the first step or
+// does not get reflected in the second. Record the angle of incidence and angle
+// of reflection. Calculate the correlation between these angles and check that
+// it is ZERO.
+//
+// To see the test detecting non-Lambertian reflection, change
+//
+// - teflon_surface -> SetFinish(groundfrontpainted);    // Lambertian
+// + teflon_surface -> SetFinish(polishedfrontpainted);  // Specular
+//
+// in geometry.cc.
 TEST_CASE("csi teflon reflectivity lambertian", "[csi][teflon][reflectivity]") {
   std::vector<G4LogicalVolume*> step_volumes;
   std::vector<G4double> step_thetas;
   std::vector<G4double> thetas_in, thetas_out;
 
-  auto record_data = [&step_volumes, &step_thetas] (const G4Step* step) {
+  // The normal to the surface at which the photon is reflected
+  auto find_normal = [] (const auto& pos) {
+    return WithinRel(-my.scint_size.z()  , 1e-6).match(pos.z()) ? G4ThreeVector{ 0,  0,  1} :
+           WithinRel(-my.scint_size.x()/2, 1e-6).match(pos.x()) ? G4ThreeVector{ 1,  0,  0} :
+           WithinRel( my.scint_size.x()/2, 1e-6).match(pos.x()) ? G4ThreeVector{-1,  0,  0} :
+           WithinRel(-my.scint_size.y()/2, 1e-6).match(pos.y()) ? G4ThreeVector{ 0,  1,  0} :
+           WithinRel( my.scint_size.y()/2, 1e-6).match(pos.y()) ? G4ThreeVector{ 0, -1,  0} :
+                                                                  G4ThreeVector{ 0,  0, -1} ; // Meaningless
+  };
+
+  auto record_data = [&step_volumes, &step_thetas, &find_normal] (const G4Step* step) {
     auto track = step -> GetTrack();
     auto step_number = track -> GetCurrentStepNumber();
     if ( step_number < 3 ) {
@@ -121,13 +143,8 @@ TEST_CASE("csi teflon reflectivity lambertian", "[csi][teflon][reflectivity]") {
         step -> GetPostStepPoint() :
         step ->  GetPreStepPoint() ;
       auto pos = point -> GetPosition();
+      auto n = find_normal(pos);
       auto p = step -> GetPreStepPoint() -> GetMomentumDirection();
-      auto n = WithinRel(-my.scint_size.z()  , 1e-6).match(pos.z()) ? G4ThreeVector{ 0,  0,  1}
-             : WithinRel(-my.scint_size.x()/2, 1e-6).match(pos.x()) ? G4ThreeVector{ 1,  0,  0}
-             : WithinRel( my.scint_size.x()/2, 1e-6).match(pos.x()) ? G4ThreeVector{-1,  0,  0}
-             : WithinRel(-my.scint_size.y()/2, 1e-6).match(pos.y()) ? G4ThreeVector{ 0,  1,  0}
-             : WithinRel( my.scint_size.y()/2, 1e-6).match(pos.y()) ? G4ThreeVector{ 0, -1,  0}
-             :                                                        G4ThreeVector{ 0,  0, -1}; // Meaningless
       auto theta = std::acos(p.dot(n));
       step_thetas.push_back(theta);
     }
@@ -165,7 +182,8 @@ TEST_CASE("csi teflon reflectivity lambertian", "[csi][teflon][reflectivity]") {
     .actions(test_action)
     .run(100000);
 
-  // TODO implement correlation in nain4
+  // TODO move implementation of correlation to nain4
+  // TODO find a numerically stable implementation of correlation
   auto correlation = [] (const auto& as, const auto& bs) -> std::optional<double> {
     if (as.size() != bs.size() || as.size() < 2) { return {}; }
     const auto N = as.size();
@@ -184,7 +202,7 @@ TEST_CASE("csi teflon reflectivity lambertian", "[csi][teflon][reflectivity]") {
     return {accumulator / ((N - 1) * sigma_a * sigma_b)};
   };
 
-  // Quick sanity check of your correlation implementation
+  // Quick sanity check of our correlation implementation
   CHECK_THAT(correlation(std::vector<double>{1.0, 2.0, 3.0},
                          std::vector<double>{1.0, 2.0, 3.0}).value(), WithinAbs(1, 1e-2));
 

@@ -30,12 +30,13 @@ G4PVPlacement* crystal_geometry() {
     .place(scintillator).at_z(my.reflector_thickness / 2)
     .in(reflector).now();
 
+  // TODO add abstraction for placing optical surface between volumes
   auto
   teflon_surface = new G4OpticalSurface("teflon_surface");
   teflon_surface -> SetType(dielectric_dielectric);
   teflon_surface -> SetModel(unified);
-  teflon_surface -> SetFinish(groundfrontpainted);
-  //teflon_surface -> SetFinish(polishedfrontpainted);
+  teflon_surface -> SetFinish(groundfrontpainted);     // Lambertian
+  //teflon_surface -> SetFinish(polishedfrontpainted); // Specular
   teflon_surface -> SetSigmaAlpha(0.0);
 
   teflon_surface -> SetMaterialPropertiesTable(teflon_properties());
