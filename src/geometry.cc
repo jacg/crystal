@@ -35,6 +35,7 @@ G4PVPlacement* crystal_geometry() {
   teflon_surface -> SetType(dielectric_dielectric);
   teflon_surface -> SetModel(unified);
   teflon_surface -> SetFinish(groundfrontpainted);
+  //teflon_surface -> SetFinish(polishedfrontpainted);
   teflon_surface -> SetSigmaAlpha(0.0);
 
   teflon_surface -> SetMaterialPropertiesTable(teflon_properties());

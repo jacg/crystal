@@ -78,8 +78,8 @@ G4MaterialPropertiesTable* teflon_properties() {
   return n4::material_properties()
     .add("RINDEX"               , energy, 1.41)
     .add("REFLECTIVITY"         , energy, reflectivity)
-    .add("SPECULARLOBECONSTANT" , OPTPHOT_ENERGY_RANGE, 0.)
-    .add("SPECULARSPIKECONSTANT", OPTPHOT_ENERGY_RANGE, 0.)
-    .add("BACKSCATTERCONSTANT"  , OPTPHOT_ENERGY_RANGE, 0.)
+    .add("SPECULARLOBECONSTANT" , OPTPHOT_ENERGY_RANGE, 0.0)
+    //.add("SPECULARSPIKECONSTANT", OPTPHOT_ENERGY_RANGE, 0.0)
+    .add("BACKSCATTERCONSTANT"  , OPTPHOT_ENERGY_RANGE, 0.0)
     .done();
 }

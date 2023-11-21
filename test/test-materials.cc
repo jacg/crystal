@@ -109,15 +109,19 @@ TEST_CASE("csi teflon reflectivity fraction", "[csi][teflon][reflectivity]") {
 TEST_CASE("csi teflon reflectivity lambertian", "[csi][teflon][reflectivity]") {
   std::vector<G4LogicalVolume*> step_volumes;
   std::vector<G4double> step_thetas;
-  std::vector<G4double> theta_in, theta_out;
+  std::vector<G4double> thetas_in, thetas_out;
 
   auto record_data = [&step_volumes, &step_thetas] (const G4Step* step) {
     auto track = step -> GetTrack();
-    if ( track -> GetCurrentStepNumber() < 3 ) {
+    auto step_number = track -> GetCurrentStepNumber();
+    if ( step_number < 3 ) {
       auto next_volume = track -> GetNextVolume() -> GetLogicalVolume();
       step_volumes.push_back(next_volume);
-      auto pos = step -> GetPostStepPoint() -> GetPosition();
-      auto p = step -> GetPreStepPoint()  -> GetMomentumDirection();
+      auto point = step_number == 1 ?
+        step -> GetPostStepPoint() :
+        step ->  GetPreStepPoint() ;
+      auto pos = point -> GetPosition();
+      auto p = step -> GetPreStepPoint() -> GetMomentumDirection();
       auto n = WithinRel(-my.scint_size.z()  , 1e-6).match(pos.z()) ? G4ThreeVector{ 0,  0,  1}
              : WithinRel(-my.scint_size.x()/2, 1e-6).match(pos.x()) ? G4ThreeVector{ 1,  0,  0}
              : WithinRel( my.scint_size.x()/2, 1e-6).match(pos.x()) ? G4ThreeVector{-1,  0,  0}
@@ -137,13 +141,13 @@ TEST_CASE("csi teflon reflectivity lambertian", "[csi][teflon][reflectivity]") {
     step_thetas .clear();
   };
 
-  auto check_validity = [&step_volumes, &step_thetas, &theta_in, &theta_out] (const G4Event* event) {
+  auto check_validity = [&step_volumes, &step_thetas, &thetas_in, &thetas_out] (const G4Event* event) {
     auto crystal   = n4::find_logical("crystal");
     auto reflector = n4::find_logical("reflector");
     if (step_matches(step_volumes, 0, reflector) &&
         step_matches(step_volumes, 1, crystal)) {
-      theta_in .push_back(step_thetas[0]);
-      theta_out.push_back(step_thetas[1]);
+      thetas_in .push_back(step_thetas[0]);
+      thetas_out.push_back(step_thetas[1]);
     }
   };
 
@@ -161,24 +165,37 @@ TEST_CASE("csi teflon reflectivity lambertian", "[csi][teflon][reflectivity]") {
     .actions(test_action)
     .run(100000);
 
-  auto n = theta_in.size();
+  // TODO implement correlation in nain4
+  auto correlation = [] (const auto& as, const auto& bs) -> std::optional<double> {
+    if (as.size() != bs.size() || as.size() < 2) { return {}; }
+    const auto N = as.size();
 
-  auto mean_theta_in  = n4::stats::mean(theta_in ).value();
-  auto mean_theta_out = n4::stats::mean(theta_out).value();
+    auto mean_a = n4::stats::mean(as).value();
+    auto mean_b = n4::stats::mean(bs).value();
 
-  std::vector<double> dtheta_in, dtheta_out;
-  dtheta_in  .reserve(n);
-  dtheta_out .reserve(n);
+    auto sigma_a = n4::stats::std_dev_sample(as).value();
+    auto sigma_b = n4::stats::std_dev_sample(bs).value();
 
-  std::for_each(std::begin(theta_in ), std::end(theta_in ), [&] (auto th) { dtheta_in .push_back(th - mean_theta_in ); });
-  std::for_each(std::begin(theta_out), std::end(theta_out), [&] (auto th) { dtheta_out.push_back(th - mean_theta_out); });
+    // auto [mean_a, sima_a] = n4::stats::mean_and_std_dev_sample(as).value();
+    // auto [mean_b, sima_b] = n4::stats::mean_and_std_dev_sample(bs).value();
 
-  auto sigma_in  = n4::stats::std_dev_sample(dtheta_in ).value();
-  auto sigma_out = n4::stats::std_dev_sample(dtheta_out).value();
+    auto accumulator = 0.0;
+    for (auto k=0; k<N; k++) { accumulator += (as[k] - mean_a) * (bs[k] - mean_b); }
+    return {accumulator / ((N - 1) * sigma_a * sigma_b)};
+  };
 
-  auto correlation = 0.;
-  for (auto k=0; k<n; k++) { correlation += dtheta_in[k] * dtheta_out[k]; }
-  correlation /= n * sigma_in * sigma_out;
+  // Quick sanity check of your correlation implementation
+  CHECK_THAT(correlation(std::vector<double>{1.0, 2.0, 3.0},
+                         std::vector<double>{1.0, 2.0, 3.0}).value(), WithinAbs(1, 1e-2));
 
-  CHECK_THAT(correlation, WithinAbs(0, 1e-2));
+  CHECK_THAT(correlation(std::vector<double>{1.0, 2.0, 3.0, 4.0},
+                         std::vector<double>{1.0, 2.0, 3.0, 4.0}).value(), WithinAbs(1, 1e-2));
+
+  CHECK_THAT(correlation(std::vector<double>{10.0, 20.0, 30.0},
+                         std::vector<double>{-1.0, -2.0, -3.0}).value(), WithinAbs(-1, 1e-2));
+
+  // The actual test we care about
+  auto corr = correlation(thetas_in, thetas_out).value();
+  std::cerr << "------------------------------ CORRELATION: " << corr << std::endl;
+  CHECK_THAT(corr, WithinAbs(0, 1e-2));
 }
