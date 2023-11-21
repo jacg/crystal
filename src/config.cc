@@ -9,6 +9,7 @@ std::string scintillator_type_to_string(scintillator_type_enum s) {
     case scintillator_type_enum::bgo : return "BGO" ;
     case scintillator_type_enum::csi : return "CsI" ;
   }
+  return "unreachable!";
 }
 
 scintillator_type_enum string_to_scintillator_type(const std::string& s) {
@@ -26,4 +27,5 @@ G4Material* scintillator_material(scintillator_type_enum type) {
     case scintillator_type_enum::lyso: return lyso_with_properties();
     case scintillator_type_enum::bgo : return  bgo_with_properties();
   }
+  return nullptr; // unreachable
 }
