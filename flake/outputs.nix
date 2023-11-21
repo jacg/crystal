@@ -5,6 +5,16 @@
 }: let
   inherit (nixpkgs.legacyPackages) pkgs;
 
+  shell-shared = {
+    G4_DIR = "${pkgs.geant4}";
+
+      shellHook = ''
+        export CRYSTAL_LIB=$PWD/install/crystal/lib
+        export LD_LIBRARY_PATH=$CRYSTAL_LIB:$LD_LIBRARY_PATH;
+        export PKG_CONFIG_PATH=$CRYSTAL_LIB/pkgconfig:$PKG_CONFIG_PATH;
+      '';
+    };
+
   in {
 
     packages.default = self.packages.crystal;
@@ -51,16 +61,16 @@
     devShell = self.devShells.clang;
 
     # Activated by `nix develop <URL to this flake>#clang`
-    devShells.clang = pkgs.mkShell.override { stdenv = nain4.packages.clang_16.stdenv; } {
+    devShells.clang = pkgs.mkShell.override { stdenv = nain4.packages.clang_16.stdenv; } (shell-shared // {
       name = "crystal-clang-devenv";
       packages = nain4.deps.dev-shell-packages ++ [ nain4.packages.clang_16 ];
-    };
+    });
 
     # Activated by `nix develop <URL to this flake>#gcc`
-    devShells.gcc = pkgs.mkShell {
+    devShells.gcc = pkgs.mkShell (shell-shared // {
       name = "crystal-gcc-devenv";
       packages = nain4.deps.dev-shell-packages;
-    };
+    });
 
     # 1. `nix build` .#singularity
     # 2. `scp result <me>@lxplus7.cern.ch:hello.img`

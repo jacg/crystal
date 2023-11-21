@@ -5,7 +5,8 @@ project( 'crystal'
                            , 'debug=true'
                            , 'optimization=2'
                            , 'cpp_std=c++20'
-                           , 'prefix=@0@/../install/app/'.format(meson.source_root())
+                           , 'prefix=@0@/../install/crystal/'.format(meson.source_root())
+                           , 'libdir=lib' # removes architecture from path
                            ]
        )
 
@@ -32,16 +33,33 @@ geant4 = dependency( 'Geant4'
                                , 'Geant4::G4UIVisDefinitions'
                                ])
 
-my_app_deps    = [nain4, geant4]
-my_app_include = include_directories('.')
-my_app_sources = ['main.cc', 'LXe.cc']
+crystal_deps     = [nain4, geant4]
+crystal_include  = include_directories('.')
+crystal_sources  = ['main.cc', 'actions.cc', 'config.cc', 'geometry.cc', 'materials.cc', 'physics-list.cc']
+crystal_includes =            ['actions.hh', 'config.hh', 'geometry.hh', 'materials.hh', 'physics-list.hh']
 
 geant4_include = geant4.get_variable(cmake    : 'Geant4_INCLUDE_DIRS')
 nain4_include  =  nain4.get_variable(pkgconfig: 'includedir'         )
 
-my_app_exe = executable( 'crystal'
-                       , my_app_sources
-                       , include_directories: [my_app_include, nain4_include, geant4_include]
-                       , dependencies       : my_app_deps
-                       , install            : true
-                       )
+crystal_exe = executable( 'crystal'
+                        , crystal_sources
+                        , include_directories: [crystal_include, nain4_include, geant4_include]
+                        , dependencies       : crystal_deps
+                        , install            : true
+                        )
+
+crystal_lib = shared_library( 'crystal'
+                            , crystal_sources
+                            , include_directories: [crystal_include, geant4_include]
+                            , dependencies       : crystal_deps
+                            , install            : true
+                            )
+
+install_headers(crystal_includes)
+
+pkg = import('pkgconfig')
+pkg.generate( crystal_lib
+            , description: 'crystal'
+            , name       : 'crystal'
+            , filebase   : 'crystal'
+            )

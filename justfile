@@ -6,7 +6,7 @@ set positional-arguments := true
 default:
   just run --beam-on 10
 
-test *REST:
+test *REST: install
   meson setup build/test test
   meson compile -C build/test
   meson install -C build/test
@@ -20,15 +20,15 @@ catch2-demo *REST:
   install/test/bin/catch2-demo-test "$@"
 
 build:
-  meson setup build/app src
-  meson compile -C build/app
+  meson setup build/crystal src
+  meson compile -C build/crystal
 
 install: build
-  meson install -C build/app
+  meson install -C build/crystal
 
 run *ARGS: install
   #!/usr/bin/env sh
-  sh execute-with-nixgl-if-needed.sh ./install/app/bin/crystal "$@"
+  sh execute-with-nixgl-if-needed.sh ./install/crystal/bin/crystal "$@"
   exit $?
 
 clean:
