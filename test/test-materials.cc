@@ -163,18 +163,8 @@ TEST_CASE("csi teflon reflectivity lambertian", "[csi][teflon][reflectivity]") {
 
   auto n = theta_in.size();
 
-  auto average = [n] (auto xs) { return std::accumulate(std::begin(xs), std::end(xs), 0.) / n; };
-
-  auto std_dev = [n] (std::vector<double>& dxs) {
-    std::vector<double> products(std::distance(begin(dxs), end(dxs)));
-    std::transform(begin(dxs), end(dxs), begin(products), [] (double x){return x*x;});
-
-    auto sum = std::accumulate(std::begin(products), std::end(products), 0.);
-    return std::sqrt(sum/(n-1));
-  };
-
-  auto average_theta_in  = average(theta_in );
-  auto average_theta_out = average(theta_out);
+  auto average_theta_in  = n4::stats::mean(theta_in ).value();
+  auto average_theta_out = n4::stats::mean(theta_out).value();
 
   std::vector<double> dtheta_in, dtheta_out;
   dtheta_in  .reserve(n);
@@ -183,8 +173,8 @@ TEST_CASE("csi teflon reflectivity lambertian", "[csi][teflon][reflectivity]") {
   std::for_each(std::begin(theta_in ), std::end(theta_in ), [&] (auto th) { dtheta_in .push_back(th - average_theta_in ); });
   std::for_each(std::begin(theta_out), std::end(theta_out), [&] (auto th) { dtheta_out.push_back(th - average_theta_out); });
 
-  auto sigma_in  = std_dev(dtheta_in );
-  auto sigma_out = std_dev(dtheta_out);
+  auto sigma_in  = n4::stats::std_dev_sample(dtheta_in ).value();
+  auto sigma_out = n4::stats::std_dev_sample(dtheta_out).value();
 
   auto correlation = 0.;
   for (auto k=0; k<n; k++) { correlation += dtheta_in[k] * dtheta_out[k]; }
