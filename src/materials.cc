@@ -14,11 +14,9 @@ using vec_double = std::vector<G4double>;
 
 // TODO: remove duplication of hc (defined in moth materials.cc and geometry.cc)
 const   G4double hc = CLHEP::h_Planck * CLHEP::c_light;
-const   G4double OPTPHOT_MIN_ENERGY_eV{1.00};
-const   G4double OPTPHOT_MAX_ENERGY_eV{8.21};
-const   G4double OPTPHOT_MIN_ENERGY   {OPTPHOT_MIN_ENERGY_eV*eV};
-const   G4double OPTPHOT_MAX_ENERGY   {OPTPHOT_MAX_ENERGY_eV*eV};
-const vec_double OPTPHOT_ENERGY_RANGE{OPTPHOT_MIN_ENERGY, OPTPHOT_MAX_ENERGY_eV};
+const   G4double OPTPHOT_MIN_ENERGY   {1.00*eV};
+const   G4double OPTPHOT_MAX_ENERGY   {8.21*eV};
+const vec_double OPTPHOT_ENERGY_RANGE{OPTPHOT_MIN_ENERGY, OPTPHOT_MAX_ENERGY};
 
 G4Material* csi_with_properties() {
     auto csi = n4::material("G4_CESIUM_IODIDE");
@@ -72,7 +70,7 @@ G4Material* teflon_with_properties() {
 G4MaterialPropertiesTable* teflon_properties() {
     // Values could be taken from "Optical properties of Teflon AF amorphous fluoropolymers" by Yang, French & Tokarsky (using AF2400, Fig.6)
     // but are also stated in the same paper as above
-    auto energy       = n4::scale_by(  eV, {OPTPHOT_MIN_ENERGY_eV,  2.8,  3.5,  4.0,  6.0,  7.2, OPTPHOT_MAX_ENERGY_eV});
+    auto energy       = n4::scale_by(  eV, {OPTPHOT_MIN_ENERGY/eV,  2.8,  3.5,  4.0,  6.0,  7.2, OPTPHOT_MAX_ENERGY/eV});
     auto reflectivity = n4::scale_by(0.01, {                   98, 98  , 98  , 98  , 72  , 72  , 72});
 
   return n4::material_properties()
