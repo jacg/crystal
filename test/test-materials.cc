@@ -41,6 +41,7 @@ auto blue_light_towards_teflon() {
   };
 }
 
+// Check whether step exists and if so, whether its value is as specified
 bool step_matches(std::vector<G4LogicalVolume*>& step_volumes, size_t pos, G4LogicalVolume* value) {
     return step_volumes.size() > pos && step_volumes[pos] == value;
   };
@@ -57,8 +58,6 @@ TEST_CASE("csi teflon reflectivity fraction", "[csi][teflon][reflectivity]") {
     step_volumes.push_back(next_volume);
     if (step_volumes.size() >= 2) { track -> SetTrackStatus(fStopAndKill); } // The first 2 steps tell us all we need to know
   };
-
-  // Check whether step exists and if so, whether its value is as specified
 
   auto reset_step_list = [&step_volumes] (const G4Event*) { step_volumes.clear(); };
   auto classify_events = [&] (const G4Event*) {
