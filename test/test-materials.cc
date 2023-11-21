@@ -28,6 +28,7 @@ auto blue_light_towards_teflon() {
   auto energy        = 2.5 * eV;
   auto [x, y, z] = unpack(my.scint_size);
 
+  // Avoid the SiPM face which is not covered by teflon
   auto min_theta = std::atan(std::hypot(x,y) / z);
   auto random_direction = n4::random::direction{}.min_theta(min_theta);
 
@@ -46,12 +47,18 @@ bool step_matches(std::vector<G4LogicalVolume*>& step_volumes, size_t pos, G4Log
     return step_volumes.size() > pos && step_volumes[pos] == value;
   };
 
+// Shoot photons from within crystal in random directions towards teflon
+// reflector (avoiding the SiPM face which is not covered by teflon). Count
+// events in which the photon reaches the teflon in the first step. Cound how
+// many of those result in the photon returning into the crystal in the next
+// step. Check that the ratio of these counts is equal to the expected
+// reflectivity.
 TEST_CASE("csi teflon reflectivity fraction", "[csi][teflon][reflectivity]") {
-
   unsigned count_incoming = 0, count_reflected = 0;
 
-  std::vector<G4LogicalVolume*> step_volumes;
+  std::vector<G4LogicalVolume*> step_volumes; // Space for storing the first and second volumes to be stepped through
 
+  // Stepping action: record the volumes visited in the steps
   auto record_step_volumes = [&step_volumes] (const G4Step* step) {
     auto track = step -> GetTrack();
     auto next_volume = track -> GetNextVolume() -> GetLogicalVolume();
@@ -59,7 +66,12 @@ TEST_CASE("csi teflon reflectivity fraction", "[csi][teflon][reflectivity]") {
     if (step_volumes.size() >= 2) { track -> SetTrackStatus(fStopAndKill); } // The first 2 steps tell us all we need to know
   };
 
+  // Begin of event action: forget volumes visited in the previous event
   auto reset_step_list = [&step_volumes] (const G4Event*) { step_volumes.clear(); };
+
+  // End of event action: count events where
+  // 1. reflector was reached in first step
+  // 2. second step resulted in reflection
   auto classify_events = [&] (const G4Event*) {
     auto reflector = n4::find_logical("reflector");
     auto crystal   = n4::find_logical("crystal");
@@ -67,6 +79,7 @@ TEST_CASE("csi teflon reflectivity fraction", "[csi][teflon][reflectivity]") {
     if (step_matches(step_volumes, 1, crystal  )) { count_reflected++; }
   };
 
+  // Gather together all the above actions
   auto test_action = [&] {
     return (new n4::actions{blue_light_towards_teflon()})
       -> set((new n4::event_action)
