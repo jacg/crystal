@@ -182,38 +182,7 @@ TEST_CASE("csi teflon reflectivity lambertian", "[csi][teflon][reflectivity]") {
     .actions(test_action)
     .run(100000);
 
-  // TODO move implementation of correlation to nain4
-  // TODO find a numerically stable implementation of correlation
-  auto correlation = [] (const auto& as, const auto& bs) -> std::optional<double> {
-    if (as.size() != bs.size() || as.size() < 2) { return {}; }
-    const auto N = as.size();
-
-    auto mean_a = n4::stats::mean(as).value();
-    auto mean_b = n4::stats::mean(bs).value();
-
-    auto sigma_a = n4::stats::std_dev_sample(as).value();
-    auto sigma_b = n4::stats::std_dev_sample(bs).value();
-
-    // auto [mean_a, sima_a] = n4::stats::mean_and_std_dev_sample(as).value();
-    // auto [mean_b, sima_b] = n4::stats::mean_and_std_dev_sample(bs).value();
-
-    auto accumulator = 0.0;
-    for (auto k=0; k<N; k++) { accumulator += (as[k] - mean_a) * (bs[k] - mean_b); }
-    return {accumulator / ((N - 1) * sigma_a * sigma_b)};
-  };
-
-  // Quick sanity check of our correlation implementation
-  CHECK_THAT(correlation(std::vector<double>{1.0, 2.0, 3.0},
-                         std::vector<double>{1.0, 2.0, 3.0}).value(), WithinAbs(1, 1e-2));
-
-  CHECK_THAT(correlation(std::vector<double>{1.0, 2.0, 3.0, 4.0},
-                         std::vector<double>{1.0, 2.0, 3.0, 4.0}).value(), WithinAbs(1, 1e-2));
-
-  CHECK_THAT(correlation(std::vector<double>{10.0, 20.0, 30.0},
-                         std::vector<double>{-1.0, -2.0, -3.0}).value(), WithinAbs(-1, 1e-2));
-
-  // The actual test we care about
-  auto corr = correlation(thetas_in, thetas_out).value();
+  auto corr = n4::stats::correlation(thetas_in, thetas_out).value();
   std::cerr << "------------------------------ CORRELATION: " << corr << std::endl;
   CHECK_THAT(corr, WithinAbs(0, 1e-2));
 }
