@@ -26,7 +26,7 @@ G4PVPlacement* crystal_geometry() {
     .in(world).now();
 
   auto crystal = n4::box("crystal")
-    .xyz(sx, sy, sz)
+    .xyz(my.scint_size)
     .place(scintillator).at_z(my.reflector_thickness / 2)
     .in(reflector).now();
 
