@@ -48,29 +48,50 @@ std::string scintillator_type_to_string(scintillator_type_enum s) {
   return "unreachable!";
 }
 
-scintillator_type_enum string_to_scintillator_type(const std::string& s) {
-  auto z = s;
-  for (auto& c: z) { c = std::toupper(c); }
-  if (z == "lyso") { return scintillator_type_enum::lyso; }
-  if (z == "bgo" ) { return scintillator_type_enum::bgo;  }
-  if (z == "csi" ) { return scintillator_type_enum::csi;  }
+scintillator_type_enum string_to_scintillator_type(std::string s) {
+  for (auto& c: s) { c = std::toupper(c); }
+  if (s == "lyso") { return scintillator_type_enum::lyso; }
+  if (s == "bgo" ) { return scintillator_type_enum::bgo;  }
+  if (s == "csi" ) { return scintillator_type_enum::csi;  }
   throw "up"; // TODO think about failure propagation out of string_to_scintillator_type
 }
 
-void config::set_config_type(std::string s) {
-  for (auto& c: s) { c = std::tolower(c); }
-  if (s == "lyso")      { scint_params = lyso; }
-  if (s == "bgo" )      { scint_params = bgo;  }
-  if (s == "csi" )      { scint_params = csi;  }
-  if (s == "csi_mono" ) { scint_params = csi_mono;  }
-  if (s == "custom"   ) {
-    msg -> DeclareMethod("scint"      , &config::set_scint);
-    msg -> DeclareMethod("scint_depth", &config::set_scint_depth);
-    msg -> DeclareMethod("n_sipms_x"  , &config::set_n_sipms_x);
-    msg -> DeclareMethod("n_sipms_y"  , &config::set_n_sipms_y);
-    scint_params = csi;
+std::string config_type_to_string(config_type_enum s) {
+  switch (s) {
+    case config_type_enum ::lyso    : return "LYSO";
+    case config_type_enum ::bgo     : return "BGO" ;
+    case config_type_enum ::csi     : return "CsI" ;
+    case config_type_enum ::csi_mono: return "CsI-monolithic" ;
+    case config_type_enum ::custom  : return "Custom" ;
   }
-  throw "up"; // TODO think about failure propagation out of config::set_config_type
+  return "unreachable!";
+}
+
+config_type_enum string_to_config_type(std::string s) {
+  for (auto& c: s) { c = std::tolower(c); }
+  if (s == "lyso"    ) { return config_type_enum::lyso;     }
+  if (s == "bgo"     ) { return config_type_enum::bgo;      }
+  if (s == "csi"     ) { return config_type_enum::csi;      }
+  if (s == "csi-mono") { return config_type_enum::csi_mono; }
+  if (s == "custom"  ) { return config_type_enum::custom;   }
+  std::cerr << "\n\n\n\n         ERROR in string_to_config_type: unknown config '" << s << "'\n\n\n\n" << std::endl;
+  throw "up"; // TODO think about failure propagation out of string_to_scintillator_type
+}
+
+void config::set_config_type(const std::string& s) {
+  switch (string_to_config_type(s)) {
+    case config_type_enum::lyso    : scint_params = lyso;     return;
+    case config_type_enum::bgo     : scint_params = bgo;      return;
+    case config_type_enum::csi     : scint_params = csi;      return;
+    case config_type_enum::csi_mono: scint_params = csi_mono; return;
+    case config_type_enum::custom  :
+      msg -> DeclareMethod("scint"      , &config::set_scint);
+      msg -> DeclareMethod("scint_depth", &config::set_scint_depth);
+      msg -> DeclareMethod("n_sipms_x"  , &config::set_n_sipms_x);
+      msg -> DeclareMethod("n_sipms_y"  , &config::set_n_sipms_y);
+      scint_params = csi;
+      return;
+  }
 }
 
 G4ThreeVector config::scint_size() const {

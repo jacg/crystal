@@ -9,7 +9,7 @@
 
 
 enum class scintillator_type_enum { lyso, bgo, csi };
-enum class config_type_enum       { lyso, gbo, csi, csi_mono, custom };
+enum class config_type_enum       { lyso, bgo, csi, csi_mono, custom };
 
 struct scint_parameters {
   scintillator_type_enum scint;
@@ -25,8 +25,10 @@ extern const scint_parameters csi;
 extern const scint_parameters csi_mono;
 
 std::string scintillator_type_to_string(scintillator_type_enum s);
+scintillator_type_enum string_to_scintillator_type(std::string s);
 
-scintillator_type_enum string_to_scintillator_type(const std::string &s);
+std::string config_type_to_string(config_type_enum s);
+config_type_enum string_to_config_type(std::string s);
 
 struct config {
   scint_parameters scint_params        = csi;
@@ -61,7 +63,7 @@ struct config {
 
   G4ThreeVector scint_size() const;
 private:
-  void set_config_type(std::string s);
+  void set_config_type(const std::string& s);
   void set_scint (std::string   s) { scint_params.scint       = string_to_scintillator_type(s); }
   void set_scint_depth(double   d) { scint_params.scint_depth = d; }
   void set_n_sipms_x  (unsigned n) { scint_params.n_sipms_x   = n; }
