@@ -3,19 +3,18 @@
 #include "materials.hh"
 
 #include <n4-material.hh>
+#include <n4-sequences.hh>
 #include <n4-shape.hh>
 
 #include <G4OpticalSurface.hh>
 #include <G4LogicalBorderSurface.hh>
 
-std::tuple<G4double, G4double, G4double> unpack(const G4ThreeVector& v) { return {v.x(), v.y(), v.z()}; }
-
 G4PVPlacement* crystal_geometry() {
-  auto scintillator = scintillator_material(my.scintillator_type);
+  auto scintillator = scintillator_material(my.scint_params.scint);
   auto air    = air_with_properties();
   auto teflon = teflon_with_properties();
 
-  auto [sx, sy, sz] = unpack(my.scint_size);
+  auto [sx, sy, sz] = n4::unpack(my.scint_size());
 
   auto world  = n4::box("world").xyz(sx*2, sy*2, (sz - my.source_pos)*2.1).place(air).now();
   auto reflector = n4::box("reflector")
@@ -26,7 +25,7 @@ G4PVPlacement* crystal_geometry() {
     .in(world).now();
 
   auto crystal = n4::box("crystal")
-    .xyz(my.scint_size)
+    .xyz(sx, sy, sz)
     .place(scintillator).at_z(my.reflector_thickness / 2)
     .in(reflector).now();
 

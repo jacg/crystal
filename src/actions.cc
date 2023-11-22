@@ -1,15 +1,17 @@
 #include "actions.hh"
 #include "config.hh"
 
+#include <n4-inspect.hh>
 #include <n4-mandatory.hh>
 #include <n4-random.hh>
-#include <n4-inspect.hh>
+#include <n4-sequences.hh>
 
 #include <G4PrimaryVertex.hh>
 
 
 auto my_generator() {
-  auto tan = std::max(my.scint_size.x(), my.scint_size.y()) / 2 / (-my.scint_size.z() - my.reflector_thickness - my.source_pos);
+  auto [sx, sy, sz] = n4::unpack(my.scint_size());
+  auto tan = std::max(sx, sy) / 2 / (-sz - my.reflector_thickness - my.source_pos);
   auto gen = n4::random::direction().max_theta(std::atan(tan));
 
   return [&, gen](G4Event *event) {
