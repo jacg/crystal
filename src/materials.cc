@@ -81,3 +81,15 @@ G4MaterialPropertiesTable* teflon_properties() {
     .add("BACKSCATTERCONSTANT"  , OPTPHOT_ENERGY_RANGE, 0.0)
     .done();
 }
+
+// TODO: implement E dependence from
+// https://refractiveindex.info/?shelf=main&book=Si&page=Aspnes
+G4Material* silicon_with_properties() {
+    auto si  = n4::material("G4_Si");
+    auto mpt = n4::material_properties()
+      .add("RINDEX", OPTPHOT_ENERGY_RANGE, 4.32)
+      .add("EFFICIENCY", OPTPHOT_ENERGY_RANGE, 1) // full absorption at the sipm surface
+      .done();
+    si -> SetMaterialPropertiesTable(mpt);
+    return si;
+}

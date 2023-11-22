@@ -12,7 +12,7 @@
 G4PVPlacement* crystal_geometry() {
   auto scintillator = scintillator_material(my.scint_params.scint);
   auto air     = n4::material("G4_AIR");
-  auto silicon = n4::material("G4_Si");
+  auto silicon = silicon_with_properties();
   auto teflon  = teflon_with_properties();
 
   auto [sx, sy, sz] = n4::unpack(my.scint_size());
