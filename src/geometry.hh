@@ -2,4 +2,4 @@
 
 #include <G4PVPlacement.hh>
 
-G4PVPlacement* crystal_geometry();
+G4PVPlacement* crystal_geometry(unsigned&);

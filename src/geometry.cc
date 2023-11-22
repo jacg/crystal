@@ -3,13 +3,15 @@
 #include "materials.hh"
 
 #include <n4-material.hh>
+#include <n4-sensitive.hh>
 #include <n4-sequences.hh>
 #include <n4-shape.hh>
 
 #include <G4OpticalSurface.hh>
 #include <G4LogicalBorderSurface.hh>
+#include <G4TrackStatus.hh>
 
-G4PVPlacement* crystal_geometry() {
+G4PVPlacement* crystal_geometry(unsigned& n_detected_evt) {
   auto scintillator = scintillator_material(my.scint_params.scint);
   auto air     = n4::material("G4_AIR");
   auto silicon = silicon_with_properties();
@@ -32,8 +34,17 @@ G4PVPlacement* crystal_geometry() {
 
   auto sipm_thickness = 1*mm;
 
+  auto process_hits = [&n_detected_evt] (G4Step* step) {
+    n_detected_evt++;
+    step -> GetTrack() -> SetTrackStatus(fStopAndKill);
+    return true;
+  };
+
+  auto sipm_detector = new n4::sensitive_detector("sipm", process_hits);
+
   auto sipm = n4::box("sipm")
     .xyz(sx, sy, sipm_thickness)
+    .sensitive(sipm_detector)
     .place(silicon).in(world);
 
   auto n=0;
@@ -56,7 +67,6 @@ G4PVPlacement* crystal_geometry() {
 
   teflon_surface -> SetMaterialPropertiesTable(teflon_properties());
   new G4LogicalBorderSurface("teflon_surface", crystal, reflector, teflon_surface);
-
 
   return world;
 }
