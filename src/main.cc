@@ -30,8 +30,8 @@ int main(int argc, char* argv[]) {
     // .apply_command(...) // also possible after apply_early_macro
 
     .physics(physics_list)
-    .geometry([&] { return my_geometry(my); })
-    .actions(create_actions(my, n_event))
+    .geometry(crystal_geometry)
+    .actions(create_actions(n_event))
 
     //.apply_command("/my/particle e-")
     .apply_late_macro("late-hard-wired.mac")

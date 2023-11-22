@@ -1,9 +1,7 @@
 #pragma once
 
-#include "config.hh"
-
 #include <n4-mandatory.hh>
 
-auto my_generator(const config& my);
+auto my_generator();
 
-n4::actions* create_actions(const config& my, unsigned& n_event);
+n4::actions* create_actions(unsigned& n_event);

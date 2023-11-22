@@ -1,4 +1,5 @@
 #include "materials.hh"
+#include "G4MaterialPropertiesTable.hh"
 #include "config.hh"
 
 #include <n4-all.hh>
@@ -12,8 +13,10 @@ G4Material*  bgo_with_properties() { return n4::material("G4_WATER"); }
 using vec_double = std::vector<G4double>;
 
 // TODO: remove duplication of hc (defined in moth materials.cc and geometry.cc)
-const G4double hc = CLHEP::h_Planck * CLHEP::c_light;
-const vec_double OPTPHOT_ENERGY_RANGE{1*eV, 8.21*eV};
+const   G4double hc = CLHEP::h_Planck * CLHEP::c_light;
+const   G4double OPTPHOT_MIN_ENERGY   {1.00*eV};
+const   G4double OPTPHOT_MAX_ENERGY   {8.21*eV};
+const vec_double OPTPHOT_ENERGY_RANGE{OPTPHOT_MIN_ENERGY, OPTPHOT_MAX_ENERGY};
 
 G4Material* csi_with_properties() {
     auto csi = n4::material("G4_CESIUM_IODIDE");
@@ -59,12 +62,22 @@ G4Material* air_with_properties() {
 }
 
 G4Material* teflon_with_properties() {
-    auto teflon = n4::material("G4_TEFLON");
+  auto teflon = n4::material("G4_TEFLON");
+  teflon -> SetMaterialPropertiesTable(teflon_properties());
+  return teflon;
+}
+
+G4MaterialPropertiesTable* teflon_properties() {
     // Values could be taken from "Optical properties of Teflon AF amorphous fluoropolymers" by Yang, French & Tokarsky (using AF2400, Fig.6)
     // but are also stated in the same paper as above
-    auto mpt = n4::material_properties()
-        .add("RINDEX", OPTPHOT_ENERGY_RANGE, 1.35)
-        .done();
-    teflon -> SetMaterialPropertiesTable(mpt);
-    return teflon;
+    auto energy       = n4::scale_by(  eV, {OPTPHOT_MIN_ENERGY/eV,  2.8,  3.5,  4.0,  6.0,  7.2, OPTPHOT_MAX_ENERGY/eV});
+    auto reflectivity = n4::scale_by(0.01, {                   98, 98  , 98  , 98  , 72  , 72  , 72});
+
+  return n4::material_properties()
+    .add("RINDEX"               , energy, 1.41)
+    .add("REFLECTIVITY"         , energy, reflectivity)
+    .add("SPECULARLOBECONSTANT" , OPTPHOT_ENERGY_RANGE, 0.0)
+    //.add("SPECULARSPIKECONSTANT", OPTPHOT_ENERGY_RANGE, 0.0)
+    .add("BACKSCATTERCONSTANT"  , OPTPHOT_ENERGY_RANGE, 0.0)
+    .done();
 }
