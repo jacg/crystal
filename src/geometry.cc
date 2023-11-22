@@ -11,8 +11,9 @@
 
 G4PVPlacement* crystal_geometry() {
   auto scintillator = scintillator_material(my.scint_params.scint);
-  auto air    = air_with_properties();
-  auto teflon = teflon_with_properties();
+  auto air     = n4::material("G4_AIR");
+  auto silicon = n4::material("G4_Si");
+  auto teflon  = teflon_with_properties();
 
   auto [sx, sy, sz] = n4::unpack(my.scint_size());
 
@@ -28,6 +29,21 @@ G4PVPlacement* crystal_geometry() {
     .xyz(sx, sy, sz)
     .place(scintillator).at_z(my.reflector_thickness / 2)
     .in(reflector).now();
+
+  auto sipm_thickness = 1*mm;
+
+  auto sipm = n4::box("sipm")
+    .xyz(sx, sy, sipm_thickness)
+    .place(silicon).in(world);
+
+  auto n=0;
+  for   (auto i=0; i<my.scint_params.n_sipms_x; i++) {
+    auto x = -my.scint_size().x()/2 + (i+0.5)*my.sipm_size;
+    for (auto j=0; j<my.scint_params.n_sipms_y; j++) {
+      auto y = -my.scint_size().y()/2 + (j+0.5)*my.sipm_size;
+      sipm.clone().at(x, y, sipm_thickness/2).copy_no(n++).now();
+    }
+  }
 
   // TODO add abstraction for placing optical surface between volumes
   auto
