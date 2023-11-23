@@ -43,12 +43,12 @@ G4PVPlacement* crystal_geometry(unsigned& n_detected_evt) {
   auto Nx = my.scint_params.n_sipms_x;
   auto Ny = my.scint_params.n_sipms_y;
   auto sipm = n4::box("sipm")
-    .xyz(sx/Nx, sy/Ny, sipm_thickness)
+    .xy(my.sipm_size).z(sipm_thickness)
     .sensitive("sipm", process_hits)
     .place(silicon).at_z(sipm_thickness/2).in(world);
 
-  auto lim_x = (sx/Nx) * (Nx/2.0 - 0.5);
-  auto lim_y = (sy/Ny) * (Ny/2.0 - 0.5);
+  auto lim_x = my.sipm_size * (Nx / 2.0 - 0.5);
+  auto lim_y = my.sipm_size * (Ny / 2.0 - 0.5);
 
   auto n=0;
   for   (auto x: n4::linspace(-lim_x, lim_x, Nx)) {
