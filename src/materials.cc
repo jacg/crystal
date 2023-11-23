@@ -52,8 +52,22 @@ G4Material* csi_with_properties() {
   return csi;
 }
 
+// Refractive index, scintillation spectrum and time constant taken from
+//   https://jnm.snmjournals.org/content/jnumed/41/6/1051.full.pdf
 G4Material* bgo_with_properties() {
   auto bgo = n4::material("G4_BGO");
+  auto       energies = n4::scale_by(hc*eV, {1/0.65, 1/0.48, 1/0.39}); // denominator is wavelength in micrometres
+  vec_double scint    =                     {  0.0 ,   1.0 ,   0.0  };
+  //double scint_yield = my.scint_yield.value_or(8'500 / MeV); // According to Wikipedia
+  double scint_yield = my.scint_yield.value_or(6'000 / MeV); // https://wiki.app.uib.no/ift/images/c/c2/Characterization_of_Scintillation_Crystals_for_Positron_Emission_Tomography.pdf
+  auto mpt = n4::material_properties()
+    .add("RINDEX"                    , energies,   2.15)
+    .add("SCINTILLATIONCOMPONENT1"   , energies, scint)
+    .add("SCINTILLATIONTIMECONSTANT1", 300 * ns)
+    .add("SCINTILLATIONYIELD"        , scint_yield)
+    .add("RESOLUTIONSCALE"           ,     1.0    ) // TODO what is RESOLUTIONSCALE ?
+    .done();
+  bgo -> SetMaterialPropertiesTable(mpt);
   return bgo;
 }
 
