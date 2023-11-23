@@ -6,11 +6,6 @@
 #include <G4MaterialPropertiesTable.hh>
 #include <G4SystemOfUnits.hh>
 
-G4Material* lyso_with_properties() {
-  // .scint_yield = 666.6, // TODO look up scintillation yield for LYSO
-  return n4::material("G4_WATER");
-}
-
 using vec_double = std::vector<double>;
 
 // TODO: remove duplication of hc (defined in moth materials.cc and geometry.cc)
@@ -69,6 +64,30 @@ G4Material* bgo_with_properties() {
     .done();
   bgo -> SetMaterialPropertiesTable(mpt);
   return bgo;
+}
+
+// TODO get better LYSO material property data
+// https://arxiv.org/pdf/2207.06696.pdf
+G4Material* lyso_with_properties() {
+  auto density = 7.1 * g/cm3;
+  auto state = kStateSolid;
+  auto               [ fLu ,  fY  ,  fSi ,  fO  ] =
+      std::make_tuple(0.714, 0.040, 0.064, 0.182);
+  auto lyso = nain4::material_from_elements_F("LYSO", density, {.state=state},
+                                              {{"Lu", fLu}, {"Y", fY}, {"Si", fSi}, {"O", fO}});
+
+  auto       energies = n4::scale_by(hc*eV, {1/0.60, 1/0.42, 1/0.20}); // denominator is wavelength in micrometres
+  vec_double scint    =                     {  0.0 ,   1.0 ,   0.0  };
+  double scint_yield = my.scint_yield.value_or(30'000 / MeV);
+  auto mpt = n4::material_properties()
+    .add("RINDEX"                    , energies,  1.82)
+    .add("SCINTILLATIONCOMPONENT1"   , energies, scint)
+    .add("SCINTILLATIONTIMECONSTANT1", 40 * ns)
+    .add("SCINTILLATIONYIELD"        , scint_yield)
+    .add("RESOLUTIONSCALE"           ,     1.0    ) // TODO what is RESOLUTIONSCALE ?
+    .done();
+  lyso -> SetMaterialPropertiesTable(mpt);
+  return lyso;
 }
 
 G4Material* air_with_properties() {
