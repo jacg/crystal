@@ -121,7 +121,7 @@ TEST_CASE("csi teflon reflectivity fraction", "[csi][teflon][reflectivity]") {
 // + teflon_surface -> SetFinish(polishedfrontpainted);  // Specular
 //
 // in geometry.cc.
-TEST_CASE("csi teflon reflectivity lambertian", "[csi][teflon][reflectivity]") {
+TEST_CASE("teflon reflectivity lambertian", "[teflon][reflectivity]") {
   std::vector<G4LogicalVolume*> step_volumes;
   std::vector<G4double> step_thetas;
   std::vector<G4double> thetas_in, thetas_out;
