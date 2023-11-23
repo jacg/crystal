@@ -27,16 +27,18 @@ auto blue_light_towards_teflon() {
   auto particle_type = n4::find_particle("opticalphoton");
   auto energy        = 2.5 * eV;
   auto [x, y, z] = n4::unpack(my.scint_size());
+  auto source_z  = -z/2;
 
   // Avoid the SiPM face which is not covered by teflon
-  auto min_theta = std::atan(std::hypot(x,y) / z);
-  auto random_direction = n4::random::direction{}.min_theta(min_theta);
+  auto min_theta = std::atan(std::hypot(x,y) / -source_z);
+  auto towards_teflon = n4::random::direction{}.min_theta(min_theta);
+  auto isotropic      = n4::random::direction{};
 
-  return [energy, z, particle_type, random_direction] (G4Event* event) {
-    auto r        = random_direction.get() * energy;
+  return [energy, source_z, particle_type, towards_teflon, isotropic] (G4Event* event) {
+    auto r        = towards_teflon.get() * energy;
     auto particle = new G4PrimaryParticle{particle_type, r.x(), r.y(), r.z()};
-    particle -> SetPolarization(random_direction.get());
-    auto vertex   = new G4PrimaryVertex{{0,0,-z/2}, 0};
+    particle -> SetPolarization(isotropic.get());
+    auto vertex   = new G4PrimaryVertex{{0,0,source_z}, 0};
     vertex -> SetPrimary(particle);
     event  -> AddPrimaryVertex(vertex);
   };
