@@ -59,7 +59,7 @@ struct config {
     msg -> DeclareProperty        ("source_pos"          ,          source_pos             );
     msg -> DeclareMethod          ("seed"                ,         &config::set_random_seed);
     msg -> DeclareProperty        ("debug"               ,          debug                  );
-    msg -> DeclareMethodWithUnit  ("override_scint_yield", "1/MeV",&config::set_scint_yield);
+    msg -> DeclareMethodWithUnit  ("scint_yield"         , "1/MeV",&config::set_scint_yield);
 
 
     set_random_seed(seed);
