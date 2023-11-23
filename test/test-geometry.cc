@@ -83,41 +83,23 @@ TEST_CASE("geometry crystal size", "[geometry][default]") {
            , params.scint_depth};
   };
 
-  SECTION("CsI") {
-    n4::clear_geometry();
-    UI -> ApplyCommand("/my/config_type CsI");
-    crystal_geometry(dummy);
-    auto [x,y,z] = size_from_params(csi);
-    check_crystal(x, y, z);
-    check_sipms(1, 1);
+  // This doesn't work because of csi-mono vs csi_mono
+#define TEST_CONFIG(NAME)                         \
+  SECTION(#NAME) {                                \
+    n4::clear_geometry();                         \
+    UI -> ApplyCommand("/my/config_type " #NAME); \
+    crystal_geometry(dummy);                      \
+    auto [x,y,z] = size_from_params(NAME);        \
+    check_crystal(x, y, z);                       \
+    check_sipms(1, 1);                            \
   }
 
-  SECTION("CsI-mono") {
-    n4::clear_geometry();
-    UI -> ApplyCommand("/my/config_type CsI-mono");
-    crystal_geometry(dummy);
-    auto [x,y,z] = size_from_params(csi_mono);
-    check_crystal(x, y, z);
-    check_sipms(1, 1);
-  }
+  TEST_CONFIG(csi);
+  TEST_CONFIG(csi_mono);
+  TEST_CONFIG(bgo);
+  TEST_CONFIG(lyso);
 
-  SECTION("BGO") {
-    n4::clear_geometry();
-    UI -> ApplyCommand("/my/config_type BGO");
-    crystal_geometry(dummy);
-    auto [x,y,z] = size_from_params(bgo);
-    check_crystal(x, y, z);
-    check_sipms(1, 1);
-  }
-
-  SECTION("LYSO") {
-    n4::clear_geometry();
-    UI -> ApplyCommand("/my/config_type LYSO");
-    crystal_geometry(dummy);
-    auto [x,y,z] = size_from_params(lyso);
-    check_crystal(x, y, z);
-    check_sipms(1, 1);
-  }
+#undef TEST_CONFIG
 
   SECTION("Custom") {
     n4::clear_geometry();
