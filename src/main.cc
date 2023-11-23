@@ -19,7 +19,9 @@
 #include <cstdlib>
 
 int main(int argc, char* argv[]) {
-  unsigned n_event = 0;
+  unsigned              n_event       {0};
+  unsigned              n_detected_evt{0};
+  std::vector<unsigned> n_detected_run{ };
 
   n4::run_manager::create()
     .ui("crystal", argc, argv)
@@ -30,8 +32,8 @@ int main(int argc, char* argv[]) {
     // .apply_command(...) // also possible after apply_early_macro
 
     .physics(physics_list)
-    .geometry(crystal_geometry)
-    .actions(create_actions(n_event))
+    .geometry([&] {return crystal_geometry(n_detected_evt);})
+    .actions(create_actions(n_event, n_detected_evt, n_detected_run))
 
     //.apply_command("/my/particle e-")
     .apply_late_macro("late-hard-wired.mac")
@@ -41,6 +43,12 @@ int main(int argc, char* argv[]) {
     .run();
 
 
+  std::cout << "# EVENTS: " << n_event << "\n\n"
+            << "DETECTED PHOTONS PER EVENT:\n";
+  for (auto& n: n_detected_run) {
+    std::cout << n << "\n";
+  }
+  std::cout << "\nTOTAL: " << n4::stats::sum(n_detected_run) << std::endl;
 
   // Important! physics list has to be set before the generator!
 

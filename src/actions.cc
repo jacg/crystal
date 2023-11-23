@@ -1,15 +1,17 @@
 #include "actions.hh"
 #include "config.hh"
 
+#include <n4-inspect.hh>
 #include <n4-mandatory.hh>
 #include <n4-random.hh>
-#include <n4-inspect.hh>
+#include <n4-sequences.hh>
 
 #include <G4PrimaryVertex.hh>
 
 
 auto my_generator() {
-  auto tan = std::max(my.scint_size.x(), my.scint_size.y()) / 2 / (-my.scint_size.z() - my.reflector_thickness - my.source_pos);
+  auto [sx, sy, sz] = n4::unpack(my.scint_size());
+  auto tan = std::max(sx, sy) / 2 / (-sz - my.reflector_thickness - my.source_pos);
   auto gen = n4::random::direction().max_theta(std::atan(tan));
 
   return [&, gen](G4Event *event) {
@@ -25,22 +27,15 @@ auto my_generator() {
   };
 }
 
-n4::actions* create_actions(unsigned& n_event) {
-  auto my_stepping_action = [&] (const G4Step* step) {
-    auto pt = step -> GetPreStepPoint();
-    auto volume_name = pt -> GetTouchable() -> GetVolume() -> GetName();
-    if (volume_name == "straw" || volume_name == "bubble") {
-      auto pos = pt -> GetPosition();
-      std::cout << volume_name << " " << pos << std::endl;
-    }
-  };
+n4::actions* create_actions(unsigned& n_event, unsigned& n_detected_evt, std::vector<unsigned>& n_detected_run) {
 
   auto my_event_action = [&] (const G4Event*) {
      n_event++;
+     n_detected_run.push_back(n_detected_evt);
+     n_detected_evt = 0;
      std::cout << "end of event " << n_event << std::endl;
   };
 
-  return (new n4::        actions{my_generator()    })
- -> set( (new n4::   event_action{                  }) -> end(my_event_action) )
- -> set(  new n4::stepping_action{my_stepping_action});
+  return (new n4::      actions{my_generator()})
+ -> set( (new n4::event_action {              }) -> end(my_event_action));
 }

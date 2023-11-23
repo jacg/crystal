@@ -26,17 +26,19 @@ using Catch::Matchers::WithinRel;
 auto blue_light_towards_teflon() {
   auto particle_type = n4::find_particle("opticalphoton");
   auto energy        = 2.5 * eV;
-  auto [x, y, z] = unpack(my.scint_size);
+  auto [x, y, z] = n4::unpack(my.scint_size());
+  auto source_z  = -z/2;
 
   // Avoid the SiPM face which is not covered by teflon
-  auto min_theta = std::atan(std::hypot(x,y) / z);
-  auto random_direction = n4::random::direction{}.min_theta(min_theta);
+  auto min_theta = std::atan(std::hypot(x,y) / -source_z);
+  auto towards_teflon = n4::random::direction{}.min_theta(min_theta);
+  auto isotropic      = n4::random::direction{};
 
-  return [energy, z, particle_type, random_direction] (G4Event* event) {
-    auto r        = random_direction.get() * energy;
+  return [energy, source_z, particle_type, towards_teflon, isotropic] (G4Event* event) {
+    auto r        = towards_teflon.get() * energy;
     auto particle = new G4PrimaryParticle{particle_type, r.x(), r.y(), r.z()};
-    particle -> SetPolarization(random_direction.get());
-    auto vertex   = new G4PrimaryVertex{{0,0,-z/2}, 0};
+    particle -> SetPolarization(isotropic.get());
+    auto vertex   = new G4PrimaryVertex{{0,0,source_z}, 0};
     vertex -> SetPrimary(particle);
     event  -> AddPrimaryVertex(vertex);
   };
@@ -89,10 +91,11 @@ TEST_CASE("csi teflon reflectivity fraction", "[csi][teflon][reflectivity]") {
       ;
   };
 
+  unsigned dummy=0;
   n4::run_manager::create()
     .fake_ui()
     .physics(physics_list)
-    .geometry(crystal_geometry)
+    .geometry([&] {return crystal_geometry(dummy);})
     .actions(test_action)
     .run(100000);
 
@@ -125,11 +128,12 @@ TEST_CASE("csi teflon reflectivity lambertian", "[csi][teflon][reflectivity]") {
 
   // The normal to the surface at which the photon is reflected
   auto find_normal = [] (const auto& pos) {
-    return WithinRel(-my.scint_size.z()  , 1e-6).match(pos.z()) ? G4ThreeVector{ 0,  0,  1} :
-           WithinRel(-my.scint_size.x()/2, 1e-6).match(pos.x()) ? G4ThreeVector{ 1,  0,  0} :
-           WithinRel( my.scint_size.x()/2, 1e-6).match(pos.x()) ? G4ThreeVector{-1,  0,  0} :
-           WithinRel(-my.scint_size.y()/2, 1e-6).match(pos.y()) ? G4ThreeVector{ 0,  1,  0} :
-           WithinRel( my.scint_size.y()/2, 1e-6).match(pos.y()) ? G4ThreeVector{ 0, -1,  0} :
+    auto [sx, sy, sz] = n4::unpack(my.scint_size());
+    return WithinRel(-sz  , 1e-6).match(pos.z()) ? G4ThreeVector{ 0,  0,  1} :
+           WithinRel(-sx/2, 1e-6).match(pos.x()) ? G4ThreeVector{ 1,  0,  0} :
+           WithinRel( sx/2, 1e-6).match(pos.x()) ? G4ThreeVector{-1,  0,  0} :
+           WithinRel(-sy/2, 1e-6).match(pos.y()) ? G4ThreeVector{ 0,  1,  0} :
+           WithinRel( sy/2, 1e-6).match(pos.y()) ? G4ThreeVector{ 0, -1,  0} :
                                                                   G4ThreeVector{ 0,  0, -1} ; // Meaningless
   };
 
@@ -175,10 +179,11 @@ TEST_CASE("csi teflon reflectivity lambertian", "[csi][teflon][reflectivity]") {
       ;
   };
 
+  unsigned dummy=0;
   n4::run_manager::create()
     .fake_ui()
     .physics(physics_list)
-    .geometry(crystal_geometry)
+    .geometry([&] {return crystal_geometry(dummy);})
     .actions(test_action)
     .run(100000);
 

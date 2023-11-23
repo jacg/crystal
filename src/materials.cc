@@ -31,7 +31,7 @@ G4Material* csi_with_properties() {
     auto    csi_abslength = n4::scale_by(m    , {5     , 5     , 5    , 5     });
     // Values from "Temperature dependence of pure CsI: scintillation light yield and decay time" by Amsler et al
     // "cold" refers to ~77K, i.e. liquid nitrogen temperature
-    G4double csi_scint_yield = my.scint_yield; // 50000 / MeV in cold
+    G4double csi_scint_yield = my.scint_yield.value_or(my.scint_params.scint_yield); // 50000 / MeV in cold
     G4double csi_time_fast   =  1015 * ns; // only one component at cold temps!
     G4double csi_time_slow   =  1015 * ns;
     auto mpt = n4::material_properties()
@@ -80,4 +80,16 @@ G4MaterialPropertiesTable* teflon_properties() {
     //.add("SPECULARSPIKECONSTANT", OPTPHOT_ENERGY_RANGE, 0.0)
     .add("BACKSCATTERCONSTANT"  , OPTPHOT_ENERGY_RANGE, 0.0)
     .done();
+}
+
+// TODO: implement E dependence from
+// https://refractiveindex.info/?shelf=main&book=Si&page=Aspnes
+G4Material* silicon_with_properties() {
+    auto si  = n4::material("G4_Si");
+    auto mpt = n4::material_properties()
+      .add("RINDEX"    , OPTPHOT_ENERGY_RANGE, 4.32)
+      .add("EFFICIENCY", OPTPHOT_ENERGY_RANGE, 1) // full absorption at the sipm surface
+      .done();
+    si -> SetMaterialPropertiesTable(mpt);
+    return si;
 }
