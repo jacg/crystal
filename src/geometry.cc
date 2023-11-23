@@ -40,13 +40,11 @@ G4PVPlacement* crystal_geometry(unsigned& n_detected_evt) {
     return true;
   };
 
-  auto sipm_detector = new n4::sensitive_detector("sipm", process_hits);
-
   auto Nx = my.scint_params.n_sipms_x;
   auto Ny = my.scint_params.n_sipms_y;
   auto sipm = n4::box("sipm")
     .xyz(sx/Nx, sy/Ny, sipm_thickness)
-    .sensitive(sipm_detector)
+    .sensitive("sipm", process_hits)
     .place(silicon).in(world);
 
   auto n=0;
