@@ -2,6 +2,7 @@
 #include "geometry.hh"
 #include "materials.hh"
 
+#include <n4-inspect.hh>
 #include <n4-material.hh>
 #include <n4-sensitive.hh>
 #include <n4-sequences.hh>
@@ -32,14 +33,17 @@ G4PVPlacement* crystal_geometry(unsigned& n_detected_evt) {
     .place(scintillator).at_z(my.reflector_thickness / 2)
     .in(reflector).now();
 
-  auto sipm_thickness = 1*mm;
-
   auto process_hits = [&n_detected_evt] (G4Step* step) {
-    n_detected_evt++;
-    step -> GetTrack() -> SetTrackStatus(fStopAndKill);
+    static auto optical_photon = n4::find_particle("opticalphoton");
+    auto track = step -> GetTrack();
+    if (track -> GetDefinition() == optical_photon) {
+      n_detected_evt++;
+      track -> SetTrackStatus(fStopAndKill);
+    }
     return true;
   };
 
+  auto sipm_thickness = 1*mm;
   auto Nx = my.scint_params.n_sipms_x;
   auto Ny = my.scint_params.n_sipms_y;
   auto sipm = n4::box("sipm")
