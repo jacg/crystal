@@ -121,7 +121,7 @@ TEST_CASE("csi teflon reflectivity fraction", "[csi][teflon][reflectivity]") {
 // + teflon_surface -> SetFinish(polishedfrontpainted);  // Specular
 //
 // in geometry.cc.
-TEST_CASE("csi teflon reflectivity lambertian", "[csi][teflon][reflectivity]") {
+TEST_CASE("teflon reflectivity lambertian", "[teflon][reflectivity]") {
   std::vector<G4LogicalVolume*> step_volumes;
   std::vector<G4double> step_thetas;
   std::vector<G4double> thetas_in, thetas_out;
@@ -134,7 +134,7 @@ TEST_CASE("csi teflon reflectivity lambertian", "[csi][teflon][reflectivity]") {
            WithinRel( sx/2, 1e-6).match(pos.x()) ? G4ThreeVector{-1,  0,  0} :
            WithinRel(-sy/2, 1e-6).match(pos.y()) ? G4ThreeVector{ 0,  1,  0} :
            WithinRel( sy/2, 1e-6).match(pos.y()) ? G4ThreeVector{ 0, -1,  0} :
-                                                                  G4ThreeVector{ 0,  0, -1} ; // Meaningless
+                                                   G4ThreeVector{ 0,  0, -1} ; // Meaningless
   };
 
   auto record_data = [&step_volumes, &step_thetas, &find_normal] (const G4Step* step) {
@@ -185,7 +185,7 @@ TEST_CASE("csi teflon reflectivity lambertian", "[csi][teflon][reflectivity]") {
     .physics(physics_list)
     .geometry([&] {return crystal_geometry(dummy);})
     .actions(test_action)
-    .run(100000);
+    .run(100'000);
 
   auto corr = n4::stats::correlation(thetas_in, thetas_out).value();
   std::cerr << "------------------------------ CORRELATION: " << corr << std::endl;

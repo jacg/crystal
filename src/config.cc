@@ -12,7 +12,6 @@ extern const scint_parameters lyso {
   .scint_depth = 11.4*mm,
   .n_sipms_x   = 1,
   .n_sipms_y   = 1,
-  .scint_yield = 666.6, // TODO look up scintillation yield for LYSO
 };
 
 extern const scint_parameters bgo {
@@ -20,7 +19,6 @@ extern const scint_parameters bgo {
   .scint_depth = 11.4*mm,
   .n_sipms_x   = 1,
   .n_sipms_y   = 1,
-  .scint_yield = 666.6, // TODO look up scintillation yield for BGO
 };
 
 extern const scint_parameters csi {
@@ -28,7 +26,6 @@ extern const scint_parameters csi {
   .scint_depth = 18.6*mm,
   .n_sipms_x   = 1,
   .n_sipms_y   = 1,
-  .scint_yield = 50'000 / MeV,
 };
 
 extern const scint_parameters csi_mono {
@@ -36,7 +33,6 @@ extern const scint_parameters csi_mono {
   .scint_depth = csi.scint_depth,
   .n_sipms_x   = 6,
   .n_sipms_y   = 6,
-  .scint_yield = csi.scint_yield,
 };
 
 std::string scintillator_type_to_string(scintillator_type_enum s) {
