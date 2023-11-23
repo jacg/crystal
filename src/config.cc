@@ -31,8 +31,8 @@ extern const scint_parameters csi {
 extern const scint_parameters csi_mono {
   .scint       = scintillator_type_enum::csi,
   .scint_depth = csi.scint_depth,
-  .n_sipms_x   = 6,
-  .n_sipms_y   = 6,
+  .n_sipms_x   = 8,
+  .n_sipms_y   = 8,
 };
 
 std::string scintillator_type_to_string(scintillator_type_enum s) {
