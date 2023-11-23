@@ -9,21 +9,21 @@ config my;
 
 extern const scint_parameters lyso {
   .scint       = scintillator_type_enum::lyso,
-  .scint_depth = 11.4*mm,
+  .scint_depth = 22.8*mm,
   .n_sipms_x   = 1,
   .n_sipms_y   = 1,
 };
 
 extern const scint_parameters bgo {
   .scint       = scintillator_type_enum::bgo,
-  .scint_depth = 11.4*mm,
+  .scint_depth = 22.8*mm,
   .n_sipms_x   = 1,
   .n_sipms_y   = 1,
 };
 
 extern const scint_parameters csi {
   .scint       = scintillator_type_enum::csi,
-  .scint_depth = 18.6*mm,
+  .scint_depth = 37.2*mm,
   .n_sipms_x   = 1,
   .n_sipms_y   = 1,
 };
@@ -31,8 +31,8 @@ extern const scint_parameters csi {
 extern const scint_parameters csi_mono {
   .scint       = scintillator_type_enum::csi,
   .scint_depth = csi.scint_depth,
-  .n_sipms_x   = 6,
-  .n_sipms_y   = 6,
+  .n_sipms_x   = 8,
+  .n_sipms_y   = 8,
 };
 
 std::string scintillator_type_to_string(scintillator_type_enum s) {
