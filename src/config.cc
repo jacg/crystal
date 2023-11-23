@@ -47,7 +47,7 @@ std::string scintillator_type_to_string(scintillator_type_enum s) {
 }
 
 scintillator_type_enum string_to_scintillator_type(std::string s) {
-  for (auto& c: s) { c = std::toupper(c); }
+  for (auto& c: s) { c = std::tolower(c); }
   if (s == "lyso") { return scintillator_type_enum::lyso; }
   if (s == "bgo" ) { return scintillator_type_enum::bgo;  }
   if (s == "csi" ) { return scintillator_type_enum::csi;  }
