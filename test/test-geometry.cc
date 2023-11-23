@@ -83,7 +83,6 @@ TEST_CASE("geometry crystal size", "[geometry][default]") {
            , params.scint_depth};
   };
 
-  // This doesn't work because of csi-mono vs csi_mono
 #define TEST_CONFIG(NAME)                         \
   SECTION(#NAME) {                                \
     n4::clear_geometry();                         \

@@ -71,6 +71,7 @@ config_type_enum string_to_config_type(std::string s) {
   if (s == "bgo"     ) { return config_type_enum::bgo;      }
   if (s == "csi"     ) { return config_type_enum::csi;      }
   if (s == "csi-mono") { return config_type_enum::csi_mono; }
+  if (s == "csi_mono") { return config_type_enum::csi_mono; }
   if (s == "custom"  ) { return config_type_enum::custom;   }
   std::cerr << "\n\n\n\n         ERROR in string_to_config_type: unknown config '" << s << "'\n\n\n\n" << std::endl;
   throw "up"; // TODO think about failure propagation out of string_to_scintillator_type
