@@ -24,14 +24,21 @@ using Catch::Matchers::WithinRel;
 
 
 auto blue_light_towards_sipm() {
-  auto particle_type = n4::find_particle("opticalphoton");
+  auto optical_photon = n4::find_particle("opticalphoton");
   auto energy    = 2.5 * eV;
-  auto source_z  = -1*um; // zero distance to avoid optical absorption in scintillator
   auto isotropic = n4::random::direction{};
-  return [energy, source_z, particle_type, isotropic] (G4Event* event) {
-    auto particle = new G4PrimaryParticle{particle_type, 0, 0, energy}; // along z axis
+  auto random_source_pos = [] () -> G4ThreeVector {
+    return {
+      n4::random::uniform_width(my.sipm_size),
+      n4::random::uniform_width(my.sipm_size),
+      -1 * um // almost zero distance to avoid optical absorption in scintillator
+    };
+  };
+
+  return [energy, random_source_pos, optical_photon, isotropic] (G4Event* event) {
+    auto particle = new G4PrimaryParticle{optical_photon, 0, 0, energy}; // along z axis
     particle -> SetPolarization(isotropic.get());
-    auto vertex   = new G4PrimaryVertex{{0,0,source_z}, 0};
+    auto vertex   = new G4PrimaryVertex{random_source_pos(), 0};
     vertex -> SetPrimary(particle);
     event  -> AddPrimaryVertex(vertex);
   };
@@ -43,7 +50,7 @@ TEST_CASE("crystal sipm sensitive", "[sipm][sensitive]") {
   n4::run_manager::create()
     .fake_ui()
     .physics(physics_list)
-    .geometry([&] { return crystal_geometry(n_detected);})
+    .geometry([&] { return crystal_geometry(n_detected); })
     .actions(new n4::actions{blue_light_towards_sipm()})
     .run(n_shot);
 
