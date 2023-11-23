@@ -33,11 +33,11 @@ config_type_enum string_to_config_type(std::string s);
 
 struct config {
   scint_parameters        scint_params        = csi;
-  double                  sipm_size           =  6    * mm;
-  double                  reflector_thickness =  0.25 * mm;
-  double                  particle_energy     = 511   * keV;
-  double                  source_pos          = -50   * mm;
-  int                     physics_verbosity   = 0;
+  double                  sipm_size           =   6    * mm;
+  double                  reflector_thickness =   0.25 * mm;
+  double                  particle_energy     = 511    * keV;
+  double                  source_pos          = -50    * mm;
+  int                     physics_verbosity   =   0;
   long                    seed                = 123456789;
   bool                    debug               = false ;
   std::optional<G4double> scint_yield         = std::nullopt;
@@ -48,11 +48,9 @@ struct config {
   : msg{new G4GenericMessenger{this, "/my/", "docs: bla bla bla"}}
   {
     G4UnitDefinition::BuildUnitsTable();
-
     new G4UnitDefinition("1/MeV","1/MeV", "1/Energy", 1/MeV);
 
-    msg -> DeclareMethod("config_type", &config::set_config_type);
-
+    msg -> DeclareMethod          ("config_type"         ,         &config::set_config_type);
     msg -> DeclareProperty        ("reflector_thickness" ,          reflector_thickness    );
     msg -> DeclarePropertyWithUnit("particle_energy"     ,   "keV", particle_energy        );
     msg -> DeclareProperty        ("physics_verbosity"   ,          physics_verbosity      );
@@ -60,7 +58,6 @@ struct config {
     msg -> DeclareMethod          ("seed"                ,         &config::set_random_seed);
     msg -> DeclareProperty        ("debug"               ,          debug                  );
     msg -> DeclareMethodWithUnit  ("scint_yield"         , "1/MeV",&config::set_scint_yield);
-
 
     set_random_seed(seed);
   }
