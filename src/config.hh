@@ -17,7 +17,6 @@ struct scint_parameters {
   double   scint_depth;
   unsigned n_sipms_x;
   unsigned n_sipms_y;
-  double   scint_yield;
 };
 
 extern const scint_parameters lyso;

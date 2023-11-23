@@ -6,7 +6,10 @@
 #include <G4MaterialPropertiesTable.hh>
 #include <G4SystemOfUnits.hh>
 
-G4Material* lyso_with_properties() { return n4::material("G4_WATER"); }
+G4Material* lyso_with_properties() {
+  // .scint_yield = 666.6, // TODO look up scintillation yield for LYSO
+  return n4::material("G4_WATER");
+}
 
 using vec_double = std::vector<G4double>;
 
@@ -29,7 +32,7 @@ G4Material* csi_with_properties() {
   auto    csi_abslength = n4::scale_by(m    ,  {5     , 5     , 5    , 5     });
   // Values from "Temperature dependence of pure CsI: scintillation light yield and decay time" by Amsler et al
   // "cold" refers to ~77K, i.e. liquid nitrogen temperature
-  G4double csi_scint_yield = my.scint_yield.value_or(my.scint_params.scint_yield); // 50000 / MeV in cold
+  G4double csi_scint_yield = my.scint_yield.value_or(50'000 / MeV); // 50000 / MeV in cold
   G4double csi_time_fast   =  1015 * ns; // only one component at cold temps!
   G4double csi_time_slow   =  1015 * ns;
   auto mpt = n4::material_properties()
