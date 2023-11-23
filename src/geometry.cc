@@ -50,9 +50,9 @@ G4PVPlacement* crystal_geometry(unsigned& n_detected_evt) {
     .place(silicon).in(world);
 
   auto n=0;
-  for   (auto i=0; i<my.scint_params.n_sipms_x; i++) {
+  for   (size_t i=0; i<my.scint_params.n_sipms_x; i++) {
     auto x = -my.scint_size().x()/2 + (i+0.5)*my.sipm_size;
-    for (auto j=0; j<my.scint_params.n_sipms_y; j++) {
+    for (size_t j=0; j<my.scint_params.n_sipms_y; j++) {
       auto y = -my.scint_size().y()/2 + (j+0.5)*my.sipm_size;
       sipm.clone().at(x, y, sipm_thickness/2).copy_no(n++).now();
     }
