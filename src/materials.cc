@@ -11,12 +11,12 @@ G4Material* lyso_with_properties() {
   return n4::material("G4_WATER");
 }
 
-using vec_double = std::vector<G4double>;
+using vec_double = std::vector<double>;
 
 // TODO: remove duplication of hc (defined in moth materials.cc and geometry.cc)
-const   G4double hc = CLHEP::h_Planck * CLHEP::c_light;
-const   G4double OPTPHOT_MIN_ENERGY   {1.00*eV};
-const   G4double OPTPHOT_MAX_ENERGY   {8.21*eV};
+const     double hc = CLHEP::h_Planck * CLHEP::c_light;
+const     double OPTPHOT_MIN_ENERGY   {1.00*eV};
+const     double OPTPHOT_MAX_ENERGY   {8.21*eV};
 const vec_double OPTPHOT_ENERGY_RANGE{OPTPHOT_MIN_ENERGY, OPTPHOT_MAX_ENERGY};
 
 G4Material* csi_with_properties() {
@@ -32,9 +32,9 @@ G4Material* csi_with_properties() {
   auto    csi_abslength = n4::scale_by(m    ,  {5     , 5     , 5    , 5     });
   // Values from "Temperature dependence of pure CsI: scintillation light yield and decay time" by Amsler et al
   // "cold" refers to ~77K, i.e. liquid nitrogen temperature
-  G4double csi_scint_yield = my.scint_yield.value_or(50'000 / MeV); // 50000 / MeV in cold
-  G4double csi_time_fast   =  1015 * ns; // only one component at cold temps!
-  G4double csi_time_slow   =  1015 * ns;
+  double csi_scint_yield = my.scint_yield.value_or(50'000 / MeV); // 50000 / MeV in cold
+  double csi_time_fast   =  1015 * ns; // only one component at cold temps!
+  double csi_time_slow   =  1015 * ns;
   auto mpt = n4::material_properties()
     .add("RINDEX"                    , csi_energies, csi_rindex)
     .add("SCINTILLATIONCOMPONENT1"   , csi_energies, csi_scint)
