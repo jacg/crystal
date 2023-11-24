@@ -4,6 +4,7 @@
 #include <physics-list.hh>
 
 #include <n4-all.hh>
+#include <n4-will-become-external-lib.hh>
 
 #include <G4LogicalVolume.hh>
 #include <G4PVPlacement.hh>
@@ -190,4 +191,52 @@ TEST_CASE("teflon reflectivity lambertian", "[teflon][reflectivity]") {
   auto corr = n4::stats::correlation(thetas_in, thetas_out).value();
   std::cerr << "------------------------------ CORRELATION: " << corr << std::endl;
   CHECK_THAT(corr, WithinAbs(0, 1e-2));
+}
+
+TEST_CASE("CsI abslength", "[material][csi][abslength]") {
+  auto csi = csi_with_properties();
+  CHECK_THAT( csi -> GetDensity() / (g / cm3), WithinRel(4.51, 1e-6));
+
+  auto abs_lengths = measure_abslength(test_config{ .physics         = physics_list()
+                                                  , .material        = csi
+                                                  , .particle_name   = "gamma"
+                                                  , .particle_energy = 511 * keV
+                                                  , .distances       = n4::scale_by(mm, {5, 10, 15, 20, 25, 30, 35, 40, 45, 50})});
+
+  auto expected_abs_length = 18.6 * mm;
+  for (auto abs_length : abs_lengths) {
+    CHECK_THAT(abs_length, WithinRel(expected_abs_length, 0.05));
+  }
+}
+
+TEST_CASE("BGO abslength", "[material][bgo][abslength]") {
+  auto bgo = bgo_with_properties();
+  CHECK_THAT( bgo -> GetDensity() / (g / cm3), WithinRel(7.13, 1e-6));
+
+  auto abs_lengths = measure_abslength(test_config{ .physics         = physics_list()
+                                                  , .material        = bgo
+                                                  , .particle_name   = "gamma"
+                                                  , .particle_energy = 511 * keV
+                                                  , .distances       = n4::scale_by(mm, {5, 10, 15, 20, 25, 30, 35, 40, 45, 50})});
+
+  auto expected_abs_length = 11.4 * mm;
+  for (auto abs_length : abs_lengths) {
+    CHECK_THAT(abs_length, WithinRel(expected_abs_length, 0.05));
+  }
+}
+
+TEST_CASE("LYSO abslength", "[material][lyso][abslength]") {
+  auto lyso = lyso_with_properties();
+  CHECK_THAT( lyso -> GetDensity() / (g / cm3), WithinRel(1.23, 1e-6));
+
+  auto abs_lengths = measure_abslength(test_config{ .physics         = physics_list()
+                                                  , .material        = lyso
+                                                  , .particle_name   = "gamma"
+                                                  , .particle_energy = 511 * keV
+                                                  , .distances       = n4::scale_by(mm, {5, 10, 15, 20, 25, 30, 35, 40, 45, 50})});
+
+  auto expected_abs_length = 11.4 * mm;
+  for (auto abs_length : abs_lengths) {
+    CHECK_THAT(abs_length, WithinRel(expected_abs_length, 0.05));
+  }
 }
