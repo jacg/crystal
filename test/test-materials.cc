@@ -6,6 +6,7 @@
 #include <n4-all.hh>
 #include <n4-will-become-external-lib.hh>
 
+#include <G4ClassificationOfNewTrack.hh>
 #include <G4LogicalVolume.hh>
 #include <G4PVPlacement.hh>
 #include <G4Step.hh>
@@ -239,4 +240,62 @@ TEST_CASE("LYSO abslength", "[material][lyso][abslength]") {
   for (auto abs_length : abs_lengths) {
     CHECK_THAT(abs_length, WithinRel(expected_abs_length, 0.05));
   }
+}
+
+
+TEST_CASE("csi photo", "[csi][photo]") {
+  unsigned phot{0}, compt{0}, rayl{0};
+
+  auto kill_secondaries = [] (const G4Track* track) {
+    return track -> GetParentID() > 0 ? G4ClassificationOfNewTrack::fKill : G4ClassificationOfNewTrack::fUrgent;
+  };
+
+  auto record_process_and_kill = [&phot, &compt, &rayl] (const G4Step* step) {
+    auto process = step -> GetPostStepPoint() -> GetProcessDefinedStep() -> GetProcessName();
+    if (process != "Transportation") {
+      if (process == "compt") { compt++; }
+      if (process == "phot" ) {  phot++; }
+      if (process == "Rayl" ) {  rayl++; }
+
+      step -> GetTrack() -> SetTrackStatus(fStopAndKill);
+    }
+
+  };
+
+  auto isotropic_511keV_gammas = [] () {
+    auto particle_type = n4::find_particle("gamma");
+    auto energy        = 511 * keV;
+    auto isotropic     = n4::random::direction{};
+
+    return [energy, particle_type, isotropic] (G4Event* event) {
+      auto r        = isotropic.get() * energy;
+      auto particle = new G4PrimaryParticle{particle_type, r.x(), r.y(), r.z()};
+      auto vertex   = new G4PrimaryVertex{{}, 0};
+      particle -> SetPolarization(isotropic.get());
+      vertex   -> SetPrimary(particle);
+      event    -> AddPrimaryVertex(vertex);
+    };
+  };
+
+  auto enormous_sphere = [] () {return n4::sphere("huge").r(1*km).place(csi_with_properties()).now();};
+
+  // Gather together all the above actions
+  auto test_action = [&] {
+    return  (new n4::actions{isotropic_511keV_gammas()})
+      -> set((new n4::stacking_action{}) -> classify(kill_secondaries))
+      -> set(new n4::stepping_action{record_process_and_kill})
+      ;
+  };
+
+  n4::run_manager::create()
+    .fake_ui()
+    .physics(physics_list)
+    .geometry(enormous_sphere)
+    .actions(test_action)
+    .run(100000);
+
+  auto total = static_cast<float>(phot + compt + rayl);
+  CHECK_THAT( phot/total, WithinRel(0.207, 1e-2));
+  CHECK_THAT(compt/total, WithinRel(0.740, 1e-2));
+  CHECK_THAT( rayl/total, WithinRel(0.053, 1e-2));
 }
