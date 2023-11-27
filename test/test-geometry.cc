@@ -90,7 +90,7 @@ TEST_CASE("geometry crystal size", "[geometry][default]") {
     crystal_geometry(dummy);                      \
     auto [x,y,z] = size_from_params(NAME);        \
     check_crystal(x, y, z);                       \
-    check_sipms(1, 1);                            \
+    check_sipms(NAME.n_sipms_x, NAME.n_sipms_y);  \
   }
 
   TEST_CONFIG(csi);
