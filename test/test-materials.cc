@@ -204,7 +204,7 @@ TEST_CASE("CsI abslength", "[material][csi][abslength]") {
                                                   , .particle_energy = 511 * keV
                                                   , .distances       = n4::scale_by(mm, {5, 10, 15, 20, 25, 30, 35, 40, 45, 50})});
 
-  auto expected_abs_length = 18.6 * mm;
+  auto expected_abs_length = 24.9 * mm;
   for (auto abs_length : abs_lengths) {
     CHECK_THAT(abs_length, WithinRel(expected_abs_length, 0.05));
   }
@@ -228,7 +228,7 @@ TEST_CASE("BGO abslength", "[material][bgo][abslength]") {
 
 TEST_CASE("LYSO abslength", "[material][lyso][abslength]") {
   auto lyso = lyso_with_properties();
-  CHECK_THAT( lyso -> GetDensity() / (g / cm3), WithinRel(1.23, 1e-6));
+  CHECK_THAT( lyso -> GetDensity() / (g / cm3), WithinRel(7.1, 1e-6));
 
   auto abs_lengths = measure_abslength(test_config{ .physics         = physics_list()
                                                   , .material        = lyso
@@ -236,7 +236,7 @@ TEST_CASE("LYSO abslength", "[material][lyso][abslength]") {
                                                   , .particle_energy = 511 * keV
                                                   , .distances       = n4::scale_by(mm, {5, 10, 15, 20, 25, 30, 35, 40, 45, 50})});
 
-  auto expected_abs_length = 11.4 * mm;
+  auto expected_abs_length = 13.0 * mm;
   for (auto abs_length : abs_lengths) {
     CHECK_THAT(abs_length, WithinRel(expected_abs_length, 0.05));
   }
@@ -251,14 +251,14 @@ TEST_CASE("csi interaction process fractions", "[csi][interaction]") {
 
 TEST_CASE("bgo interaction process fractions", "[bgo][interaction]") {
   auto fractions = calculate_interaction_process_fractions(bgo_with_properties(), physics_list());
-  CHECK_THAT(fractions.photoelectric, WithinRel(0.207, 1e-2));
-  CHECK_THAT(fractions.compton      , WithinRel(0.740, 1e-2));
-  CHECK_THAT(fractions.rayleigh     , WithinRel(0.053, 1e-2));
+  CHECK_THAT(fractions.photoelectric, WithinRel(0.414, 1e-2));
+  CHECK_THAT(fractions.compton      , WithinRel(0.532, 1e-2));
+  CHECK_THAT(fractions.rayleigh     , WithinRel(0.054, 1e-2));
 }
 
 TEST_CASE("lyso interaction process fractions", "[lyso][interaction]") {
   auto fractions = calculate_interaction_process_fractions(lyso_with_properties(), physics_list());
-  CHECK_THAT(fractions.photoelectric, WithinRel(0.207, 1e-2));
-  CHECK_THAT(fractions.compton      , WithinRel(0.740, 1e-2));
-  CHECK_THAT(fractions.rayleigh     , WithinRel(0.053, 1e-2));
+  CHECK_THAT(fractions.photoelectric, WithinRel(0.311, 1e-2));
+  CHECK_THAT(fractions.compton      , WithinRel(0.637, 1e-2));
+  CHECK_THAT(fractions.rayleigh     , WithinRel(0.052, 1e-2));
 }
