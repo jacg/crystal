@@ -54,10 +54,10 @@
       '';
     in { type = "app"; program = "${crystal-app-package}/bin/crystal"; };
 
-    # Executed by `nix run <URL of this flake>#abslength`
-    apps.abslength = let
+    # Executed by `nix run <URL of this flake>#stats`
+    apps.stats = let
       g4-data = nain4.deps.g4-data-package;
-      crystal-app-package = pkgs.writeShellScriptBin "abslength" ''
+      crystal-app-package = pkgs.writeShellScriptBin "stats" ''
         export PATH=${pkgs.lib.makeBinPath [ self.packages.crystal ]}:$PATH
         # export LD_LIBRARY_PATH=${pkgs.lib.makeLibraryPath [ nain4.packages.geant4 ] }:$LD_LIBRARY_PATH
 
@@ -74,9 +74,9 @@
         export G4INCLDATA="${g4-data.G4INCL}/share/Geant4-11.0.4/data/G4INCL1.0"
         export G4ENSDFSTATEDATA="${g4-data.G4ENSDFSTATE}/share/Geant4-11.0.4/data/G4ENSDFSTATE2.3"
 
-        exec abslength "$@"
+        exec stats "$@"
       '';
-    in { type = "app"; program = "${crystal-app-package}/bin/abslength"; };
+    in { type = "app"; program = "${crystal-app-package}/bin/stats"; };
 
 
     # Used by `direnv` when entering this directory (also by `nix develop <URL to this flake>`)

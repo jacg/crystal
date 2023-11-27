@@ -55,9 +55,9 @@ crystal_lib = shared_library( 'crystal'
                             , install            : true
                             )
 
-abslength_sources  = ['abslength.cc', 'config.cc', 'materials.cc', 'physics-list.cc']
-abslength_exe = executable( 'abslength'
-                          , abslength_sources
+stats_sources  = ['stats.cc', 'config.cc', 'materials.cc', 'physics-list.cc']
+stats_exe = executable( 'stats'
+                          , stats_sources
                           , include_directories: [crystal_include, nain4_include, geant4_include]
                           , dependencies       : crystal_deps
                           , install            : true
