@@ -11,6 +11,15 @@
 
 #include <iomanip>
 
+void usage() {
+  std::cerr <<
+      "Usage: stats CALCULATION MATERIAL\n\n"
+      "where\n"
+      "   CALCULATION = fractions | abslength\n"
+      "   MATERIAL    = bgo | csi | lyso" << std::endl;
+  exit(1);
+}
+
 std::vector<double> abslengths(const std::string name, G4Material* material, std::vector<double> distances) {
   auto abs_lengths = measure_abslength(test_config{ .physics         = physics_list()
                                                   , .material        = material
@@ -51,7 +60,7 @@ void abslength(const std::string& material_name, G4Material* material) {
 
 
 int main(int argc, char** argv) {
-
+  if (argc < 2) { usage(); }
   auto material_choice = std::string{argv[2]};
   std::string name;
   G4Material* material;
@@ -59,10 +68,11 @@ int main(int argc, char** argv) {
   if      (material_choice == "csi" ) { name = "CsI" ; material =  csi_with_properties(); }
   else if (material_choice == "bgo" ) { name = "BGO" ; material =  bgo_with_properties(); }
   else if (material_choice == "lyso") { name = "LYSO"; material = lyso_with_properties(); }
-  else                                { std::cerr << "Unknown material " << material_choice << std::endl; exit(1); }
+  else                                { std::cerr << "Unknown material " << material_choice << std::endl; usage(); }
 
   auto task_choice = std::string{argv[1]};
   if      (task_choice == "fractions") { fractions(name, material); }
   else if (task_choice == "abslength") { abslength(name, material); }
+  else    { std:: cerr << "Unknown calculation: " << task_choice << std::endl; usage(); }
 
 }
