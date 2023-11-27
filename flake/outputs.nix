@@ -4,7 +4,8 @@
 , ...
 }: let
   inherit (nixpkgs.legacyPackages) pkgs;
-  inherit (import ./helpers.nix { inherit nain4 pkgs self; }) make-app args-from-cli shell-shared;
+  inherit (import ./helpers.nix { inherit nain4 pkgs self; }) shell-shared;
+  inherit (nain4.deps) args-from-cli make-app;
   in {
 
     packages.default = self.packages.crystal;
@@ -20,8 +21,19 @@
     # Executed by `nix run <URL of this flake> -- <args?>`
     apps.default = self.apps.crystal;
 
-    apps.crystal = make-app "crystal" "--macro-path ${self}/macs ${args-from-cli}";
-    apps.stats   = make-app "stats"                                args-from-cli;
+    # Executed by `nix run <URL of this flake>#crystal`
+    apps.crystal = make-app {
+      executable = "crystal";
+      args = "--macro-path ${self}/macs ${args-from-cli}";
+      package = self.packages.crystal;
+    };
+
+    # Executed by `nix run <URL of this flake>#stats`
+    apps.stats = make-app {
+      executable = "stats";
+      args = args-from-cli;
+      package = self.packages.crystal;
+    };
 
     # Used by `direnv` when entering this directory (also by `nix develop <URL to this flake>`)
     devShell = self.devShells.clang;
