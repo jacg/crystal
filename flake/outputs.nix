@@ -19,8 +19,6 @@
 
     packages.default = self.packages.crystal;
 
-    # Executed by `nix run <URL of this flake>#crystal -- <args?>`
-    # TODO: switch to clang environment
     packages.crystal = pkgs.stdenv.mkDerivation {
       pname = "crystal";
       version = "0.0.0";
@@ -55,6 +53,30 @@
         exec crystal --macro-path ${self}/macs "$@"
       '';
     in { type = "app"; program = "${crystal-app-package}/bin/crystal"; };
+
+    # Executed by `nix run <URL of this flake>#abslength`
+    apps.abslength = let
+      g4-data = nain4.deps.g4-data-package;
+      crystal-app-package = pkgs.writeShellScriptBin "abslength" ''
+        export PATH=${pkgs.lib.makeBinPath [ self.packages.crystal ]}:$PATH
+        # export LD_LIBRARY_PATH=${pkgs.lib.makeLibraryPath [ nain4.packages.geant4 ] }:$LD_LIBRARY_PATH
+
+        # TODO replace manual envvar setting with with use of packages' setupHooks
+        export G4NEUTRONHPDATA="${g4-data.G4NDL}/share/Geant4-11.0.4/data/G4NDL4.6"
+        export G4LEDATA="${g4-data.G4EMLOW}/share/Geant4-11.0.4/data/G4EMLOW8.0"
+        export G4LEVELGAMMADATA="${g4-data.G4PhotonEvaporation}/share/Geant4-11.0.4/data/G4PhotonEvaporation5.7"
+        export G4RADIOACTIVEDATA="${g4-data.G4RadioactiveDecay}/share/Geant4-11.0.4/data/G4RadioactiveDecay5.6"
+        export G4PARTICLEXSDATA="${g4-data.G4PARTICLEXS}/share/Geant4-11.0.4/data/G4PARTICLEXS4.0"
+        export G4PIIDATA="${g4-data.G4PII}/share/Geant4-11.0.4/data/G4PII1.3"
+        export G4REALSURFACEDATA="${g4-data.G4RealSurface}/share/Geant4-11.0.4/data/G4RealSurface2.2"
+        export G4SAIDXSDATA="${g4-data.G4SAIDDATA}/share/Geant4-11.0.4/data/G4SAIDDATA2.0"
+        export G4ABLADATA="${g4-data.G4ABLA}/share/Geant4-11.0.4/data/G4ABLA3.1"
+        export G4INCLDATA="${g4-data.G4INCL}/share/Geant4-11.0.4/data/G4INCL1.0"
+        export G4ENSDFSTATEDATA="${g4-data.G4ENSDFSTATE}/share/Geant4-11.0.4/data/G4ENSDFSTATE2.3"
+
+        exec abslength "$@"
+      '';
+    in { type = "app"; program = "${crystal-app-package}/bin/abslength"; };
 
 
     # Used by `direnv` when entering this directory (also by `nix develop <URL to this flake>`)
