@@ -6,6 +6,7 @@
 #include <n4-all.hh>
 #include <n4-will-become-external-lib.hh>
 
+#include <G4ClassificationOfNewTrack.hh>
 #include <G4LogicalVolume.hh>
 #include <G4PVPlacement.hh>
 #include <G4Step.hh>
@@ -239,4 +240,25 @@ TEST_CASE("LYSO abslength", "[material][lyso][abslength]") {
   for (auto abs_length : abs_lengths) {
     CHECK_THAT(abs_length, WithinRel(expected_abs_length, 0.05));
   }
+}
+
+TEST_CASE("csi interaction process fractions", "[csi][interaction]") {
+  auto fractions = calculate_interaction_process_fractions(csi_with_properties(), physics_list());
+  CHECK_THAT(fractions.photoelectric, WithinRel(0.207, 1e-2));
+  CHECK_THAT(fractions.compton      , WithinRel(0.740, 1e-2));
+  CHECK_THAT(fractions.rayleigh     , WithinRel(0.053, 1e-2));
+}
+
+TEST_CASE("bgo interaction process fractions", "[bgo][interaction]") {
+  auto fractions = calculate_interaction_process_fractions(bgo_with_properties(), physics_list());
+  CHECK_THAT(fractions.photoelectric, WithinRel(0.207, 1e-2));
+  CHECK_THAT(fractions.compton      , WithinRel(0.740, 1e-2));
+  CHECK_THAT(fractions.rayleigh     , WithinRel(0.053, 1e-2));
+}
+
+TEST_CASE("lyso interaction process fractions", "[lyso][interaction]") {
+  auto fractions = calculate_interaction_process_fractions(lyso_with_properties(), physics_list());
+  CHECK_THAT(fractions.photoelectric, WithinRel(0.207, 1e-2));
+  CHECK_THAT(fractions.compton      , WithinRel(0.740, 1e-2));
+  CHECK_THAT(fractions.rayleigh     , WithinRel(0.053, 1e-2));
 }
