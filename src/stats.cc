@@ -2,6 +2,7 @@
 #include <physics-list.hh>
 
 #include <n4-sequences.hh>
+#include <n4-stats.hh>
 #include <n4-stream.hh>
 #include <n4-will-become-external-lib.hh>
 
@@ -13,7 +14,7 @@
 
 void usage() {
   std::cerr <<
-      "Usage: stats CALCULATION MATERIAL\n\n"
+      "Usage: stats CALCULATION MATERIAL\n"
       "where\n"
       "   CALCULATION = fractions | abslength\n"
       "   MATERIAL    = bgo | csi | lyso" << std::endl;
@@ -47,21 +48,26 @@ void abslength(const std::string& material_name, G4Material* material) {
 
   auto distances = n4::scale_by(mm, {5, 10, 15, 20, 25, 30, 35, 40, 45, 50});
   std::cout << "Calculating attenuation lengths for : '" << material_name << "'\n"
-            << distances.size() << " statistical samples ...\n\n";
+            << distances.size() << " statistical samples: ";
   std::string name;
   auto results = [&] {
     n4::silence hush{std::cout};
     return abslengths(name, material, distances);
   }();
   for (const auto& d: results) { std::cout << G4BestUnit(d, "Length") << ' '; }
-  std::cout << std::endl << std::endl << std::endl;
-
+  std::cout << std::endl;
+  auto mean = n4::stats::mean(results).value();
+  std::cout << "Mean: " << G4BestUnit(mean, "Length") << std::endl << std::endl;
 }
 
+std::string downcase(std::string s) {
+  for (auto& c: s) { c = std::tolower(c); }
+  return s;
+}
 
 int main(int argc, char** argv) {
-  if (argc < 2) { usage(); }
-  auto material_choice = std::string{argv[2]};
+  if (argc < 3) { std::cout << "Error: not enough arguments\n"; usage(); }
+  auto material_choice = downcase(argv[2]);
   std::string name;
   G4Material* material;
 
@@ -70,7 +76,7 @@ int main(int argc, char** argv) {
   else if (material_choice == "lyso") { name = "LYSO"; material = lyso_with_properties(); }
   else                                { std::cerr << "Unknown material " << material_choice << std::endl; usage(); }
 
-  auto task_choice = std::string{argv[1]};
+  auto task_choice = downcase(argv[1]);
   if      (task_choice == "fractions") { fractions(name, material); }
   else if (task_choice == "abslength") { abslength(name, material); }
   else    { std:: cerr << "Unknown calculation: " << task_choice << std::endl; usage(); }
