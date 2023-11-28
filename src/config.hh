@@ -35,7 +35,6 @@ struct config {
   double                  sipm_size           =   6    * mm;
   double                  reflector_thickness =   0.25 * mm;
   double                  particle_energy     = 511    * keV;
-  double                  source_z            = -50    * mm;
   int                     physics_verbosity   =   0;
   long                    seed                = 123456789;
   bool                    debug               = false ;
@@ -54,7 +53,6 @@ struct config {
     msg -> DeclareProperty        ("reflector_thickness" ,          reflector_thickness    );
     msg -> DeclarePropertyWithUnit("particle_energy"     ,   "keV", particle_energy        );
     msg -> DeclareProperty        ("physics_verbosity"   ,          physics_verbosity      );
-    msg -> DeclareProperty        ("source_z"            ,          source_z               );
     msg -> DeclareMethod          ("seed"                ,         &config::set_random_seed);
     msg -> DeclareProperty        ("debug"               ,          debug                  );
     msg -> DeclareMethodWithUnit  ("scint_yield"         , "1/MeV",&config::set_scint_yield);
