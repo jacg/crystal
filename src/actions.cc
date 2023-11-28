@@ -10,17 +10,15 @@
 
 
 auto my_generator() {
-  auto [sx, sy, sz] = n4::unpack(my.scint_size());
-  auto tan = std::max(sx, sy) / 2 / (-sz - my.reflector_thickness - my.source_pos);
-  auto gen = n4::random::direction().max_theta(std::atan(tan));
-
-  return [&, gen](G4Event *event) {
+  return [&](G4Event *event) {
+    static size_t event_number = 0;
     static auto particle_type = n4::find_particle("gamma");
-    auto vertex = new G4PrimaryVertex(0, 0, my.source_pos, 0);
-    auto r = gen.get();
+    const auto N = event_number++ % (my.scint_params.n_sipms_x * my.scint_params.n_sipms_y);
+    auto [x, y, _] = n4::unpack(my.sipm_positions()[N]);
+    auto vertex = new G4PrimaryVertex(x, y, my.source_z, 0);
     vertex -> SetPrimary(new G4PrimaryParticle(
                            particle_type,
-                           r.x(), r.y(), r.z(),
+                           0,0,1, // parallel to z-axis
                            my.particle_energy
                          ));
     event  -> AddPrimaryVertex(vertex);

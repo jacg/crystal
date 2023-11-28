@@ -20,7 +20,7 @@ G4PVPlacement* crystal_geometry(unsigned& n_detected_evt) {
 
   auto [sx, sy, sz] = n4::unpack(my.scint_size());
 
-  auto world  = n4::box("world").xyz(sx*2, sy*2, (sz - my.source_pos)*2.1).place(air).now();
+  auto world  = n4::box("world").xyz(sx*2, sy*2, (sz - my.source_z)*2.1).place(air).now();
   auto reflector = n4::box("reflector")
     .x(sx + 2*my.reflector_thickness)
     .y(sy + 2*my.reflector_thickness)
