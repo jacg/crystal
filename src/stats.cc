@@ -69,7 +69,7 @@ int main(int argc, char** argv) {
   if (argc < 3) { std::cout << "Error: not enough arguments\n"; usage(); }
   auto material_choice = downcase(argv[2]);
   std::string name;
-  G4Material* material;
+  G4Material* material = nullptr;
 
   if      (material_choice == "csi" ) { name = "CsI" ; material =  csi_with_properties(); }
   else if (material_choice == "bgo" ) { name = "BGO" ; material =  bgo_with_properties(); }
