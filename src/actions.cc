@@ -36,11 +36,13 @@ n4::actions* create_actions(run_stats& stats) {
     using std::setw; using std::fixed; using std::setprecision;
     std::cout
         << "event "
-        << setw(4) << n4::event_number()     << ':'
-        << setw(7) << stats.n_detected_evt   << " photons detected"
-        << setw(6) << n_sipms_over_threshold << " SiPMs over threshold"
-        << setw(8) << fixed << setprecision(1)
-        << stats.n_events_over_threshold_fraction() << "% of events over threshold (running total)"
+        << setw( 4) << n4::event_number()     << ':'
+        << setw( 7) << stats.n_detected_evt   << " photons detected;"
+        << setw( 6) << n_sipms_over_threshold << " SiPMs detected over "
+        << setw( 6) << my.sipm_threshold << " photons;"
+        << setw(10) << fixed << setprecision(1) << "     so far,"
+        << setw( 6) << stats.n_events_over_threshold_fraction() << "% of events detected over"
+        << setw( 7) << my.event_threshold << " photons."
         << std::endl;
     stats.n_detected_evt = 0;
     stats.n_detected_at_sipm.clear();
