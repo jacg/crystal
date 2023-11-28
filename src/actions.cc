@@ -28,15 +28,17 @@ auto my_generator() {
 n4::actions* create_actions(run_stats& stats) {
 
   auto my_event_action = [&] (const G4Event*) {
-     using std::setw; using std::fixed; using std::setprecision;
-     std::cout << "event " << setw(4) << n4::event_number()
-               << ':'      << setw(6) << stats.n_detected_evt << " photons detected  "
-               <<             setw(5) << fixed << setprecision(1)
-               << stats.over_threshold_fraction() << "% over threshold"
-               << std::endl;
-     stats.n_over_threshold += stats.n_detected_evt > 5000;
-     stats.n_detected_total += stats.n_detected_evt;
-     stats.n_detected_evt = 0;
+    using std::setw; using std::fixed; using std::setprecision;
+    std::cout
+        << "event " << setw(4) << n4::event_number()
+        << ':'      << setw(6) << stats.n_detected_evt << " photons detected  "
+        <<             setw(5) << fixed << setprecision(1)
+        << stats.over_threshold_fraction() << "% over threshold"
+        << std::endl;
+    stats.n_over_threshold += stats.n_detected_evt > 5000;
+    stats.n_detected_total += stats.n_detected_evt;
+    stats.n_detected_evt = 0;
+    stats.n_detected_at_sipm.clear();
   };
 
   return (new n4::      actions{my_generator()})
