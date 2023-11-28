@@ -1,6 +1,8 @@
 #include "config.hh"
 #include "materials.hh"
 
+#include <n4-sequences.hh>
+
 #include <G4ThreeVector.hh>
 
 #include <cctype>
@@ -74,26 +76,40 @@ config_type_enum string_to_config_type(std::string s) {
   throw "up"; // TODO think about failure propagation out of string_to_scintillator_type
 }
 
+#define INVALIDATE_CACHE_AND_RETURN reset_sipm_positions(); return
 void config::set_config_type(const std::string& s) {
   switch (string_to_config_type(s)) {
-    case config_type_enum::lyso    : scint_params = lyso;     return;
-    case config_type_enum::bgo     : scint_params = bgo;      return;
-    case config_type_enum::csi     : scint_params = csi;      return;
-    case config_type_enum::csi_mono: scint_params = csi_mono; return;
+    case config_type_enum::lyso    : scint_params = lyso;     INVALIDATE_CACHE_AND_RETURN;
+    case config_type_enum::bgo     : scint_params = bgo;      INVALIDATE_CACHE_AND_RETURN;
+    case config_type_enum::csi     : scint_params = csi;      INVALIDATE_CACHE_AND_RETURN;
+    case config_type_enum::csi_mono: scint_params = csi_mono; INVALIDATE_CACHE_AND_RETURN;
     case config_type_enum::custom  :
       msg -> DeclareMethod("scint"      , &config::set_scint);
       msg -> DeclareMethod("scint_depth", &config::set_scint_depth);
       msg -> DeclareMethod("n_sipms_x"  , &config::set_n_sipms_x);
       msg -> DeclareMethod("n_sipms_y"  , &config::set_n_sipms_y);
       scint_params = csi;
-      return;
+      INVALIDATE_CACHE_AND_RETURN;
   }
 }
+#undef INVALIDATE_CACHE_AND_RETURN
 
 G4ThreeVector config::scint_size() const {
   return { scint_params.n_sipms_x * sipm_size
          , scint_params.n_sipms_y * sipm_size
          , scint_params.scint_depth          };
+}
+
+void config::reset_sipm_positions() {
+  sipm_positions_.clear();
+  auto Nx = my.scint_params.n_sipms_x; auto lim_x = my.sipm_size * (Nx / 2.0 - 0.5);
+  auto Ny = my.scint_params.n_sipms_y; auto lim_y = my.sipm_size * (Ny / 2.0 - 0.5);
+  sipm_positions_.reserve(scint_params.n_sipms_x * scint_params.n_sipms_y);
+  for   (auto x: n4::linspace(-lim_x, lim_x, Nx)) {
+    for (auto y: n4::linspace(-lim_y, lim_y, Ny)) {
+      sipm_positions_.push_back({x,y,0});
+    }
+  }
 }
 
 G4Material* scintillator_material(scintillator_type_enum type) {

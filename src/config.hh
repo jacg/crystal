@@ -46,6 +46,7 @@ struct config {
   // messenger violates the principle of least surprise.
   : msg{new G4GenericMessenger{this, "/my/", "docs: bla bla bla"}}
   {
+    reset_sipm_positions();
     G4UnitDefinition::BuildUnitsTable();
     new G4UnitDefinition("1/MeV","1/MeV", "1/Energy", 1/MeV);
 
@@ -62,15 +63,19 @@ struct config {
   }
 
   G4ThreeVector scint_size() const;
+  const std::vector<G4ThreeVector>& sipm_positions() const { return sipm_positions_; }
 private:
   void set_config_type(const std::string& s);
   void set_scint (std::string   s) { scint_params.scint       = string_to_scintillator_type(s); }
   void set_scint_depth(double   d) { scint_params.scint_depth = d; }
   void set_scint_yield(double   y) { scint_yield              = y; }
-  void set_n_sipms_x  (unsigned n) { scint_params.n_sipms_x   = n; }
-  void set_n_sipms_y  (unsigned n) { scint_params.n_sipms_y   = n; }
+  void set_n_sipms_x  (unsigned n) { scint_params.n_sipms_x   = n; reset_sipm_positions(); }
+  void set_n_sipms_y  (unsigned n) { scint_params.n_sipms_y   = n; reset_sipm_positions(); }
   void set_random_seed(long  seed) { G4Random::setTheSeed(seed); }
   G4GenericMessenger* msg;
+
+  std::vector<G4ThreeVector> sipm_positions_;
+  void reset_sipm_positions();
 };
 
 extern config my;
