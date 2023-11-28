@@ -35,8 +35,8 @@ geant4 = dependency( 'Geant4'
 
 crystal_deps     = [nain4, geant4]
 crystal_include  = include_directories('.')
-crystal_sources  = ['main.cc', 'actions.cc', 'config.cc', 'geometry.cc', 'materials.cc', 'physics-list.cc']
-crystal_includes =            ['actions.hh', 'config.hh', 'geometry.hh', 'materials.hh', 'physics-list.hh']
+crystal_sources  = ['main.cc', 'actions.cc', 'config.cc', 'geometry.cc', 'materials.cc', 'run_stats.cc', 'physics-list.cc']
+crystal_includes =            ['actions.hh', 'config.hh', 'geometry.hh', 'materials.hh', 'run_stats.hh', 'physics-list.hh']
 
 geant4_include = geant4.get_variable(cmake    : 'Geant4_INCLUDE_DIRS')
 nain4_include  =  nain4.get_variable(pkgconfig: 'includedir'         )

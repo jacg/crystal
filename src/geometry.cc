@@ -1,3 +1,4 @@
+#include "actions.hh"
 #include "config.hh"
 #include "geometry.hh"
 #include "materials.hh"
@@ -12,7 +13,7 @@
 #include <G4LogicalBorderSurface.hh>
 #include <G4TrackStatus.hh>
 
-G4PVPlacement* crystal_geometry(unsigned& n_detected_evt) {
+G4PVPlacement* crystal_geometry(run_stats& stats) {
   auto scintillator = scintillator_material(my.scint_params.scint);
   auto air     = n4::material("G4_AIR");
   auto silicon = silicon_with_properties();
@@ -33,11 +34,11 @@ G4PVPlacement* crystal_geometry(unsigned& n_detected_evt) {
     .place(scintillator).at_z(my.reflector_thickness / 2)
     .in(reflector).now();
 
-  auto process_hits = [&n_detected_evt] (G4Step* step) {
+  auto process_hits = [&stats] (G4Step* step) {
     static auto optical_photon = n4::find_particle("opticalphoton");
     auto track = step -> GetTrack();
     if (track -> GetDefinition() == optical_photon) {
-      n_detected_evt++;
+      stats.n_detected_evt++;
       track -> SetTrackStatus(fStopAndKill);
     }
     return true;

@@ -42,5 +42,3 @@ n4::actions* create_actions(run_stats& stats) {
   return (new n4::      actions{my_generator()})
  -> set( (new n4::event_action {              }) -> end(my_event_action));
 }
-
-float run_stats::over_threshold_fraction() { return 100.0 * n_over_threshold / n4::event_number(); }

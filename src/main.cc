@@ -32,7 +32,7 @@ int main(int argc, char* argv[]) {
     // .apply_command(...) // also possible after apply_early_macro
 
     .physics(physics_list)
-    .geometry([&] {return crystal_geometry(stats.n_detected_evt);})
+    .geometry([&] {return crystal_geometry(stats);})
     .actions(create_actions(stats))
 
     //.apply_command("/my/particle e-")
