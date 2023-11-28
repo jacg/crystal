@@ -93,11 +93,11 @@ TEST_CASE("csi teflon reflectivity fraction", "[csi][teflon][reflectivity]") {
       ;
   };
 
-  unsigned dummy=0;
+  run_stats stats;
   n4::run_manager::create()
     .fake_ui()
     .physics(physics_list)
-    .geometry([&] {return crystal_geometry(dummy);})
+    .geometry([&] {return crystal_geometry(stats);})
     .actions(test_action)
     .run(100000);
 
@@ -181,11 +181,11 @@ TEST_CASE("teflon reflectivity lambertian", "[teflon][reflectivity]") {
       ;
   };
 
-  unsigned dummy=0;
+  run_stats stats;
   n4::run_manager::create()
     .fake_ui()
     .physics(physics_list)
-    .geometry([&] {return crystal_geometry(dummy);})
+    .geometry([&] {return crystal_geometry(stats);})
     .actions(test_action)
     .run(100'000);
 
