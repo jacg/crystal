@@ -25,19 +25,22 @@ auto my_generator() {
   };
 }
 
-n4::actions* create_actions(unsigned& n_event, unsigned& n_detected_evt, unsigned& n_over_threshold, unsigned& n_detected_total) {
+n4::actions* create_actions(run_stats& stats) {
 
   auto my_event_action = [&] (const G4Event*) {
-     n_event++;
-     using std::setw;
-     std::cout << "event " << setw(4) << n_event
-               << ':'      << setw(6) << n_detected_evt << " photons detected"
+     using std::setw; using std::fixed; using std::setprecision;
+     std::cout << "event " << setw(4) << n4::event_number()
+               << ':'      << setw(6) << stats.n_detected_evt << " photons detected  "
+               <<             setw(5) << fixed << setprecision(1)
+               << stats.over_threshold_fraction() << "% over threshold"
                << std::endl;
-     n_over_threshold += n_detected_evt > 5000;
-     n_detected_total += n_detected_evt;
-     n_detected_evt = 0;
+     stats.n_over_threshold += stats.n_detected_evt > 5000;
+     stats.n_detected_total += stats.n_detected_evt;
+     stats.n_detected_evt = 0;
   };
 
   return (new n4::      actions{my_generator()})
  -> set( (new n4::event_action {              }) -> end(my_event_action));
 }
+
+float run_stats::over_threshold_fraction() { return 100.0 * n_over_threshold / n4::event_number(); }

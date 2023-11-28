@@ -4,4 +4,11 @@
 
 auto my_generator();
 
-n4::actions* create_actions(unsigned& n_event, unsigned& n_detected_evt, unsigned& n_over_threshold, unsigned& n_detected_total);
+struct run_stats {
+  unsigned n_detected_evt   = 0;
+  unsigned n_over_threshold = 0;
+  unsigned n_detected_total = 0;
+  float over_threshold_fraction();
+};
+
+n4::actions* create_actions(run_stats& data);
