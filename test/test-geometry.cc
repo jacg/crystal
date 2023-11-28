@@ -28,7 +28,7 @@ using Catch::Matchers::WithinULP;
 
 
 TEST_CASE("geometry crystal size", "[geometry][default]") {
-  unsigned dummy;
+  run_stats stats;
   auto sipm_size = 1.2345*mm;
 
   auto UI = G4UImanager::GetUIpointer();
@@ -87,7 +87,7 @@ TEST_CASE("geometry crystal size", "[geometry][default]") {
   SECTION(#NAME) {                                \
     n4::clear_geometry();                         \
     UI -> ApplyCommand("/my/config_type " #NAME); \
-    crystal_geometry(dummy);                      \
+    crystal_geometry(stats);                      \
     auto [x,y,z] = size_from_params(NAME);        \
     check_crystal(x, y, z);                       \
     check_sipms(NAME.n_sipms_x, NAME.n_sipms_y);  \
@@ -115,7 +115,7 @@ TEST_CASE("geometry crystal size", "[geometry][default]") {
     UI -> ApplyCommand("/my/n_sipms_y   " + std::to_string(n_sipms_y)        );
     UI -> ApplyCommand("/my/sipm_size   " + std::to_string(sipm_size) + " mm");
 
-    crystal_geometry(dummy);
+    crystal_geometry(stats);
     check_crystal(size_x, size_y, size_z);
     check_sipms(n_sipms_x, n_sipms_y);
   }
