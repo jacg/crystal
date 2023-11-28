@@ -1,3 +1,4 @@
+#include "actions.hh"
 #include "config.hh"
 #include "geometry.hh"
 #include "materials.hh"
@@ -12,7 +13,7 @@
 #include <G4LogicalBorderSurface.hh>
 #include <G4TrackStatus.hh>
 
-G4PVPlacement* crystal_geometry(unsigned& n_detected_evt) {
+G4PVPlacement* crystal_geometry(run_stats& stats) {
   auto scintillator = scintillator_material(my.scint_params.scint);
   auto air     = n4::material("G4_AIR");
   auto silicon = silicon_with_properties();
@@ -20,7 +21,7 @@ G4PVPlacement* crystal_geometry(unsigned& n_detected_evt) {
 
   auto [sx, sy, sz] = n4::unpack(my.scint_size());
 
-  auto world  = n4::box("world").xyz(sx*2, sy*2, (sz - my.source_pos)*2.1).place(air).now();
+  auto world  = n4::box("world").xyz(sx*1.5, sy*1.5, sz*2.5).place(air).now();
   auto reflector = n4::box("reflector")
     .x(sx + 2*my.reflector_thickness)
     .y(sy + 2*my.reflector_thickness)
@@ -33,32 +34,27 @@ G4PVPlacement* crystal_geometry(unsigned& n_detected_evt) {
     .place(scintillator).at_z(my.reflector_thickness / 2)
     .in(reflector).now();
 
-  auto process_hits = [&n_detected_evt] (G4Step* step) {
+  auto process_hits = [&stats] (G4Step* step) {
     static auto optical_photon = n4::find_particle("opticalphoton");
     auto track = step -> GetTrack();
     if (track -> GetDefinition() == optical_photon) {
-      n_detected_evt++;
+      stats.n_detected_evt++;
       track -> SetTrackStatus(fStopAndKill);
+      size_t n = step -> GetPreStepPoint() -> GetPhysicalVolume() -> GetCopyNo();
+      ++stats.n_detected_at_sipm[n];
     }
     return true;
   };
 
   auto sipm_thickness = 1*mm;
-  auto Nx = my.scint_params.n_sipms_x;
-  auto Ny = my.scint_params.n_sipms_y;
   auto sipm = n4::box("sipm")
     .xy(my.sipm_size).z(sipm_thickness)
     .sensitive("sipm", process_hits)
     .place(silicon).at_z(sipm_thickness/2).in(world);
 
-  auto lim_x = my.sipm_size * (Nx / 2.0 - 0.5);
-  auto lim_y = my.sipm_size * (Ny / 2.0 - 0.5);
-
   auto n=0;
-  for   (auto x: n4::linspace(-lim_x, lim_x, Nx)) {
-    for (auto y: n4::linspace(-lim_y, lim_y, Ny)) {
-      sipm.clone().at_x(x).at_y(y).copy_no(n++).now();
-    }
+  for (const auto& pos: my.sipm_positions()) {
+      sipm.clone().at(pos).copy_no(n++).now();
   }
 
   // TODO add abstraction for placing optical surface between volumes

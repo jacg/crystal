@@ -35,17 +35,19 @@ struct config {
   double                  sipm_size           =   6    * mm;
   double                  reflector_thickness =   0.25 * mm;
   double                  particle_energy     = 511    * keV;
-  double                  source_pos          = -50    * mm;
   int                     physics_verbosity   =   0;
   long                    seed                = 123456789;
   bool                    debug               = false ;
   std::optional<G4double> scint_yield         = std::nullopt;
+  size_t                  event_threshold     = 1;
+  size_t                   sipm_threshold     = 1;
 
   config()
   // The trailing slash after '/my_geometry' is CRUCIAL: without it, the
   // messenger violates the principle of least surprise.
   : msg{new G4GenericMessenger{this, "/my/", "docs: bla bla bla"}}
   {
+    reset_sipm_positions();
     G4UnitDefinition::BuildUnitsTable();
     new G4UnitDefinition("1/MeV","1/MeV", "1/Energy", 1/MeV);
 
@@ -53,24 +55,29 @@ struct config {
     msg -> DeclareProperty        ("reflector_thickness" ,          reflector_thickness    );
     msg -> DeclarePropertyWithUnit("particle_energy"     ,   "keV", particle_energy        );
     msg -> DeclareProperty        ("physics_verbosity"   ,          physics_verbosity      );
-    msg -> DeclareProperty        ("source_pos"          ,          source_pos             );
     msg -> DeclareMethod          ("seed"                ,         &config::set_random_seed);
     msg -> DeclareProperty        ("debug"               ,          debug                  );
     msg -> DeclareMethodWithUnit  ("scint_yield"         , "1/MeV",&config::set_scint_yield);
+    msg -> DeclareProperty        ("event_threshold"     ,          event_threshold        );
+    msg -> DeclareProperty        ( "sipm_threshold"     ,           sipm_threshold        );
 
     set_random_seed(seed);
   }
 
   G4ThreeVector scint_size() const;
+  const std::vector<G4ThreeVector>& sipm_positions() const { return sipm_positions_; }
 private:
   void set_config_type(const std::string& s);
   void set_scint (std::string   s) { scint_params.scint       = string_to_scintillator_type(s); }
   void set_scint_depth(double   d) { scint_params.scint_depth = d; }
   void set_scint_yield(double   y) { scint_yield              = y; }
-  void set_n_sipms_x  (unsigned n) { scint_params.n_sipms_x   = n; }
-  void set_n_sipms_y  (unsigned n) { scint_params.n_sipms_y   = n; }
+  void set_n_sipms_x  (unsigned n) { scint_params.n_sipms_x   = n; reset_sipm_positions(); }
+  void set_n_sipms_y  (unsigned n) { scint_params.n_sipms_y   = n; reset_sipm_positions(); }
   void set_random_seed(long  seed) { G4Random::setTheSeed(seed); }
   G4GenericMessenger* msg;
+
+  std::vector<G4ThreeVector> sipm_positions_;
+  void reset_sipm_positions();
 };
 
 extern config my;

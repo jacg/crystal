@@ -46,14 +46,14 @@ auto blue_light_towards_sipm() {
 
 TEST_CASE("crystal sipm sensitive", "[sipm][sensitive]") {
   unsigned n_shot     = 100000;
-  unsigned n_detected = 0;
+  run_stats stats;
   n4::run_manager::create()
     .fake_ui()
     .physics(physics_list)
-    .geometry([&] { return crystal_geometry(n_detected); })
+    .geometry([&] { return crystal_geometry(stats); })
     .actions(new n4::actions{blue_light_towards_sipm()})
     .run(n_shot);
 
-  auto fraction_detected = static_cast<double>(n_detected) / n_shot;
+  auto fraction_detected = static_cast<double>(stats.n_detected_evt) / n_shot;
   CHECK_THAT(fraction_detected, WithinAbs(1, 1e-6));
 }
