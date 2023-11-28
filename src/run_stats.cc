@@ -11,6 +11,6 @@ size_t run_stats::n_sipms_over_threshold(size_t threshold) const {
   return std::count_if(
     cbegin(n_detected_at_sipm),
     cend  (n_detected_at_sipm),
-    [threshold] (const auto& pair) { return pair.second > threshold; }
+    [threshold] (const auto& pair) { return pair.second >= threshold; }
   );
 }

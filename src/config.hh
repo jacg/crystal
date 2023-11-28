@@ -39,6 +39,8 @@ struct config {
   long                    seed                = 123456789;
   bool                    debug               = false ;
   std::optional<G4double> scint_yield         = std::nullopt;
+  size_t                  event_threshold     = 1;
+  size_t                   sipm_threshold     = 1;
 
   config()
   // The trailing slash after '/my_geometry' is CRUCIAL: without it, the
@@ -56,6 +58,8 @@ struct config {
     msg -> DeclareMethod          ("seed"                ,         &config::set_random_seed);
     msg -> DeclareProperty        ("debug"               ,          debug                  );
     msg -> DeclareMethodWithUnit  ("scint_yield"         , "1/MeV",&config::set_scint_yield);
+    msg -> DeclareProperty        ("event_threshold"     ,          event_threshold        );
+    msg -> DeclareProperty        ( "sipm_threshold"     ,           sipm_threshold        );
 
     set_random_seed(seed);
   }
