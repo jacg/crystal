@@ -8,6 +8,7 @@
 
 #include <G4PrimaryVertex.hh>
 
+#include <cstddef>
 
 auto my_generator() {
   return [&](G4Event *event) {
@@ -28,15 +29,22 @@ auto my_generator() {
 n4::actions* create_actions(run_stats& stats) {
 
   auto my_event_action = [&] (const G4Event*) {
+    static const size_t event_total_threshold = 5000;
+    static const size_t single_sipm_threshold =  100;
+
+    stats.n_over_threshold += stats.n_detected_evt > event_total_threshold;
+    stats.n_detected_total += stats.n_detected_evt;
+    auto n_sipms_over_threshold = stats.n_sipms_over_threshold(single_sipm_threshold);
+
     using std::setw; using std::fixed; using std::setprecision;
     std::cout
-        << "event " << setw(4) << n4::event_number()
-        << ':'      << setw(6) << stats.n_detected_evt << " photons detected  "
-        <<             setw(5) << fixed << setprecision(1)
-        << stats.over_threshold_fraction() << "% over threshold"
+        << "event "
+        << setw(4) << n4::event_number()     << ':'
+        << setw(7) << stats.n_detected_evt   << " photons detected"
+        << setw(6) << n_sipms_over_threshold << " SiPMs over threshold"
+        << setw(8) << fixed << setprecision(1)
+        << stats.n_events_over_threshold_fraction() << "% of events over threshold (running total)"
         << std::endl;
-    stats.n_over_threshold += stats.n_detected_evt > 5000;
-    stats.n_detected_total += stats.n_detected_evt;
     stats.n_detected_evt = 0;
     stats.n_detected_at_sipm.clear();
   };

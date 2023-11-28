@@ -40,6 +40,8 @@ G4PVPlacement* crystal_geometry(run_stats& stats) {
     if (track -> GetDefinition() == optical_photon) {
       stats.n_detected_evt++;
       track -> SetTrackStatus(fStopAndKill);
+      size_t n = step -> GetPreStepPoint() -> GetPhysicalVolume() -> GetCopyNo();
+      ++stats.n_detected_at_sipm[n];
     }
     return true;
   };
