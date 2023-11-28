@@ -4,6 +4,7 @@
 #include "materials.hh"
 #include "physics-list.hh"
 
+#include <iomanip>
 #include <n4-all.hh>
 
 #include <G4PrimaryParticle.hh>
@@ -13,15 +14,16 @@
 #include <G4Box.hh>             // for creating shapes in the geometry
 #include <G4Sphere.hh>          // for creating shapes in the geometry
 #include <FTFP_BERT.hh>         // our choice of physics list
-
-
 #include <G4ThreeVector.hh>
+
+
+#include <ios>
 #include <cstdlib>
 
 int main(int argc, char* argv[]) {
-  unsigned              n_event       {0};
-  unsigned              n_detected_evt{0};
-  std::vector<unsigned> n_detected_run{ };
+  unsigned              n_event         {0};
+  unsigned              n_detected_evt  {0};
+  unsigned              n_over_threshold{0};
 
   n4::run_manager::create()
     .ui("crystal", argc, argv)
@@ -33,7 +35,7 @@ int main(int argc, char* argv[]) {
 
     .physics(physics_list)
     .geometry([&] {return crystal_geometry(n_detected_evt);})
-    .actions(create_actions(n_event, n_detected_evt, n_detected_run))
+    .actions(create_actions(n_event, n_detected_evt, n_over_threshold))
 
     //.apply_command("/my/particle e-")
     .apply_late_macro("late-hard-wired.mac")
@@ -42,13 +44,10 @@ int main(int argc, char* argv[]) {
 
     .run();
 
-
-  std::cout << "# EVENTS: " << n_event << "\n\n"
-            << "DETECTED PHOTONS PER EVENT:\n";
-  for (auto& n: n_detected_run) {
-    std::cout << n << "\n";
-  }
-  std::cout << "\nTOTAL: " << n4::stats::sum(n_detected_run) << std::endl;
+  using std::setprecision; using std::fixed; using std::setw;
+  std::cout
+    <<         n_over_threshold << " / " << n_event << " = " << fixed << setprecision(1) << setw(4)
+    << 100.0 * n_over_threshold      /     n_event  << " %  over threshold\n";
 
   // Important! physics list has to be set before the generator!
 

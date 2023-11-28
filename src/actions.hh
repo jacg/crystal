@@ -4,4 +4,4 @@
 
 auto my_generator();
 
-n4::actions* create_actions(unsigned& n_event, unsigned& n_detected_evt, std::vector<unsigned>& n_detected_run);
+n4::actions* create_actions(unsigned& n_event, unsigned& n_detected_evt, unsigned& n_over_threshold);

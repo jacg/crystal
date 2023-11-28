@@ -25,13 +25,16 @@ auto my_generator() {
   };
 }
 
-n4::actions* create_actions(unsigned& n_event, unsigned& n_detected_evt, std::vector<unsigned>& n_detected_run) {
+n4::actions* create_actions(unsigned& n_event, unsigned& n_detected_evt, unsigned& n_over_threshold) {
 
   auto my_event_action = [&] (const G4Event*) {
      n_event++;
-     n_detected_run.push_back(n_detected_evt);
+     using std::setw;
+     std::cout << "event " << setw(4) << n_event
+               << ':'      << setw(6) << n_detected_evt << " photons detected"
+               << std::endl;
+     n_over_threshold += n_detected_evt > 5000;
      n_detected_evt = 0;
-     std::cout << "end of event " << n_event << std::endl;
   };
 
   return (new n4::      actions{my_generator()})
