@@ -15,7 +15,7 @@ auto my_generator() {
   auto gen = n4::random::direction().max_theta(std::atan(tan));
 
   return [&, gen](G4Event *event) {
-    auto particle_type = n4::find_particle("gamma");
+    static auto particle_type = n4::find_particle("gamma");
     auto vertex = new G4PrimaryVertex(0, 0, my.source_pos, 0);
     auto r = gen.get();
     vertex -> SetPrimary(new G4PrimaryParticle(
