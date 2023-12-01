@@ -11,12 +11,13 @@
 #include <cstddef>
 
 auto my_generator() {
-  return [&](G4Event *event) {
+  auto params = my.scint_params();
+  return [params](G4Event *event) {
     static size_t event_number = 0;
     static auto particle_type = n4::find_particle("gamma");
-    const auto N = event_number++ % (my.scint_params.n_sipms_x * my.scint_params.n_sipms_y);
+    const auto N = event_number++ % (params.n_sipms_x * params.n_sipms_y);
     auto [x, y, _] = n4::unpack(my.sipm_positions()[N]);
-    auto vertex = new G4PrimaryVertex(x, y, -my.scint_params.scint_depth * 1.1, 0);
+    auto vertex = new G4PrimaryVertex(x, y, -params.scint_depth * 1.1, 0);
     vertex -> SetPrimary(new G4PrimaryParticle(
                            particle_type,
                            0,0,1, // parallel to z-axis

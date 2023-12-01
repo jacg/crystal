@@ -108,7 +108,7 @@ TEST_CASE("geometry crystal size", "[geometry][default]") {
     auto size_y = n_sipms_y * sipm_size;
     auto size_z = 4.2 * mm;
 
-    UI -> ApplyCommand("/my/config_type Custom");
+    UI -> ApplyCommand("/my/config_type CsI");
     UI -> ApplyCommand("/my/scint       LYSO");
     UI -> ApplyCommand("/my/scint_depth " + std::to_string(size_z   ) + " mm");
     UI -> ApplyCommand("/my/n_sipms_x   " + std::to_string(n_sipms_x)        );

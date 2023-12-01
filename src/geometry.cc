@@ -14,7 +14,7 @@
 #include <G4TrackStatus.hh>
 
 G4PVPlacement* crystal_geometry(run_stats& stats) {
-  auto scintillator = scintillator_material(my.scint_params.scint);
+  auto scintillator = scintillator_material(my.scint_params().scint);
   auto air     = n4::material("G4_AIR");
   auto silicon = silicon_with_properties();
   auto teflon  =  teflon_with_properties();

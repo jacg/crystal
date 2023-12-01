@@ -10,13 +10,22 @@
 
 
 enum class scintillator_type_enum { lyso, bgo, csi };
-enum class config_type_enum       { lyso, bgo, csi, csi_mono, custom };
+enum class config_type_enum       { lyso, bgo, csi, csi_mono };
 
 struct scint_parameters {
   scintillator_type_enum scint;
   double   scint_depth;
   unsigned n_sipms_x;
   unsigned n_sipms_y;
+  double   sipm_size;
+};
+
+struct scint_overrides {
+  std::optional<scintillator_type_enum> scint;
+  std::optional<double>                 scint_depth;
+  std::optional<unsigned>               n_sipms_x;
+  std::optional<unsigned>               n_sipms_y;
+  std::optional<double>                 sipm_size;
 };
 
 extern const scint_parameters lyso;
@@ -31,7 +40,10 @@ std::string config_type_to_string(config_type_enum s);
 config_type_enum string_to_config_type(std::string s);
 
 struct config {
-  scint_parameters        scint_params        = csi;
+private:
+  scint_parameters        scint_params_       = csi;
+  scint_overrides         overrides           =  {};
+public:
   double                  sipm_size           =   6    * mm;
   double                  sipm_thickness      =   1    * mm;
   double                  reflector_thickness =   0.25 * mm;
@@ -49,12 +61,10 @@ struct config {
   // messenger violates the principle of least surprise.
   : msg{new G4GenericMessenger{this, "/my/", "docs: bla bla bla"}}
   {
-    reset_sipm_positions();
     G4UnitDefinition::BuildUnitsTable();
     new G4UnitDefinition("1/MeV","1/MeV", "1/Energy", 1/MeV);
 
     msg -> DeclareMethod          ("config_type"         ,          &config::set_config_type );
-    msg -> DeclareMethodWithUnit  ("sipm_size"           ,    "mm", &config::set_sipm_size   );
     msg -> DeclarePropertyWithUnit("reflector_thickness" ,    "mm",  reflector_thickness     );
     msg -> DeclarePropertyWithUnit("particle_energy"     ,   "keV",  particle_energy         );
     msg -> DeclareProperty        ("physics_verbosity"   ,           physics_verbosity       );
@@ -65,25 +75,33 @@ struct config {
     msg -> DeclareProperty        ( "sipm_threshold"     ,            sipm_threshold         );
     msg -> DeclareMethod          ("reflectivity"        ,          &config::set_reflectivity);
 
+    msg -> DeclareMethod        ("scint"      ,       &config::set_scint);
+    msg -> DeclareMethodWithUnit("scint_depth", "mm", &config::set_scint_depth);
+    msg -> DeclareMethod        ("n_sipms_x"  ,       &config::set_n_sipms_x);
+    msg -> DeclareMethod        ("n_sipms_y"  ,       &config::set_n_sipms_y);
+    msg -> DeclareMethodWithUnit("sipm_size"  , "mm", &config::set_sipm_size);
+
     set_random_seed(seed);
   }
 
   G4ThreeVector scint_size() const;
   const std::vector<G4ThreeVector>& sipm_positions() const { return sipm_positions_; }
+  const scint_parameters scint_params() const;
 private:
+
   void set_config_type(const std::string& s);
-  void set_scint (std::string   s) { scint_params.scint       = string_to_scintillator_type(s); }
-  void set_scint_depth(double   d) { scint_params.scint_depth = d; }
-  void set_scint_yield(double   y) { scint_yield              = y; }
-  void set_n_sipms_x  (unsigned n) { scint_params.n_sipms_x   = n; reset_sipm_positions(); }
-  void set_n_sipms_y  (unsigned n) { scint_params.n_sipms_y   = n; reset_sipm_positions(); }
-  void set_sipm_size  (double   s) { sipm_size                = s; reset_sipm_positions(); }
+  void set_scint      (const std::string& s) { overrides.scint = string_to_scintillator_type(s); }
+  void set_scint_depth(double   d)           { overrides.scint_depth = d; }
+  void set_n_sipms_x  (unsigned n)           { overrides.n_sipms_x   = n; }
+  void set_n_sipms_y  (unsigned n)           { overrides.n_sipms_y   = n; }
+  void set_sipm_size  (double   d)           { overrides.sipm_size   = d; }
+
+  void set_scint_yield(double   y) { scint_yield = y; }
   void set_random_seed(long  seed) { G4Random::setTheSeed(seed); }
-  void set_reflectivity(double  r) { reflectivity             = r; }
+  void set_reflectivity(double  r) { reflectivity = r; }
   G4GenericMessenger* msg;
 
-  std::vector<G4ThreeVector> sipm_positions_;
-  void reset_sipm_positions();
+  mutable std::vector<G4ThreeVector> sipm_positions_;
 };
 
 extern config my;
