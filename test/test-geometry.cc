@@ -69,11 +69,7 @@ TEST_CASE("geometry crystal size", "[geometry][default]") {
     for (auto i=0; i<n_sipms; i++) {
       CHECK(n4::find_physical("sipm-" + std::to_string(i)) != nullptr);
     }
-    // For some reason, the following line doesn't return a nullptr,
-    // even though it says it is doing so in a warning message (change
-    // true -> false to silence the warning). This makes me worry that
-    // the previous CHECK doesn't really count as a valid test.
-    // CHECK(n4::find_physical("sipm-" + std::to_string(n_sipms), true) == nullptr);
+    CHECK(n4::find_physical("sipm-" + std::to_string(n_sipms), true) == nullptr);
   };
 
 
