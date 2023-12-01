@@ -52,17 +52,17 @@ struct config {
     G4UnitDefinition::BuildUnitsTable();
     new G4UnitDefinition("1/MeV","1/MeV", "1/Energy", 1/MeV);
 
-    msg -> DeclareMethod          ("config_type"         ,         &config::set_config_type );
-    msg -> DeclareProperty        ("sipm_size"           ,          sipm_size               );
-    msg -> DeclareProperty        ("reflector_thickness" ,          reflector_thickness     );
-    msg -> DeclarePropertyWithUnit("particle_energy"     ,   "keV", particle_energy         );
-    msg -> DeclareProperty        ("physics_verbosity"   ,          physics_verbosity       );
-    msg -> DeclareMethod          ("seed"                ,         &config::set_random_seed );
-    msg -> DeclareProperty        ("debug"               ,          debug                   );
-    msg -> DeclareMethodWithUnit  ("scint_yield"         , "1/MeV",&config::set_scint_yield );
-    msg -> DeclareProperty        ("event_threshold"     ,          event_threshold         );
-    msg -> DeclareProperty        ( "sipm_threshold"     ,           sipm_threshold         );
-    msg -> DeclareMethod          ("reflectivity"        ,         &config::set_reflectivity);
+    msg -> DeclareMethod          ("config_type"         ,          &config::set_config_type );
+    msg -> DeclarePropertyWithUnit("sipm_size"           ,    "mm",  sipm_size               );
+    msg -> DeclarePropertyWithUnit("reflector_thickness" ,    "mm",  reflector_thickness     );
+    msg -> DeclarePropertyWithUnit("particle_energy"     ,   "keV",  particle_energy         );
+    msg -> DeclareProperty        ("physics_verbosity"   ,           physics_verbosity       );
+    msg -> DeclareMethod          ("seed"                ,          &config::set_random_seed );
+    msg -> DeclareProperty        ("debug"               ,           debug                   );
+    msg -> DeclareMethodWithUnit  ("scint_yield"         , "1/MeV", &config::set_scint_yield );
+    msg -> DeclareProperty        ("event_threshold"     ,           event_threshold         );
+    msg -> DeclareProperty        ( "sipm_threshold"     ,            sipm_threshold         );
+    msg -> DeclareMethod          ("reflectivity"        ,          &config::set_reflectivity);
 
     set_random_seed(seed);
   }
