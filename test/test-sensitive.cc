@@ -19,9 +19,10 @@ auto blue_light_towards_sipm() {
   auto energy    = 2.5 * eV;
   auto isotropic = n4::random::direction{};
   auto random_source_pos = [] () -> G4ThreeVector {
+    auto params = my.scint_params();
     return {
-      n4::random::uniform_width(my.sipm_size),
-      n4::random::uniform_width(my.sipm_size),
+      n4::random::uniform_width(params.sipm_size),
+      n4::random::uniform_width(params.sipm_size),
       -1 * um // almost zero distance to avoid optical absorption in scintillator
     };
   };

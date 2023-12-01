@@ -10,7 +10,7 @@
 
 config my;
 
-extern const scint_parameters lyso {
+static const scint_parameters lyso {
   .scint       = scintillator_type_enum::lyso,
   .scint_depth = 22.8*mm,
   .n_sipms_x   = 1,
@@ -18,7 +18,7 @@ extern const scint_parameters lyso {
   .sipm_size   = 6   *mm
 };
 
-extern const scint_parameters bgo {
+static const scint_parameters bgo {
   .scint       = scintillator_type_enum::bgo,
   .scint_depth = 22.8*mm,
   .n_sipms_x   = 1,
@@ -26,7 +26,7 @@ extern const scint_parameters bgo {
   .sipm_size   = 6   *mm
 };
 
-extern const scint_parameters csi {
+static const scint_parameters csi {
   .scint       = scintillator_type_enum::csi,
   .scint_depth = 37.2*mm,
   .n_sipms_x   = 1,
@@ -34,13 +34,43 @@ extern const scint_parameters csi {
   .sipm_size   = 6   *mm
 };
 
-extern const scint_parameters csi_mono {
+static const scint_parameters csi_mono {
   .scint       = scintillator_type_enum::csi,
   .scint_depth = csi.scint_depth,
   .n_sipms_x   = 8,
   .n_sipms_y   = 8,
   .sipm_size   = 6   *mm
 };
+
+config::config()
+: scint_params_{}
+// The trailing slash after '/my_geometry' is CRUCIAL: without it, the
+// messenger violates the principle of least surprise.
+, msg{new G4GenericMessenger{this, "/my/", "docs: bla bla bla"}}
+{
+  G4UnitDefinition::BuildUnitsTable();
+  new G4UnitDefinition("1/MeV","1/MeV", "1/Energy", 1/MeV);
+
+  msg -> DeclareMethod          ("config_type"         ,          &config::set_config_type );
+  msg -> DeclarePropertyWithUnit("reflector_thickness" ,    "mm",  reflector_thickness     );
+  msg -> DeclarePropertyWithUnit("particle_energy"     ,   "keV",  particle_energy         );
+  msg -> DeclareProperty        ("physics_verbosity"   ,           physics_verbosity       );
+  msg -> DeclareMethod          ("seed"                ,          &config::set_random_seed );
+  msg -> DeclareProperty        ("debug"               ,           debug                   );
+  msg -> DeclareMethodWithUnit  ("scint_yield"         , "1/MeV", &config::set_scint_yield );
+  msg -> DeclareProperty        ("event_threshold"     ,           event_threshold         );
+  msg -> DeclareProperty        ( "sipm_threshold"     ,            sipm_threshold         );
+  msg -> DeclareMethod          ("reflectivity"        ,          &config::set_reflectivity);
+
+  msg -> DeclareMethod        ("scint"      ,       &config::set_scint);
+  msg -> DeclareMethodWithUnit("scint_depth", "mm", &config::set_scint_depth);
+  msg -> DeclareMethod        ("n_sipms_x"  ,       &config::set_n_sipms_x);
+  msg -> DeclareMethod        ("n_sipms_y"  ,       &config::set_n_sipms_y);
+  msg -> DeclareMethodWithUnit("sipm_size"  , "mm", &config::set_sipm_size);
+
+  set_random_seed(seed);
+}
+
 
 std::string scintillator_type_to_string(scintillator_type_enum s) {
   switch (s) {
@@ -91,9 +121,9 @@ void config::set_config_type(const std::string& s) {
 
 G4ThreeVector config::scint_size() const {
   auto params = scint_params();
-  return { params.n_sipms_x * sipm_size
-         , params.n_sipms_y * sipm_size
-         , params.scint_depth          };
+  return { params.n_sipms_x * params.sipm_size
+         , params.n_sipms_y * params.sipm_size
+         , params.scint_depth                 };
 }
 
 G4Material* scintillator_material(scintillator_type_enum type) {
@@ -116,8 +146,8 @@ const scint_parameters config::scint_params() const {
   };
 
   sipm_positions_.clear();
-  auto Nx = params.n_sipms_x; auto lim_x = sipm_size * (Nx - 1) / 2.0;
-  auto Ny = params.n_sipms_y; auto lim_y = sipm_size * (Ny - 1) / 2.0;
+  auto Nx = params.n_sipms_x; auto lim_x = params.sipm_size * (Nx - 1) / 2.0;
+  auto Ny = params.n_sipms_y; auto lim_y = params.sipm_size * (Ny - 1) / 2.0;
   sipm_positions_.reserve(params.n_sipms_x * params.n_sipms_y);
   for   (auto x: n4::linspace(-lim_x, lim_x, Nx)) {
     for (auto y: n4::linspace(-lim_y, lim_y, Ny)) {

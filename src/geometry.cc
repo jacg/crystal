@@ -47,7 +47,7 @@ G4PVPlacement* crystal_geometry(run_stats& stats) {
   };
 
   auto sipm = n4::box("sipm")
-    .xy(my.sipm_size).z(my.sipm_thickness)
+    .xy(my.scint_params().sipm_size).z(my.sipm_thickness)
     .sensitive("sipm", process_hits)
     .place(silicon).in(world);
 

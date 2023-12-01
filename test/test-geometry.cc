@@ -77,20 +77,21 @@ TEST_CASE("geometry crystal size", "[geometry][default]") {
   };
 
 
-  auto size_from_params = [sipm_size] (auto params) -> std::tuple<double, double, double> {
+  auto size_from_params = [sipm_size] (const scint_parameters& params) -> std::tuple<double, double, double> {
     return { params.n_sipms_x*sipm_size
            , params.n_sipms_y*sipm_size
            , params.scint_depth};
   };
 
-#define TEST_CONFIG(NAME)                         \
-  SECTION(#NAME) {                                \
-    n4::clear_geometry();                         \
-    UI -> ApplyCommand("/my/config_type " #NAME); \
-    crystal_geometry(stats);                      \
-    auto [x,y,z] = size_from_params(NAME);        \
-    check_crystal(x, y, z);                       \
-    check_sipms(NAME.n_sipms_x, NAME.n_sipms_y);  \
+#define TEST_CONFIG(NAME)                            \
+  SECTION(#NAME) {                                   \
+    n4::clear_geometry();                            \
+    UI -> ApplyCommand("/my/config_type " #NAME);    \
+    crystal_geometry(stats);                         \
+    auto params = my.scint_params();                 \
+    auto [x,y,z] = size_from_params(params);         \
+    check_crystal(x, y, z);                          \
+    check_sipms(params.n_sipms_x, params.n_sipms_y); \
   }
 
   TEST_CONFIG(csi);
