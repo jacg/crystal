@@ -10,7 +10,7 @@
 
 #include <cstddef>
 
-auto gammas_from_afar() {
+std::function<void(G4Event*)> gammas_from_afar() {
   auto params = my.scint_params();
   return [params](G4Event *event) {
     static size_t event_number = 0;
