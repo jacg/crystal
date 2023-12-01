@@ -33,6 +33,7 @@ config_type_enum string_to_config_type(std::string s);
 struct config {
   scint_parameters        scint_params        = csi;
   double                  sipm_size           =   6    * mm;
+  double                  sipm_thickness      =   1    * mm;
   double                  reflector_thickness =   0.25 * mm;
   double                  particle_energy     = 511    * keV;
   int                     physics_verbosity   =   0;
@@ -53,7 +54,7 @@ struct config {
     new G4UnitDefinition("1/MeV","1/MeV", "1/Energy", 1/MeV);
 
     msg -> DeclareMethod          ("config_type"         ,          &config::set_config_type );
-    msg -> DeclarePropertyWithUnit("sipm_size"           ,    "mm",  sipm_size               );
+    msg -> DeclareMethodWithUnit  ("sipm_size"           ,    "mm", &config::set_sipm_size   );
     msg -> DeclarePropertyWithUnit("reflector_thickness" ,    "mm",  reflector_thickness     );
     msg -> DeclarePropertyWithUnit("particle_energy"     ,   "keV",  particle_energy         );
     msg -> DeclareProperty        ("physics_verbosity"   ,           physics_verbosity       );
@@ -76,6 +77,7 @@ private:
   void set_scint_yield(double   y) { scint_yield              = y; }
   void set_n_sipms_x  (unsigned n) { scint_params.n_sipms_x   = n; reset_sipm_positions(); }
   void set_n_sipms_y  (unsigned n) { scint_params.n_sipms_y   = n; reset_sipm_positions(); }
+  void set_sipm_size  (double   s) { sipm_size                = s; reset_sipm_positions(); }
   void set_random_seed(long  seed) { G4Random::setTheSeed(seed); }
   void set_reflectivity(double  r) { reflectivity             = r; }
   G4GenericMessenger* msg;

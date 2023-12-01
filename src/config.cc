@@ -103,12 +103,12 @@ G4ThreeVector config::scint_size() const {
 
 void config::reset_sipm_positions() {
   sipm_positions_.clear();
-  auto Nx = my.scint_params.n_sipms_x; auto lim_x = my.sipm_size * (Nx / 2.0 - 0.5);
-  auto Ny = my.scint_params.n_sipms_y; auto lim_y = my.sipm_size * (Ny / 2.0 - 0.5);
+  auto Nx = my.scint_params.n_sipms_x; auto lim_x = my.sipm_size * (Nx - 1) / 2.0;
+  auto Ny = my.scint_params.n_sipms_y; auto lim_y = my.sipm_size * (Ny - 1) / 2.0;
   sipm_positions_.reserve(scint_params.n_sipms_x * scint_params.n_sipms_y);
   for   (auto x: n4::linspace(-lim_x, lim_x, Nx)) {
     for (auto y: n4::linspace(-lim_y, lim_y, Ny)) {
-      sipm_positions_.push_back({x,y,0});
+      sipm_positions_.push_back({x,y,sipm_thickness/2});
     }
   }
 }
