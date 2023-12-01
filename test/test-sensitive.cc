@@ -1,12 +1,9 @@
 #include <config.hh>
 #include <geometry.hh>
-#include <materials.hh>
 #include <physics-list.hh>
 
 #include <n4-all.hh>
 
-#include <G4LogicalVolume.hh>
-#include <G4PVPlacement.hh>
 #include <G4Step.hh>
 #include <G4ThreeVector.hh>
 #include <G4TrackStatus.hh>
@@ -14,13 +11,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 
-#include <algorithm>
-#include <cmath>
-#include <numeric>
-
 using Catch::Matchers::WithinAbs;
-using Catch::Matchers::WithinRel;
-
 
 
 auto blue_light_towards_sipm() {

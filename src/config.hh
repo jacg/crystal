@@ -53,6 +53,7 @@ struct config {
 
     msg -> DeclareMethod          ("config_type"         ,         &config::set_config_type);
     msg -> DeclareProperty        ("reflector_thickness" ,          reflector_thickness    );
+    msg -> DeclareProperty        ("sipm_size"           ,          sipm_size              );
     msg -> DeclarePropertyWithUnit("particle_energy"     ,   "keV", particle_energy        );
     msg -> DeclareProperty        ("physics_verbosity"   ,          physics_verbosity      );
     msg -> DeclareMethod          ("seed"                ,         &config::set_random_seed);
