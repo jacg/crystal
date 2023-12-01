@@ -10,7 +10,7 @@
 
 #include <cstddef>
 
-auto my_generator() {
+auto gammas_from_afar() {
   auto params = my.scint_params();
   return [params](G4Event *event) {
     static size_t event_number = 0;
@@ -49,6 +49,6 @@ n4::actions* create_actions(run_stats& stats) {
     stats.n_detected_at_sipm.clear();
   };
 
-  return (new n4::      actions{my_generator()})
- -> set( (new n4::event_action {              }) -> end(my_event_action));
+  return (new n4::      actions{gammas_from_afar()})
+ -> set( (new n4::event_action {                  }) -> end(my_event_action));
 }
