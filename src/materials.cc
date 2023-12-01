@@ -111,6 +111,9 @@ G4MaterialPropertiesTable* teflon_properties() {
   // but are also stated in the same paper as above
   auto energy       = n4::scale_by(  eV, {OPTPHOT_MIN_ENERGY/eV,  2.8,  3.5,  4.0,  6.0,  7.2, OPTPHOT_MAX_ENERGY/eV});
   auto reflectivity = n4::scale_by(0.01, {                   98, 98  , 98  , 98  , 72  , 72  , 72});
+  if (my.reflectivity.has_value()) {
+    reflectivity = std::vector<double>(energy.size(), my.reflectivity.value());
+  }
 
   return n4::material_properties()
     .add("RINDEX"               , energy, 1.41)

@@ -41,6 +41,7 @@ struct config {
   std::optional<G4double> scint_yield         = std::nullopt;
   size_t                  event_threshold     = 1;
   size_t                   sipm_threshold     = 1;
+  std::optional<double>   reflectivity        = std::nullopt;
 
   config()
   // The trailing slash after '/my_geometry' is CRUCIAL: without it, the
@@ -51,16 +52,17 @@ struct config {
     G4UnitDefinition::BuildUnitsTable();
     new G4UnitDefinition("1/MeV","1/MeV", "1/Energy", 1/MeV);
 
-    msg -> DeclareMethod          ("config_type"         ,         &config::set_config_type);
-    msg -> DeclareProperty        ("reflector_thickness" ,          reflector_thickness    );
-    msg -> DeclareProperty        ("sipm_size"           ,          sipm_size              );
-    msg -> DeclarePropertyWithUnit("particle_energy"     ,   "keV", particle_energy        );
-    msg -> DeclareProperty        ("physics_verbosity"   ,          physics_verbosity      );
-    msg -> DeclareMethod          ("seed"                ,         &config::set_random_seed);
-    msg -> DeclareProperty        ("debug"               ,          debug                  );
-    msg -> DeclareMethodWithUnit  ("scint_yield"         , "1/MeV",&config::set_scint_yield);
-    msg -> DeclareProperty        ("event_threshold"     ,          event_threshold        );
-    msg -> DeclareProperty        ( "sipm_threshold"     ,           sipm_threshold        );
+    msg -> DeclareMethod          ("config_type"         ,         &config::set_config_type );
+    msg -> DeclareProperty        ("sipm_size"           ,          sipm_size               );
+    msg -> DeclareProperty        ("reflector_thickness" ,          reflector_thickness     );
+    msg -> DeclarePropertyWithUnit("particle_energy"     ,   "keV", particle_energy         );
+    msg -> DeclareProperty        ("physics_verbosity"   ,          physics_verbosity       );
+    msg -> DeclareMethod          ("seed"                ,         &config::set_random_seed );
+    msg -> DeclareProperty        ("debug"               ,          debug                   );
+    msg -> DeclareMethodWithUnit  ("scint_yield"         , "1/MeV",&config::set_scint_yield );
+    msg -> DeclareProperty        ("event_threshold"     ,          event_threshold         );
+    msg -> DeclareProperty        ( "sipm_threshold"     ,           sipm_threshold         );
+    msg -> DeclareMethod          ("reflectivity"        ,         &config::set_reflectivity);
 
     set_random_seed(seed);
   }
@@ -75,6 +77,7 @@ private:
   void set_n_sipms_x  (unsigned n) { scint_params.n_sipms_x   = n; reset_sipm_positions(); }
   void set_n_sipms_y  (unsigned n) { scint_params.n_sipms_y   = n; reset_sipm_positions(); }
   void set_random_seed(long  seed) { G4Random::setTheSeed(seed); }
+  void set_reflectivity(double  r) { reflectivity             = r; }
   G4GenericMessenger* msg;
 
   std::vector<G4ThreeVector> sipm_positions_;
