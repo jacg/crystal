@@ -26,6 +26,56 @@ std::function<void(G4Event*)> gammas_from_afar() {
   };
 }
 
+
+std::function<void(G4Event*)> photoelectric_electrons() {
+  auto isotropic                = n4::random::direction{};
+  auto xe_kshell_binding_energy = 34.56 * keV;
+  auto electron_K               = my.particle_energy - xe_kshell_binding_energy;
+  auto electron_mass            = 0.510'998'91 * MeV;
+  auto electron_momentum        = std::sqrt(     electron_K * electron_K
+                                           + 2 * electron_K * electron_mass);
+  auto [sx, sy, sz]             = n4::unpack(my.scint_size());
+
+  return [isotropic, electron_momentum, sx, sy, sz] (G4Event *event) {
+    static auto particle_type = n4::find_particle("e-");
+    auto x0 =  n4::random::uniform_width(sx);
+    auto y0 =  n4::random::uniform_width(sy);
+    auto z0 = -n4::random::uniform   (0, sz);
+    auto vertex = new G4PrimaryVertex(x0, y0, z0, 0);
+
+    auto p  = isotropic.get() * electron_momentum;
+    vertex -> SetPrimary(new G4PrimaryParticle(
+                           particle_type,
+                           p.x(), p.y(), p.z()
+                         ));
+    event  -> AddPrimaryVertex(vertex);
+  };
+}
+
+std::function<void(G4Event*)>  pointlike_photon_source(unsigned nphot) {
+  auto isotropic    = n4::random::direction{};
+  auto [sx, sy, sz] = n4::unpack(my.scint_size());
+
+  return [nphot, isotropic, sx, sy, sz] (G4Event *event) {
+    static auto particle_type = n4::find_particle("opticalphoton");
+    auto x0 =  n4::random::uniform_width(sx);
+    auto y0 =  n4::random::uniform_width(sy);
+    auto z0 = -n4::random::uniform   (0, sz);
+    auto vertex = new G4PrimaryVertex(x0, y0, z0, 0);
+
+    for (unsigned i=0; i<nphot; ++i) {
+      auto p  = isotropic.get() * my.particle_energy;
+      auto particle = new G4PrimaryParticle(
+                        particle_type,
+                        p.x(), p.y(), p.z()
+                        );
+      particle -> SetPolarization(isotropic.get());
+      vertex -> SetPrimary(particle);
+    }
+    event  -> AddPrimaryVertex(vertex);
+  };
+}
+
 n4::actions* create_actions(run_stats& stats) {
 
   auto my_event_action = [&] (const G4Event*) {
