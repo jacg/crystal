@@ -20,8 +20,7 @@ std::function<void(G4Event*)> gammas_from_afar() {
     auto vertex = new G4PrimaryVertex(x, y, -params.scint_depth * 1.1, 0);
     vertex -> SetPrimary(new G4PrimaryParticle(
                            particle_type,
-                           0,0,1, // parallel to z-axis
-                           my.particle_energy
+                           0,0, my.particle_energy // parallel to z-axis
                          ));
     event  -> AddPrimaryVertex(vertex);
   };
