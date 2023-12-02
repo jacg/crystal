@@ -43,7 +43,7 @@ static const scint_parameters csi_mono {
 };
 
 config::config()
-: scint_params_{}
+: scint_params_{csi}
 // The trailing slash after '/my_geometry' is CRUCIAL: without it, the
 // messenger violates the principle of least surprise.
 , msg{new G4GenericMessenger{this, "/my/", "docs: bla bla bla"}}
