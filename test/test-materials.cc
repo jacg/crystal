@@ -212,51 +212,61 @@ TEST_CASE("csi teflon null reflectivity", "[csi][teflon][reflectivity]") {
   CHECK(stats.n_detected_at_sipm.size() == 0);
 }
 
-TEST_CASE("CsI abslength", "[material][csi][abslength]") {
+TEST_CASE("CsI interaction length", "[material][csi][interaction_length]") {
   auto csi = csi_with_properties();
   CHECK_THAT( csi -> GetDensity() / (g / cm3), WithinRel(4.51, 1e-6));
 
-  auto abs_lengths = measure_abslength(test_config{ .physics         = physics_list()
-                                                  , .material        = csi
-                                                  , .particle_name   = "gamma"
-                                                  , .particle_energy = 511 * keV
-                                                  , .distances       = n4::scale_by(mm, {5, 10, 15, 20, 25, 30, 35, 40, 45, 50})});
+  interaction_length_config config{ .physics         = physics_list()
+                                  , .material        = csi
+                                  , .particle_name   = "gamma"
+                                  , .particle_energy = 511 * keV
+                                  , .distances       = n4::scale_by(mm, {5, 10, 15, 20, 25, 30, 35, 40, 45, 50})
+                                  , .n_events        = 100'000};
 
-  auto expected_abs_length = 24.9 * mm;
-  for (auto abs_length : abs_lengths) {
-    CHECK_THAT(abs_length, WithinRel(expected_abs_length, 0.05));
+  auto i_lengths = measure_interaction_length(config);
+
+  auto expected_interaction_length = 24.9 * mm;
+  for (auto i_length : i_lengths) {
+    CHECK_THAT(i_length, WithinRel(expected_interaction_length, 0.05));
   }
 }
 
-TEST_CASE("BGO abslength", "[material][bgo][abslength]") {
+
+
+TEST_CASE("BGO interaction length", "[material][bgo][interaction_length]") {
   auto bgo = bgo_with_properties();
   CHECK_THAT( bgo -> GetDensity() / (g / cm3), WithinRel(7.13, 1e-6));
 
-  auto abs_lengths = measure_abslength(test_config{ .physics         = physics_list()
-                                                  , .material        = bgo
-                                                  , .particle_name   = "gamma"
-                                                  , .particle_energy = 511 * keV
-                                                  , .distances       = n4::scale_by(mm, {5, 10, 15, 20, 25, 30, 35, 40, 45, 50})});
+  interaction_length_config config{ .physics         = physics_list()
+                                  , .material        = bgo
+                                  , .particle_name   = "gamma"
+                                  , .particle_energy = 511 * keV
+                                  , .distances       = n4::scale_by(mm, {5, 10, 15, 20, 25, 30, 35, 40, 45, 50})
+                                  , .n_events        = 100'000};
 
-  auto expected_abs_length = 11.4 * mm;
-  for (auto abs_length : abs_lengths) {
-    CHECK_THAT(abs_length, WithinRel(expected_abs_length, 0.05));
+  auto i_lengths = measure_interaction_length(config);
+
+  auto expected_interaction_length = 11.4 * mm;
+  for (auto i_length : i_lengths) {
+    CHECK_THAT(i_length, WithinRel(expected_interaction_length, 0.05));
   }
 }
 
-TEST_CASE("LYSO abslength", "[material][lyso][abslength]") {
+TEST_CASE("LYSO interaction length", "[material][lyso][interaction_length]") {
   auto lyso = lyso_with_properties();
   CHECK_THAT( lyso -> GetDensity() / (g / cm3), WithinRel(7.1, 1e-6));
 
-  auto abs_lengths = measure_abslength(test_config{ .physics         = physics_list()
-                                                  , .material        = lyso
-                                                  , .particle_name   = "gamma"
-                                                  , .particle_energy = 511 * keV
-                                                  , .distances       = n4::scale_by(mm, {5, 10, 15, 20, 25, 30, 35, 40, 45, 50})});
+  interaction_length_config config{ .physics         = physics_list()
+                                  , .material        = lyso
+                                  , .particle_name   = "gamma"
+                                  , .particle_energy = 511 * keV
+                                  , .distances       = n4::scale_by(mm, {5, 10, 15, 20, 25, 30, 35, 40, 45, 50})
+                                  , .n_events        = 100'000};
+  auto i_lengths = measure_interaction_length(config);
 
-  auto expected_abs_length = 13.0 * mm;
-  for (auto abs_length : abs_lengths) {
-    CHECK_THAT(abs_length, WithinRel(expected_abs_length, 0.05));
+  auto expected_interaction_length = 13.0 * mm;
+  for (auto i_length : i_lengths) {
+    CHECK_THAT(i_length, WithinRel(expected_interaction_length, 0.05));
   }
 }
 
