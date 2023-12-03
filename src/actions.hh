@@ -4,8 +4,8 @@
 
 #include <n4-mandatory.hh>
 
-std::function<void(G4Event*)> gammas_from_afar();
-std::function<void(G4Event*)> photoelectric_electrons();
-std::function<void(G4Event*)> pointlike_photon_source(unsigned nphot);
+n4::generator::function gammas_from_afar();
+n4::generator::function photoelectric_electrons();
+n4::generator::function pointlike_photon_source(unsigned);
 
 n4::actions* create_actions(run_stats& data);

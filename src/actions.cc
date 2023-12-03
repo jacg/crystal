@@ -10,7 +10,9 @@
 
 #include <cstddef>
 
-std::function<void(G4Event*)> gammas_from_afar() {
+using generator_fn = n4::generator::function;
+
+generator_fn gammas_from_afar() {
   auto params = my.scint_params();
   return [params](G4Event *event) {
     static size_t event_number = 0;
@@ -27,7 +29,7 @@ std::function<void(G4Event*)> gammas_from_afar() {
 }
 
 
-std::function<void(G4Event*)> photoelectric_electrons() {
+generator_fn photoelectric_electrons() {
   auto isotropic                = n4::random::direction{};
   auto xe_kshell_binding_energy = 34.56 * keV;
   auto electron_K               = my.particle_energy - xe_kshell_binding_energy;
@@ -52,7 +54,7 @@ std::function<void(G4Event*)> photoelectric_electrons() {
   };
 }
 
-std::function<void(G4Event*)>  pointlike_photon_source(unsigned nphot) {
+generator_fn pointlike_photon_source(unsigned nphot) {
   auto isotropic    = n4::random::direction{};
   auto [sx, sy, sz] = n4::unpack(my.scint_size());
 
