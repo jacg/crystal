@@ -61,6 +61,7 @@ config::config()
   msg -> DeclareProperty        ("event_threshold"     ,           event_threshold         );
   msg -> DeclareProperty        ( "sipm_threshold"     ,            sipm_threshold         );
   msg -> DeclareMethod          ("reflectivity"        ,          &config::set_reflectivity);
+  msg -> DeclareProperty        ( "generator"          ,           generator               );
 
   msg -> DeclareMethod        ("scint"      ,       &config::set_scint);
   msg -> DeclareMethodWithUnit("scint_depth", "mm", &config::set_scint_depth);

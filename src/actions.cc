@@ -82,6 +82,29 @@ generator_fn pointlike_photon_source() {
   };
 }
 
+enum class generators {gammas_from_afar, photoelectric_electrons, pointlike_photon_source};
+
+generators string_to_generator(std::string s) {
+  for (auto& c: s) { c = std::tolower(c); }
+  if (s == "gammas_from_afar"        ||
+      s == "gammas"                  ) { return generators::gammas_from_afar;        }
+  if (s == "photoelectric_electrons" ||
+      s == "electrons"               ) { return generators::photoelectric_electrons; }
+  if (s == "pointlike_photon_source" ||
+      s == "photons"                 ) { return generators::pointlike_photon_source; }
+  throw "Invalid generator name: `" + s + "'"; // TODO think about failure propagation out of here
+}
+
+std::function<generator_fn((void))> select_generator() {
+  auto symbol = string_to_generator(my.generator);
+  switch (symbol) {
+    case generators::gammas_from_afar       : return gammas_from_afar;
+    case generators::photoelectric_electrons: return photoelectric_electrons;
+    case generators::pointlike_photon_source: return pointlike_photon_source;
+  }
+  throw "[select_generator]: unreachable";
+}
+
 n4::actions* create_actions(run_stats& stats) {
 
   auto my_event_action = [&] (const G4Event*) {
