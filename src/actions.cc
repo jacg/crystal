@@ -54,11 +54,15 @@ generator_fn photoelectric_electrons() {
   };
 }
 
-generator_fn pointlike_photon_source(unsigned nphot) {
+generator_fn pointlike_photon_source() {
+  static G4GenericMessenger msg{nullptr, "/source/", "Commands specific to this generator"};
+  static unsigned nphot = 1'000;
+  msg.DeclareProperty("nphotons", nphot);
+
   auto isotropic    = n4::random::direction{};
   auto [sx, sy, sz] = n4::unpack(my.scint_size());
 
-  return [nphot, isotropic, sx, sy, sz] (G4Event *event) {
+  return [isotropic, sx, sy, sz] (G4Event *event) {
     static auto particle_type = n4::find_particle("opticalphoton");
     auto x0 =  n4::random::uniform_width(sx);
     auto y0 =  n4::random::uniform_width(sy);
@@ -72,7 +76,7 @@ generator_fn pointlike_photon_source(unsigned nphot) {
                         p.x(), p.y(), p.z()
                         );
       particle -> SetPolarization(isotropic.get());
-      vertex -> SetPrimary(particle);
+      vertex   -> SetPrimary(particle);
     }
     event  -> AddPrimaryVertex(vertex);
   };

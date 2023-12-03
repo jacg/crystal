@@ -72,12 +72,13 @@ TEST_CASE("pointlike photon source generator", "[generator][photon][pointlike]")
 
   // override particle energy
   my.particle_energy    = 1.234 * eV;
-
   auto n_phot_per_event = 9876;
-  auto generator        = pointlike_photon_source(n_phot_per_event);
+  auto generator        = pointlike_photon_source();
   auto optical_photon   = n4::find_particle("opticalphoton");
   auto is_given_energy  = WithinULP(my.particle_energy, 2);
   auto is_close_to_zero = WithinAbs(0, 2e-2);
+
+  G4UImanager::GetUIpointer() -> ApplyCommand("/source/nphotons " + std::to_string(n_phot_per_event));
 
   auto n_events = 10;
   for (auto i=0; i<n_events; i++) {
