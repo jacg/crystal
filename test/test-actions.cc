@@ -13,6 +13,7 @@
 #include <algorithm>
 #include <cmath>
 #include <numeric>
+#include <unordered_map>
 
 using Catch::Matchers::WithinULP;
 using Catch::Matchers::WithinAbs;
@@ -102,4 +103,29 @@ TEST_CASE("pointlike photon source generator", "[generator][photon][pointlike]")
     CHECK_THAT(average_p.y(), is_close_to_zero);
     CHECK_THAT(average_p.z(), is_close_to_zero);
   }
+}
+
+TEST_CASE("test selector", "[selector]") {
+  using generator_type = std::function<n4::generator::function(void)>;
+  std::unordered_map<std::string, generator_type> options {
+    {"gammas_from_afar"       , gammas_from_afar},
+    {"gammas"                 , gammas_from_afar},
+    {"photoelectric_electrons", photoelectric_electrons},
+    {"electrons"              , photoelectric_electrons},
+    {"pointlike_photon_source", pointlike_photon_source},
+    {"photons"                , pointlike_photon_source}
+  };
+
+  auto fn_equal = [] (generator_type got, generator_type expected) {
+    typedef n4::generator::function (fn_type)(void);
+    size_t      got_address = (size_t)      *got.target<fn_type*>();
+    size_t expected_address = (size_t) *expected.target<fn_type*>();
+    return got_address == expected_address;
+  };
+
+  for (auto& [name, expected_fn] : options) {
+    my.generator = name;
+    CHECK(fn_equal(select_generator(), expected_fn));
+  }
+
 }
