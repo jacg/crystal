@@ -9,6 +9,7 @@
 #include <G4PrimaryVertex.hh>
 
 #include <cstddef>
+#include <unordered_map>
 
 using generator_fn = n4::generator::function;
 
@@ -106,24 +107,32 @@ std::function<generator_fn((void))> select_generator() {
   throw "[select_generator]: unreachable";
 }
 
+void write_xx(
+  const G4ThreeVector& pos,
+  const std::unordered_map<size_t, size_t>& counts,
+  const size_t N) {
+  std::cout << "Position: " << pos << std::endl;
+
+  for (size_t sipm_n=0; sipm_n<N; ++sipm_n) {
+    if (counts.contains(sipm_n)) { std::cout << sipm_n << " " << counts.at(sipm_n) << std::endl; }
+    else                         { std::cout << sipm_n << " " <<       0        << std::endl;}
+  }
+
+}
+
 n4::actions* create_actions(run_stats& stats) {
 
-  auto my_event_action = [&] (const G4Event*) {
+  auto my_event_action = [&] (const G4Event* event) {
     stats.n_over_threshold += stats.n_detected_evt >= my.event_threshold;
     stats.n_detected_total += stats.n_detected_evt;
-    auto n_sipms_over_threshold = stats.n_sipms_over_threshold(my.sipm_threshold);
+    //auto n_sipms_over_threshold = stats.n_sipms_over_threshold(my.sipm_threshold);
 
-    using std::setw; using std::fixed; using std::setprecision;
-    std::cout
-        << "event "
-        << setw( 4) << n4::event_number()     << ':'
-        << setw( 7) << stats.n_detected_evt   << " photons detected;"
-        << setw( 6) << n_sipms_over_threshold << " SiPMs detected over "
-        << setw( 6) << my.sipm_threshold << " photons;"
-        << setw(10) << fixed << setprecision(1) << "     so far,"
-        << setw( 6) << stats.n_events_over_threshold_fraction() << "% of events detected over"
-        << setw( 7) << my.event_threshold << " photons."
-        << std::endl;
+    std::cout << "--------------------------------------------------------------------------------" << std::endl;
+    auto primary_vertex = event -> GetPrimaryVertex();
+    const auto& counts = stats.n_detected_at_sipm;
+    const auto& params = my.scint_params();
+    const auto N = params.n_sipms_x * params.n_sipms_y;
+    write_xx(primary_vertex -> GetPosition(), counts, N);
     stats.n_detected_evt = 0;
     stats.n_detected_at_sipm.clear();
   };
