@@ -15,7 +15,7 @@
       version = "0.0.0";
       src = "${self}/src";
       nativeBuildInputs = [];
-      buildInputs = [ nain4.packages.nain4 ];
+      buildInputs = [ nain4.packages.nain4 pkgs.arrow-cpp];
     };
 
     # Executed by `nix run <URL of this flake> -- <args?>`
@@ -41,13 +41,13 @@
     # Activated by `nix develop <URL to this flake>#clang`
     devShells.clang = pkgs.mkShell.override { stdenv = nain4.packages.clang_16.stdenv; } (shell-shared // {
       name = "crystal-clang-devenv";
-      packages = nain4.deps.dev-shell-packages ++ [ nain4.packages.clang_16 ];
+      packages = nain4.deps.dev-shell-packages ++ [ nain4.packages.clang_16 pkgs.arrow-cpp];
     });
 
     # Activated by `nix develop <URL to this flake>#gcc`
     devShells.gcc = pkgs.mkShell (shell-shared // {
       name = "crystal-gcc-devenv";
-      packages = nain4.deps.dev-shell-packages;
+      packages = nain4.deps.dev-shell-packages + [ pkgs.arrow-cpp ];
     });
 
     # 1. `nix build` .#singularity
