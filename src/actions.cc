@@ -128,6 +128,6 @@ n4::actions* create_actions(run_stats& stats) {
     stats.n_detected_at_sipm.clear();
   };
 
-  return (new n4::      actions{gammas_from_outside_crystal()})
- -> set( (new n4::event_action {                  }) -> end(my_event_action));
+  return (new n4::      actions{select_generator()()})
+ -> set( (new n4::event_action {                    }) -> end(my_event_action));
 }
