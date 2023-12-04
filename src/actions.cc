@@ -99,9 +99,9 @@ generators string_to_generator(std::string s) {
 std::function<generator_fn((void))> select_generator() {
   auto symbol = string_to_generator(my.generator);
   switch (symbol) {
-    case generators::gammas_from_outside_crystal       : return gammas_from_outside_crystal;
-    case generators::photoelectric_electrons: return photoelectric_electrons;
-    case generators::pointlike_photon_source: return pointlike_photon_source;
+    case generators::gammas_from_outside_crystal: return gammas_from_outside_crystal;
+    case generators::photoelectric_electrons    : return photoelectric_electrons;
+    case generators::pointlike_photon_source    : return pointlike_photon_source;
   }
   throw "[select_generator]: unreachable";
 }
