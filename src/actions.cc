@@ -1,5 +1,6 @@
 #include "actions.hh"
 #include "config.hh"
+#include "io.hh"
 
 #include <n4-inspect.hh>
 #include <n4-mandatory.hh>
@@ -107,7 +108,7 @@ std::function<generator_fn((void))> select_generator() {
 }
 
 n4::actions* create_actions(run_stats& stats) {
-
+  static auto writer = parquet_writer("crystal-out.parquet");
   auto my_event_action = [&] (const G4Event*) {
     stats.n_over_threshold += stats.n_detected_evt >= my.event_threshold;
     stats.n_detected_total += stats.n_detected_evt;
@@ -126,8 +127,23 @@ n4::actions* create_actions(run_stats& stats) {
         << std::endl;
     stats.n_detected_evt = 0;
     stats.n_detected_at_sipm.clear();
+
+    auto n = n4::event_number();
+    auto sipms = std::unordered_map<unsigned, unsigned>{ {0, 3*n}, {1, 4*n}, {2, 3*n} };
+    auto status = writer.append({1.*n, 10.*n, 100.*n}, sipms);
+    if (! status.ok()) {
+      std::cerr << "could not append event " + std::to_string(n) << std::endl;
+    }
+  };
+
+  auto run_action = [&] (const G4Run*) {
+    auto status = writer.write();
+    if (! status.ok() ) {
+      std::cerr << "Could not write to disk" << std::endl;
+    }
   };
 
   return (new n4::      actions{select_generator()()})
+ -> set( (new n4::  run_action {                    }) -> end(     run_action))
  -> set( (new n4::event_action {                    }) -> end(my_event_action));
 }
