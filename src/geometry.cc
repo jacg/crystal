@@ -14,7 +14,7 @@
 #include <G4TrackStatus.hh>
 
 G4PVPlacement* crystal_geometry(run_stats& stats) {
-  auto scintillator = scintillator_material(my.scint_params.scint);
+  auto scintillator = scintillator_material(my.scint_params().scint);
   auto air     = n4::material("G4_AIR");
   auto silicon = silicon_with_properties();
   auto teflon  =  teflon_with_properties();
@@ -46,11 +46,10 @@ G4PVPlacement* crystal_geometry(run_stats& stats) {
     return true;
   };
 
-  auto sipm_thickness = 1*mm;
   auto sipm = n4::box("sipm")
-    .xy(my.sipm_size).z(sipm_thickness)
+    .xy(my.scint_params().sipm_size).z(my.sipm_thickness)
     .sensitive("sipm", process_hits)
-    .place(silicon).at_z(sipm_thickness/2).in(world);
+    .place(silicon).in(world);
 
   auto n=0;
   for (const auto& pos: my.sipm_positions()) {

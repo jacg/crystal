@@ -99,7 +99,7 @@ TEST_CASE("csi teflon reflectivity fraction", "[csi][teflon][reflectivity]") {
     .physics(physics_list)
     .geometry([&] {return crystal_geometry(stats);})
     .actions(test_action)
-    .run(100000);
+    .run(100'000);
 
   auto teflon_reflectivity_percentage   = 98;
   auto measured_reflectivity_percentage = 100.0 * count_reflected / count_incoming;
@@ -192,6 +192,24 @@ TEST_CASE("teflon reflectivity lambertian", "[teflon][reflectivity]") {
   auto corr = n4::stats::correlation(thetas_in, thetas_out).value();
   std::cerr << "------------------------------ CORRELATION: " << corr << std::endl;
   CHECK_THAT(corr, WithinAbs(0, 1e-2));
+}
+
+// Shoot photons from within crystal in random directions towards
+// teflon reflector (avoiding the SiPM face which is not covered by
+// teflon). Set the reflectivity to 0 and count how many photons reach
+// the sipm. It should be 0.
+TEST_CASE("csi teflon null reflectivity", "[csi][teflon][reflectivity]") {
+  run_stats stats;
+
+  n4::run_manager::create()
+    .fake_ui()
+    .apply_command("/my/reflectivity 0")
+    .physics(physics_list)
+    .geometry([&] {return crystal_geometry(stats);})
+    .actions(new n4::actions{blue_light_towards_teflon()})
+    .run(100'000);
+
+  CHECK(stats.n_detected_at_sipm.size() == 0);
 }
 
 TEST_CASE("CsI abslength", "[material][csi][abslength]") {

@@ -69,28 +69,25 @@ TEST_CASE("geometry crystal size", "[geometry][default]") {
     for (auto i=0; i<n_sipms; i++) {
       CHECK(n4::find_physical("sipm-" + std::to_string(i)) != nullptr);
     }
-    // For some reason, the following line doesn't return a nullptr,
-    // even though it says it is doing so in a warning message (change
-    // true -> false to silence the warning). This makes me worry that
-    // the previous CHECK doesn't really count as a valid test.
-    // CHECK(n4::find_physical("sipm-" + std::to_string(n_sipms), true) == nullptr);
+    CHECK(n4::find_physical("sipm-" + std::to_string(n_sipms), true) == nullptr);
   };
 
 
-  auto size_from_params = [sipm_size] (auto params) -> std::tuple<double, double, double> {
+  auto size_from_params = [sipm_size] (const scint_parameters& params) -> std::tuple<double, double, double> {
     return { params.n_sipms_x*sipm_size
            , params.n_sipms_y*sipm_size
            , params.scint_depth};
   };
 
-#define TEST_CONFIG(NAME)                         \
-  SECTION(#NAME) {                                \
-    n4::clear_geometry();                         \
-    UI -> ApplyCommand("/my/config_type " #NAME); \
-    crystal_geometry(stats);                      \
-    auto [x,y,z] = size_from_params(NAME);        \
-    check_crystal(x, y, z);                       \
-    check_sipms(NAME.n_sipms_x, NAME.n_sipms_y);  \
+#define TEST_CONFIG(NAME)                            \
+  SECTION(#NAME) {                                   \
+    n4::clear_geometry();                            \
+    UI -> ApplyCommand("/my/config_type " #NAME);    \
+    crystal_geometry(stats);                         \
+    auto params = my.scint_params();                 \
+    auto [x,y,z] = size_from_params(params);         \
+    check_crystal(x, y, z);                          \
+    check_sipms(params.n_sipms_x, params.n_sipms_y); \
   }
 
   TEST_CONFIG(csi);
@@ -108,7 +105,7 @@ TEST_CASE("geometry crystal size", "[geometry][default]") {
     auto size_y = n_sipms_y * sipm_size;
     auto size_z = 4.2 * mm;
 
-    UI -> ApplyCommand("/my/config_type Custom");
+    UI -> ApplyCommand("/my/config_type CsI");
     UI -> ApplyCommand("/my/scint       LYSO");
     UI -> ApplyCommand("/my/scint_depth " + std::to_string(size_z   ) + " mm");
     UI -> ApplyCommand("/my/n_sipms_x   " + std::to_string(n_sipms_x)        );
