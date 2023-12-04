@@ -20,7 +20,7 @@ using Catch::Matchers::WithinAbs;
 
 TEST_CASE("gamma generator", "[generator][gamma]") {
   n4::test::default_run_manager().run(0);
-  auto generator       = gammas_from_afar();
+  auto generator       = gammas_from_outside_crystal();
   auto is_given_energy = WithinULP(my.particle_energy, 1);
   auto gamma           = n4::find_particle("gamma");
 
@@ -108,12 +108,12 @@ TEST_CASE("pointlike photon source generator", "[generator][photon][pointlike]")
 TEST_CASE("test selector", "[selector]") {
   using generator_type = std::function<n4::generator::function(void)>;
   std::unordered_map<std::string, generator_type> options {
-    {"gammas_from_afar"       , gammas_from_afar},
-    {"gammas"                 , gammas_from_afar},
-    {"photoelectric_electrons", photoelectric_electrons},
-    {"electrons"              , photoelectric_electrons},
-    {"pointlike_photon_source", pointlike_photon_source},
-    {"photons"                , pointlike_photon_source}
+    {"gammas_from_outside_crystal", gammas_from_outside_crystal},
+    {"gammas"                     , gammas_from_outside_crystal},
+    {"photoelectric_electrons"    , photoelectric_electrons},
+    {"electrons"                  , photoelectric_electrons},
+    {"pointlike_photon_source"    , pointlike_photon_source},
+    {"photons"                    , pointlike_photon_source}
   };
 
   auto fn_equal = [] (generator_type got, generator_type expected) {

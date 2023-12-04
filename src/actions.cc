@@ -12,7 +12,7 @@
 
 using generator_fn = n4::generator::function;
 
-generator_fn gammas_from_afar() {
+generator_fn gammas_from_outside_crystal() {
   auto params = my.scint_params();
   return [params](G4Event *event) {
     static size_t event_number = 0;
@@ -82,23 +82,23 @@ generator_fn pointlike_photon_source() {
   };
 }
 
-enum class generators {gammas_from_afar, photoelectric_electrons, pointlike_photon_source};
+enum class generators {gammas_from_outside_crystal, photoelectric_electrons, pointlike_photon_source};
 
 generators string_to_generator(std::string s) {
   for (auto& c: s) { c = std::tolower(c); }
-  if (s == "gammas_from_afar"        ||
-      s == "gammas"                  ) { return generators::gammas_from_afar;        }
+  if (s == "gammas_from_outside_crystal"        ||
+      s == "gammas"                  ) { return generators::gammas_from_outside_crystal; }
   if (s == "photoelectric_electrons" ||
-      s == "electrons"               ) { return generators::photoelectric_electrons; }
+      s == "electrons"               ) { return generators::photoelectric_electrons;     }
   if (s == "pointlike_photon_source" ||
-      s == "photons"                 ) { return generators::pointlike_photon_source; }
+      s == "photons"                 ) { return generators::pointlike_photon_source;     }
   throw "Invalid generator name: `" + s + "'"; // TODO think about failure propagation out of here
 }
 
 std::function<generator_fn((void))> select_generator() {
   auto symbol = string_to_generator(my.generator);
   switch (symbol) {
-    case generators::gammas_from_afar       : return gammas_from_afar;
+    case generators::gammas_from_outside_crystal       : return gammas_from_outside_crystal;
     case generators::photoelectric_electrons: return photoelectric_electrons;
     case generators::pointlike_photon_source: return pointlike_photon_source;
   }
@@ -127,6 +127,6 @@ n4::actions* create_actions(run_stats& stats) {
     stats.n_detected_at_sipm.clear();
   };
 
-  return (new n4::      actions{gammas_from_afar()})
+  return (new n4::      actions{gammas_from_outside_crystal()})
  -> set( (new n4::event_action {                  }) -> end(my_event_action));
 }

@@ -50,7 +50,7 @@ public:
   size_t                  event_threshold     = 1;
   size_t                   sipm_threshold     = 1;
   std::optional<double>   reflectivity        = std::nullopt;
-  std::string             generator           = "gammas_from_afar";
+  std::string             generator           = "gammas_from_outside_crystal";
   config();
 
   G4ThreeVector scint_size() const;
