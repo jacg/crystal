@@ -146,7 +146,17 @@ const scint_parameters config::scint_params() const {
     APPLY_OVERRIDE(n_sipms_y),
     APPLY_OVERRIDE(sipm_size)
   };
+  return params;
+}
+#undef APPLY_OVERRIDE
 
+const std::vector<G4ThreeVector>& config::sipm_positions() const {
+  if (sipm_positions_need_recalculating) { recalculate_sipm_positions(); }
+  return sipm_positions_;
+}
+
+void config::recalculate_sipm_positions() const {
+  auto params = scint_params();
   sipm_positions_.clear();
   auto Nx = params.n_sipms_x; auto lim_x = params.sipm_size * (Nx - 1) / 2.0;
   auto Ny = params.n_sipms_y; auto lim_y = params.sipm_size * (Ny - 1) / 2.0;
@@ -156,7 +166,5 @@ const scint_parameters config::scint_params() const {
       sipm_positions_.push_back({x,y,sipm_thickness/2});
     }
   }
-
-  return params;
+  sipm_positions_need_recalculating = false;
 }
-#undef APPLY_OVERRIDE

@@ -54,7 +54,7 @@ public:
   config();
 
   G4ThreeVector scint_size() const;
-  const std::vector<G4ThreeVector>& sipm_positions() const { return sipm_positions_; }
+  const std::vector<G4ThreeVector>& sipm_positions() const;
   const scint_parameters scint_params() const;
 private:
 
@@ -71,6 +71,8 @@ private:
   G4GenericMessenger* msg;
 
   mutable std::vector<G4ThreeVector> sipm_positions_;
+  mutable bool                       sipm_positions_need_recalculating = true;
+  void recalculate_sipm_positions() const;
 };
 
 extern config my;

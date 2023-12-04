@@ -14,11 +14,12 @@ using generator_fn = n4::generator::function;
 
 generator_fn gammas_from_outside_crystal() {
   auto params = my.scint_params();
-  return [params](G4Event *event) {
+  auto const sipm_positions = my.sipm_positions();
+  return [params, sipm_positions](G4Event *event) {
     static size_t event_number = 0;
     static auto particle_type = n4::find_particle("gamma");
     const auto N = event_number++ % (params.n_sipms_x * params.n_sipms_y);
-    auto [x, y, _] = n4::unpack(my.sipm_positions()[N]);
+    auto [x, y, _] = n4::unpack(sipm_positions[N]);
     auto vertex = new G4PrimaryVertex(x, y, -params.scint_depth * 1.1, 0);
     vertex -> SetPrimary(new G4PrimaryParticle(
                            particle_type,
