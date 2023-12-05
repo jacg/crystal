@@ -43,19 +43,10 @@ std::unique_ptr<parquet::arrow::FileWriter> make_writer(
 }
 
 std::shared_ptr<const arrow::KeyValueMetadata> metadata() {
-  auto positions  = my.sipm_positions();
   auto config_map = my.as_map();
-  auto N = positions.size() + config_map.size();
+  auto N = config_map.size();
   std::vector<std::string> keys  ; keys  .reserve(N);
   std::vector<std::string> values; values.reserve(N);
-  size_t n = 0;
-  for (const auto& p: positions) {
-    keys  .push_back("x_" + std::to_string(n));
-    values.push_back(       std::to_string(p.x()));
-    keys  .push_back("y_" + std::to_string(n));
-    values.push_back(       std::to_string(p.y()));
-    n++;
-  }
   for (const auto& [k, v]: config_map) {
     keys  .push_back(k);
     values.push_back(v);

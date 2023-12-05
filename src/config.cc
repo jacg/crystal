@@ -9,6 +9,7 @@
 #include <cctype>
 #include <string>
 #include <unordered_map>
+#include <utility>
 
 config my;
 
@@ -180,7 +181,35 @@ size_t config::n_sipms() const {
 
 std::unordered_map<std::string, std::string> config::as_map() {
   std::unordered_map<std::string, std::string> it;
-  it["this"] = "esto";
-  it["that"] = "otro";
+  auto params   = scint_params();
+  auto sipm_pos = sipm_positions();
+
+  it["scint"              ] = scintillator_type_to_string(params.scint);
+  it["scint_depth"        ] = std::to_string(params.scint_depth/mm) + " mm";
+  it["n_sipms_x"          ] = std::to_string(params.n_sipms_x);
+  it["n_sipms_y"          ] = std::to_string(params.n_sipms_y);
+  it["sipm_size"          ] = std::to_string(params.sipm_size/mm) + " mm";
+  it["sipm_thickness"     ] = std::to_string(my.sipm_thickness/mm) + " mm";
+  it["reflector_thickness"] = std::to_string(my.reflector_thickness/mm) + " mm";
+  it["particle_energy"    ] = std::to_string(my.particle_energy/keV) + " keV";
+  it["physics_verbosity"  ] = std::to_string(my.physics_verbosity);
+  it["seed"               ] = std::to_string(my.seed);
+  it["debug"              ] = std::to_string(my.debug);
+  it["event_threshold"    ] = std::to_string(my.event_threshold);
+  it[ "sipm_threshold"    ] = std::to_string(my. sipm_threshold);
+  it["chunk_size"         ] = std::to_string(my.chunk_size);
+  it["scint_yield"        ] = my.scint_yield .has_value() ? std::to_string(my.scint_yield .value()*MeV) + " MeV^-1" : "NULL";
+  it["reflectivity"       ] = my.reflectivity.has_value() ? std::to_string(my.reflectivity.value()    )             : "NULL";
+  it["generator"          ] = my.generator;
+  it["outfile"            ] = my.outfile;
+
+  size_t n = 0;
+  for (const auto& p: sipm_positions()) {
+    const auto& [x, y, _] = n4::unpack(p);
+    it["x_" + std::to_string(n)] = std::to_string(x);
+    it["y_" + std::to_string(n)] = std::to_string(y);
+    n++;
+  }
+
   return it;
 }
