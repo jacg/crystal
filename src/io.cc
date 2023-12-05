@@ -5,19 +5,9 @@
 
 #include <unordered_map>
 
-parquet_writer::parquet_writer() :
-  pool          {arrow::default_memory_pool()}
-, x_builder     {std::make_shared<arrow::FloatBuilder>(pool)}
-, y_builder     {std::make_shared<arrow::FloatBuilder>(pool)}
-, z_builder     {std::make_shared<arrow::FloatBuilder>(pool)}
-, counts_builder{}
-, writer        {}
-, schema        {}
-{
-  for (auto n=0; n<n_sipms; n++) {
-    counts_builder.push_back(std::make_shared<arrow::UInt16Builder>(pool));
-  }
+std::vector<std::shared_ptr<arrow::Field>> fields() {
   std::vector<std::shared_ptr<arrow::Field>> fields;
+  auto n_sipms = my.n_sipms();
   fields.reserve(n_sipms + 3);
   fields.push_back(arrow::field("x", arrow::float32()));
   fields.push_back(arrow::field("y", arrow::float32()));
@@ -25,8 +15,21 @@ parquet_writer::parquet_writer() :
   for (auto n=0; n<n_sipms; n++) {
     fields.push_back(arrow::field("sipm_" + std::to_string(n), arrow::uint16()));
   }
+  return fields;
+}
 
-  schema = std::make_shared<arrow::Schema>(fields);
+parquet_writer::parquet_writer() :
+  pool          {arrow::default_memory_pool()}
+, x_builder     {std::make_shared<arrow::FloatBuilder>(pool)}
+, y_builder     {std::make_shared<arrow::FloatBuilder>(pool)}
+, z_builder     {std::make_shared<arrow::FloatBuilder>(pool)}
+, counts_builder{}
+, writer        {}
+, schema        {std::make_shared<arrow::Schema>(fields())}
+{
+  for (auto n=0; n<my.n_sipms(); n++) {
+    counts_builder.push_back(std::make_shared<arrow::UInt16Builder>(pool));
+  }
 
   // Choose compression and opt to store Arrow schema for easier reads
   // back into Arrow
@@ -39,6 +42,7 @@ parquet_writer::parquet_writer() :
 }
 
 arrow::Result<std::shared_ptr<arrow::Table>> parquet_writer::make_table() {
+  auto n_sipms = my.n_sipms();
   std::vector<std::shared_ptr<arrow::Array>> arrays;
   arrays.reserve(n_sipms);
 
@@ -60,7 +64,7 @@ arrow::Status parquet_writer::append(const G4ThreeVector& pos, std::unordered_ma
   ARROW_RETURN_NOT_OK(z_builder -> Append(pos.z()));
 
   unsigned n;
-  for (auto i=0; i<n_sipms; i++) {
+  for (auto i=0; i<my.n_sipms(); i++) {
     n = counts.contains(i) ? counts[i] : 0;
     ARROW_RETURN_NOT_OK(counts_builder[i] -> Append(n));
   }

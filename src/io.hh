@@ -45,6 +45,5 @@ private:
   std::shared_ptr<arrow::Schema>               schema;
 
   unsigned n_rows     = 0;
-  unsigned n_sipms    = 3;
   unsigned chunk_size = 2;
 };
