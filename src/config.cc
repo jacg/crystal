@@ -7,6 +7,8 @@
 #include <G4ThreeVector.hh>
 
 #include <cctype>
+#include <string>
+#include <unordered_map>
 
 config my;
 
@@ -174,4 +176,11 @@ void config::recalculate_sipm_positions() const {
 size_t config::n_sipms() const {
   auto params = scint_params();
   return params.n_sipms_x * params.n_sipms_y;
+}
+
+std::unordered_map<std::string, std::string> config::as_map() {
+  std::unordered_map<std::string, std::string> it;
+  it["this"] = "esto";
+  it["that"] = "otro";
+  return it;
 }

@@ -9,6 +9,7 @@
 
 #include <cstdint>
 #include <optional>
+#include <unordered_map>
 
 
 enum class scintillator_type_enum { lyso, bgo, csi };
@@ -61,6 +62,8 @@ public:
   const std::vector<G4ThreeVector>& sipm_positions() const;
   const scint_parameters scint_params() const;
   size_t n_sipms() const;
+  std::unordered_map<std::string, std::string> as_map();
+
 private:
 
   void set_config_type(const std::string& s);
