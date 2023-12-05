@@ -3,6 +3,7 @@
 
 #include <arrow/io/api.h>
 
+#include <memory>
 #include <unordered_map>
 
 std::vector<std::shared_ptr<arrow::Field>> fields() {
@@ -27,25 +28,28 @@ std::vector<std::shared_ptr<arrow::UInt16Builder>> counts(arrow::MemoryPool* poo
   return counts;
 }
 
+std::unique_ptr<parquet::arrow::FileWriter> make_writer(
+  std::shared_ptr<arrow::Schema> schema,
+  arrow::MemoryPool* pool)
+{
+  // Choose compression and opt to store Arrow schema for easier reads
+  // back into Arrow
+  auto  file_props = parquet::     WriterProperties::Builder().compression(arrow::Compression::SNAPPY) -> build();
+  auto arrow_props = parquet::ArrowWriterProperties::Builder().store_schema() -> build();
+  auto outfile = arrow::io::FileOutputStream::Open(my.outfile).ValueOrDie();
+  return parquet::arrow::FileWriter::Open( *schema, pool, outfile,
+                                           file_props, arrow_props).ValueOrDie();
+}
+
 parquet_writer::parquet_writer() :
   pool          {arrow::default_memory_pool()}
 , x_builder     {std::make_shared<arrow::FloatBuilder>(pool)}
 , y_builder     {std::make_shared<arrow::FloatBuilder>(pool)}
 , z_builder     {std::make_shared<arrow::FloatBuilder>(pool)}
 , counts_builder{counts(pool)}
-, writer        {}
 , schema        {std::make_shared<arrow::Schema>(fields())}
-{
-
-  // Choose compression and opt to store Arrow schema for easier reads
-  // back into Arrow
-  auto  file_props = parquet::     WriterProperties::Builder().compression(arrow::Compression::SNAPPY) -> build();
-  auto arrow_props = parquet::ArrowWriterProperties::Builder().store_schema() -> build();
-  auto outfile = arrow::io::FileOutputStream::Open(my.outfile).ValueOrDie();
-  writer = parquet::arrow::FileWriter::Open( *schema, pool, outfile,
-                                             file_props, arrow_props).ValueOrDie();
-
-}
+, writer        {make_writer(schema, pool)}
+{}
 
 arrow::Result<std::shared_ptr<arrow::Table>> parquet_writer::make_table() {
   auto n_sipms = my.n_sipms();

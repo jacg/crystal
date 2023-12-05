@@ -41,8 +41,8 @@ private:
   std::vector<
   std::shared_ptr<arrow::UInt16Builder   >> counts_builder;
 
-  std::unique_ptr<parquet::arrow::FileWriter>  writer;
   std::shared_ptr<arrow::Schema>               schema;
+  std::unique_ptr<parquet::arrow::FileWriter>  writer;
 
   unsigned n_rows     = 0;
   unsigned chunk_size = 2;
