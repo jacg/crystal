@@ -7,6 +7,7 @@
 #include <G4UnitsTable.hh>
 #include <Randomize.hh>
 
+#include <cstdint>
 #include <optional>
 
 
@@ -52,6 +53,8 @@ public:
   std::optional<double>   reflectivity        = std::nullopt;
   std::string             generator           = "gammas_from_outside_crystal";
   std::string             outfile             = "crystal-out.parquet";
+  int64_t                 chunk_size          = 1024; // TODO find out what chuck_size default should be
+
   config();
 
   G4ThreeVector scint_size() const;

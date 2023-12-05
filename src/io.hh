@@ -45,5 +45,4 @@ private:
   std::unique_ptr<parquet::arrow::FileWriter>  writer;
 
   unsigned n_rows     = 0;
-  unsigned chunk_size = 2;
 };

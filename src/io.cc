@@ -79,7 +79,7 @@ arrow::Status parquet_writer::append(const G4ThreeVector& pos, std::unordered_ma
     ARROW_RETURN_NOT_OK(counts_builder[i] -> Append(n));
   }
   n_rows++;
-  return n_rows == chunk_size ? write() : arrow::Status::OK();
+  return n_rows == my.chunk_size ? write() : arrow::Status::OK();
 }
 
 arrow::Status parquet_writer::write() {
