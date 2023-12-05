@@ -11,7 +11,7 @@
 
 class parquet_writer {
 public:
-  parquet_writer(const std::string& filename);
+  parquet_writer();
   ~parquet_writer() {
     std::cerr << "CALLING CLOSE" << std::endl;
     arrow::Status status;

@@ -51,6 +51,7 @@ public:
   size_t                   sipm_threshold     = 1;
   std::optional<double>   reflectivity        = std::nullopt;
   std::string             generator           = "gammas_from_outside_crystal";
+  std::string             outfile             = "crystal-out.parquet";
   config();
 
   G4ThreeVector scint_size() const;

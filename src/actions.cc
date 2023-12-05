@@ -108,7 +108,7 @@ std::function<generator_fn((void))> select_generator() {
 }
 
 n4::actions* create_actions(run_stats& stats) {
-  static auto writer = parquet_writer("crystal-out.parquet");
+  static auto writer = parquet_writer();
   auto my_event_action = [&] (const G4Event*) {
     stats.n_over_threshold += stats.n_detected_evt >= my.event_threshold;
     stats.n_detected_total += stats.n_detected_evt;

@@ -1,16 +1,17 @@
+#include "config.hh"
 #include "io.hh"
 
 #include <arrow/io/api.h>
 
 #include <unordered_map>
 
-parquet_writer::parquet_writer(const std::string& filename) :
+parquet_writer::parquet_writer() :
   pool          {arrow::default_memory_pool()}
 , x_builder     {std::make_shared<arrow::FloatBuilder>(pool)}
 , y_builder     {std::make_shared<arrow::FloatBuilder>(pool)}
 , z_builder     {std::make_shared<arrow::FloatBuilder>(pool)}
 , counts_builder{}
-, outfile       {arrow::io::FileOutputStream::Open(filename).ValueOrDie()}
+, outfile       {arrow::io::FileOutputStream::Open(my.outfile).ValueOrDie()}
 , writer        {}
 , schema        {}
 {
