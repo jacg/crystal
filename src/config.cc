@@ -67,6 +67,7 @@ config::config()
   msg -> DeclareProperty        ( "generator"          ,           generator               );
   msg -> DeclareProperty        ( "outfile"            ,           outfile                 );
   msg -> DeclareProperty        ( "chunk_size"         ,           chunk_size              );
+  msg -> DeclareProperty        ( "compression"        ,           compression             );
 
   msg -> DeclareMethod        ("scint"      ,       &config::set_scint);
   msg -> DeclareMethodWithUnit("scint_depth", "mm", &config::set_scint_depth);

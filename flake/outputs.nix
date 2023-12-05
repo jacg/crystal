@@ -41,7 +41,10 @@
     # Activated by `nix develop <URL to this flake>#clang`
     devShells.clang = pkgs.mkShell.override { stdenv = nain4.packages.clang_16.stdenv; } (shell-shared // {
       name = "crystal-clang-devenv";
-      packages = nain4.deps.dev-shell-packages ++ [ nain4.packages.clang_16 pkgs.arrow-cpp];
+      packages = nain4.deps.dev-shell-packages ++ [
+        nain4.packages.clang_16 pkgs.arrow-cpp
+        (pkgs.python3.withPackages(ps: with ps; [parquet pandas ipython pyarrow]))
+      ];
     });
 
     # Activated by `nix develop <URL to this flake>#gcc`

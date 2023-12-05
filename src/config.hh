@@ -55,6 +55,7 @@ public:
   std::string             generator           = "gammas_from_outside_crystal";
   std::string             outfile             = "crystal-out.parquet";
   int64_t                 chunk_size          = 1024; // TODO find out what chuck_size default should be
+  std::string             compression         = "zstd-9";
 
   config();
 
