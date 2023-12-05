@@ -18,18 +18,24 @@ std::vector<std::shared_ptr<arrow::Field>> fields() {
   return fields;
 }
 
+std::vector<std::shared_ptr<arrow::UInt16Builder>> counts(arrow::MemoryPool* pool) {
+  std::vector<std::shared_ptr<arrow::UInt16Builder>> counts;
+  counts.reserve(my.n_sipms());
+  for (auto n=0; n<my.n_sipms(); n++) {
+    counts.push_back(std::make_shared<arrow::UInt16Builder>(pool));
+  }
+  return counts;
+}
+
 parquet_writer::parquet_writer() :
   pool          {arrow::default_memory_pool()}
 , x_builder     {std::make_shared<arrow::FloatBuilder>(pool)}
 , y_builder     {std::make_shared<arrow::FloatBuilder>(pool)}
 , z_builder     {std::make_shared<arrow::FloatBuilder>(pool)}
-, counts_builder{}
+, counts_builder{counts(pool)}
 , writer        {}
 , schema        {std::make_shared<arrow::Schema>(fields())}
 {
-  for (auto n=0; n<my.n_sipms(); n++) {
-    counts_builder.push_back(std::make_shared<arrow::UInt16Builder>(pool));
-  }
 
   // Choose compression and opt to store Arrow schema for easier reads
   // back into Arrow
