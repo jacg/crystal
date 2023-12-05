@@ -63,8 +63,8 @@ arrow::Status parquet_writer::append(const G4ThreeVector& pos, std::unordered_ma
     n = counts.contains(i) ? counts[i] : 0;
     ARROW_RETURN_NOT_OK(counts_builder[i] -> Append(n));
   }
-
-  return arrow::Status::OK();
+  return write();
+  //  return arrow::Status::OK();
 }
 
 arrow::Status parquet_writer::write() {
