@@ -1,6 +1,8 @@
 #include "actions.hh"
 #include "config.hh"
 
+#include <cstdlib>
+#include <iomanip>
 #include <n4-inspect.hh>
 #include <n4-mandatory.hh>
 #include <n4-random.hh>
@@ -9,6 +11,7 @@
 #include <G4PrimaryVertex.hh>
 
 #include <cstddef>
+#include <string>
 #include <unordered_map>
 
 using generator_fn = n4::generator::function;
@@ -107,32 +110,36 @@ std::function<generator_fn((void))> select_generator() {
   throw "[select_generator]: unreachable";
 }
 
-void write_xx(
-  const G4ThreeVector& pos,
-  const std::unordered_map<size_t, size_t>& counts,
-  const size_t N) {
-  std::cout << "Position: " << pos << std::endl;
-
-  for (size_t sipm_n=0; sipm_n<N; ++sipm_n) {
-    if (counts.contains(sipm_n)) { std::cout << sipm_n << " " << counts.at(sipm_n) << std::endl; }
-    else                         { std::cout << sipm_n << " " <<       0        << std::endl;}
+csv_writer::csv_writer() : out{my.outfile}, number_of_sipms{my.N_sipms()} {
+  if (!out) {
+    std::cerr << "ERROR: Could not open output file '" << my.outfile << "'." << std::endl;
+    std::exit(EXIT_FAILURE);
   }
+}
 
+void csv_writer::write(const G4ThreeVector& pos, const std::unordered_map<size_t, size_t>& counts) {
+  out
+
+
+    << std::setw(10) << std::setfill(' ') << std::fixed << std::setprecision(6) << pos.x() << ' '
+    << std::setw(10) << std::setfill(' ') << std::fixed << std::setprecision(6) << pos.y() << ' '
+    << std::setw(10) << std::setfill(' ') << std::fixed << std::setprecision(6) << pos.z() << ' ';
+  for (size_t sipm=0; sipm<number_of_sipms; ++sipm) {
+    out << std::setw(4) << (counts.contains(sipm) ? counts.at(sipm) : 0) << ' ';
+  }
+  out << std::endl;
 }
 
 n4::actions* create_actions(run_stats& stats) {
-
   auto my_event_action = [&] (const G4Event* event) {
+    static csv_writer writer;
     stats.n_over_threshold += stats.n_detected_evt >= my.event_threshold;
     stats.n_detected_total += stats.n_detected_evt;
     //auto n_sipms_over_threshold = stats.n_sipms_over_threshold(my.sipm_threshold);
 
-    std::cout << "--------------------------------------------------------------------------------" << std::endl;
     auto primary_vertex = event -> GetPrimaryVertex();
     const auto& counts = stats.n_detected_at_sipm;
-    const auto& params = my.scint_params();
-    const auto N = params.n_sipms_x * params.n_sipms_y;
-    write_xx(primary_vertex -> GetPosition(), counts, N);
+    writer.write(primary_vertex -> GetPosition(), counts);
     stats.n_detected_evt = 0;
     stats.n_detected_at_sipm.clear();
   };

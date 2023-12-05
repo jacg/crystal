@@ -62,6 +62,7 @@ config::config()
   msg -> DeclareProperty        ( "sipm_threshold"     ,            sipm_threshold         );
   msg -> DeclareMethod          ("reflectivity"        ,          &config::set_reflectivity);
   msg -> DeclareProperty        ( "generator"          ,           generator               );
+  msg -> DeclareProperty        ( "outfile"            ,           outfile                 );
 
   msg -> DeclareMethod        ("scint"      ,       &config::set_scint);
   msg -> DeclareMethodWithUnit("scint_depth", "mm", &config::set_scint_depth);
@@ -167,4 +168,9 @@ void config::recalculate_sipm_positions() const {
     }
   }
   sipm_positions_need_recalculating = false;
+}
+
+size_t config::N_sipms() const {
+  auto params = scint_params();
+  return params.n_sipms_x * params.n_sipms_y;
 }

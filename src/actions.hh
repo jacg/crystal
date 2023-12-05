@@ -11,3 +11,13 @@ n4::generator::function pointlike_photon_source();
 std::function<n4::generator::function((void))> select_generator();
 
 n4::actions* create_actions(run_stats& data);
+
+
+class csv_writer {
+public:
+  csv_writer();
+  void write(const G4ThreeVector& pos, const std::unordered_map<size_t, size_t>& counts);
+private:
+  std::ofstream out;
+  size_t        number_of_sipms;
+};
