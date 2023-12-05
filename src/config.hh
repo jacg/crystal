@@ -56,6 +56,7 @@ public:
   G4ThreeVector scint_size() const;
   const std::vector<G4ThreeVector>& sipm_positions() const;
   const scint_parameters scint_params() const;
+  size_t n_sipms() const;
 private:
 
   void set_config_type(const std::string& s);

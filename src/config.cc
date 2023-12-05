@@ -168,3 +168,8 @@ void config::recalculate_sipm_positions() const {
   }
   sipm_positions_need_recalculating = false;
 }
+
+size_t config::n_sipms() const {
+  auto params = scint_params();
+  return params.n_sipms_x * params.n_sipms_y;
+}
