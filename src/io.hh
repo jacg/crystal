@@ -1,9 +1,8 @@
 #pragma once
 
 #include <G4ThreeVector.hh>
-#include "arrow/memory_pool.h"
-#include <arrow/api.h>
 
+#include <arrow/api.h>
 #include <parquet/arrow/writer.h>
 
 #include <memory>

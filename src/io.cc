@@ -1,16 +1,8 @@
 #include "io.hh"
 
-#include <G4ThreeVector.hh>
+#include <arrow/io/api.h>
 
-#include "arrow/io/api.h"
-#include "arrow/result.h"
-#include "arrow/status.h"
-#include "arrow/type_fwd.h"
-#include "parquet/exception.h"
 #include <unordered_map>
-
-#include <parquet/api/io.h>
-#include <parquet/arrow/writer.h>
 
 parquet_writer::parquet_writer(const std::string& filename) :
   pool          {arrow::default_memory_pool()}
