@@ -68,7 +68,7 @@ arrow::Result<std::shared_ptr<arrow::Table>> parquet_writer::make_table() {
   return arrow::Table::Make(schema, arrays);
 };
 
-arrow::Status parquet_writer::append(const G4ThreeVector& pos, std::unordered_map<unsigned, unsigned> counts) {
+arrow::Status parquet_writer::append(const G4ThreeVector& pos, std::unordered_map<size_t, size_t> counts) {
   ARROW_RETURN_NOT_OK(x_builder -> Append(pos.x()));
   ARROW_RETURN_NOT_OK(y_builder -> Append(pos.y()));
   ARROW_RETURN_NOT_OK(z_builder -> Append(pos.z()));

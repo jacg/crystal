@@ -109,7 +109,7 @@ std::function<generator_fn((void))> select_generator() {
 
 n4::actions* create_actions(run_stats& stats) {
   static auto writer = parquet_writer();
-  auto my_event_action = [&] (const G4Event*) {
+  auto my_event_action = [&] (const G4Event* event) {
     stats.n_over_threshold += stats.n_detected_evt >= my.event_threshold;
     stats.n_detected_total += stats.n_detected_evt;
     auto n_sipms_over_threshold = stats.n_sipms_over_threshold(my.sipm_threshold);
@@ -125,15 +125,14 @@ n4::actions* create_actions(run_stats& stats) {
         << setw( 6) << stats.n_events_over_threshold_fraction() << "% of events detected over"
         << setw( 7) << my.event_threshold << " photons."
         << std::endl;
+
+    auto primary_pos = event -> GetPrimaryVertex() -> GetPosition();
+    auto status = writer.append(primary_pos, stats.n_detected_at_sipm);
+    if (! status.ok()) {
+      std::cerr << "could not append event " << n4::event_number() << std::endl;
+    }
     stats.n_detected_evt = 0;
     stats.n_detected_at_sipm.clear();
-
-    auto n = n4::event_number();
-    auto sipms = std::unordered_map<unsigned, unsigned>{ {0, 3*n}, {1, 4*n}, {2, 3*n} };
-    auto status = writer.append({1.*n, 10.*n, 100.*n}, sipms);
-    if (! status.ok()) {
-      std::cerr << "could not append event " + std::to_string(n) << std::endl;
-    }
   };
 
   return (new n4::      actions{select_generator()()})

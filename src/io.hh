@@ -26,7 +26,7 @@ public:
     }
   }
 
-  arrow::Status append(const G4ThreeVector& pos, std::unordered_map<unsigned, unsigned> counts);
+  arrow::Status append(const G4ThreeVector& pos, std::unordered_map<size_t, size_t> counts);
 
   arrow::Status write();
 private:
