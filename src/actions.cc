@@ -114,17 +114,21 @@ n4::actions* create_actions(run_stats& stats) {
     stats.n_detected_total += stats.n_detected_evt;
     auto n_sipms_over_threshold = stats.n_sipms_over_threshold(my.sipm_threshold);
 
-    using std::setw; using std::fixed; using std::setprecision;
-    std::cout
-        << "event "
-        << setw( 4) << n4::event_number()     << ':'
-        << setw( 7) << stats.n_detected_evt   << " photons detected;"
-        << setw( 6) << n_sipms_over_threshold << " SiPMs detected over "
-        << setw( 6) << my.sipm_threshold << " photons;"
-        << setw(10) << fixed << setprecision(1) << "     so far,"
-        << setw( 6) << stats.n_events_over_threshold_fraction() << "% of events detected over"
-        << setw( 7) << my.event_threshold << " photons."
-        << std::endl;
+    std::cout << n4::event_number() << ' ';
+    std::cout.flush();
+    if (n4::event_number() % 100 == 0) { std::cout << std::endl; }
+
+    // using std::setw; using std::fixed; using std::setprecision;
+    // std::cout
+    //     << "event "
+    //     << setw( 4) << n4::event_number()     << ':'
+    //     << setw( 7) << stats.n_detected_evt   << " photons detected;"
+    //     << setw( 6) << n_sipms_over_threshold << " SiPMs detected over "
+    //     << setw( 6) << my.sipm_threshold << " photons;"
+    //     << setw(10) << fixed << setprecision(1) << "     so far,"
+    //     << setw( 6) << stats.n_events_over_threshold_fraction() << "% of events detected over"
+    //     << setw( 7) << my.event_threshold << " photons."
+    //     << std::endl;
 
     auto primary_pos = event -> GetPrimaryVertex() -> GetPosition();
     auto status = writer.append(primary_pos, stats.n_detected_at_sipm);

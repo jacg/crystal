@@ -13,7 +13,6 @@ class parquet_writer {
 public:
   parquet_writer();
   ~parquet_writer() {
-    std::cerr << "CALLING CLOSE" << std::endl;
     arrow::Status status;
     status = write();
     if (! status.ok()) {

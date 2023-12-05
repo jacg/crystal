@@ -16,7 +16,6 @@
 #include <FTFP_BERT.hh>         // our choice of physics list
 #include <G4ThreeVector.hh>
 
-
 #include <ios>
 #include <cstdlib>
 
@@ -41,9 +40,6 @@ int main(int argc, char* argv[]) {
     // .apply_command(...) // also possible after apply_late_macro
 
     .run();
-
-  using std::setprecision; using std::fixed; using std::setw;
-  std::cout << "total detected: " << stats.n_detected_total << std::endl;
 
   // Important! physics list has to be set before the generator!
 

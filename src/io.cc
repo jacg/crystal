@@ -83,7 +83,6 @@ arrow::Status parquet_writer::append(const G4ThreeVector& pos, std::unordered_ma
 }
 
 arrow::Status parquet_writer::write() {
-  std::cerr << "CALLING WRITE" << std::endl;
   ARROW_ASSIGN_OR_RAISE(auto data, make_table());
   ARROW_RETURN_NOT_OK(writer -> WriteTable( *data.get(), n_rows));
   n_rows = 0;
