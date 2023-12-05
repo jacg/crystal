@@ -4,6 +4,7 @@
 #include <arrow/io/api.h>
 
 #include <memory>
+#include <string>
 #include <unordered_map>
 
 std::vector<std::shared_ptr<arrow::Field>> fields() {
@@ -41,13 +42,28 @@ std::unique_ptr<parquet::arrow::FileWriter> make_writer(
                                            file_props, arrow_props).ValueOrDie();
 }
 
+std::shared_ptr<const arrow::KeyValueMetadata> metadata() {
+  auto positions = my.sipm_positions();
+  std::vector<std::string> keys  ; keys  .reserve(positions.size());
+  std::vector<std::string> values; values.reserve(positions.size());
+  size_t n = 0;
+  for (const auto& p: positions) {
+    keys  .push_back("x_" + std::to_string(n));
+    values.push_back(       std::to_string(p.x()));
+    keys  .push_back("y_" + std::to_string(n));
+    values.push_back(       std::to_string(p.y()));
+    n++;
+  }
+  return std::make_shared<const arrow::KeyValueMetadata>(keys, values);
+}
+
 parquet_writer::parquet_writer() :
   pool          {arrow::default_memory_pool()}
 , x_builder     {std::make_shared<arrow::FloatBuilder>(pool)}
 , y_builder     {std::make_shared<arrow::FloatBuilder>(pool)}
 , z_builder     {std::make_shared<arrow::FloatBuilder>(pool)}
 , counts_builder{counts(pool)}
-, schema        {std::make_shared<arrow::Schema>(fields())}
+, schema        {std::make_shared<arrow::Schema>(fields(), metadata())}
 , writer        {make_writer(schema, pool)}
 {}
 
