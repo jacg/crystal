@@ -11,7 +11,6 @@ parquet_writer::parquet_writer() :
 , y_builder     {std::make_shared<arrow::FloatBuilder>(pool)}
 , z_builder     {std::make_shared<arrow::FloatBuilder>(pool)}
 , counts_builder{}
-, outfile       {arrow::io::FileOutputStream::Open(my.outfile).ValueOrDie()}
 , writer        {}
 , schema        {}
 {
@@ -33,6 +32,7 @@ parquet_writer::parquet_writer() :
   // back into Arrow
   auto  file_props = parquet::     WriterProperties::Builder().compression(arrow::Compression::SNAPPY) -> build();
   auto arrow_props = parquet::ArrowWriterProperties::Builder().store_schema() -> build();
+  auto outfile = arrow::io::FileOutputStream::Open(my.outfile).ValueOrDie();
   writer = parquet::arrow::FileWriter::Open( *schema, pool, outfile,
                                              file_props, arrow_props).ValueOrDie();
 

@@ -41,7 +41,6 @@ private:
   std::vector<
   std::shared_ptr<arrow::UInt16Builder   >> counts_builder;
 
-  std::shared_ptr<arrow::io::FileOutputStream> outfile;
   std::unique_ptr<parquet::arrow::FileWriter>  writer;
   std::shared_ptr<arrow::Schema>               schema;
 
