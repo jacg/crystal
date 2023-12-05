@@ -19,12 +19,12 @@ parquet_writer::parquet_writer(const std::string& filename) :
 , z_builder     {std::make_shared<arrow::FloatBuilder>(pool)}
 , counts_builder{}
 , outfile       {arrow::io::FileOutputStream::Open(filename).ValueOrDie()}
+, writer        {}
 , schema        {}
 {
   for (auto n=0; n<n_sipms; n++) {
     counts_builder.push_back(std::make_shared<arrow::UInt16Builder>(pool));
   }
-
   std::vector<std::shared_ptr<arrow::Field>> fields;
   fields.reserve(n_sipms + 3);
   fields.push_back(arrow::field("x", arrow::float32()));
@@ -35,6 +35,14 @@ parquet_writer::parquet_writer(const std::string& filename) :
   }
 
   schema = std::make_shared<arrow::Schema>(fields);
+
+  // Choose compression and opt to store Arrow schema for easier reads
+  // back into Arrow
+  auto  file_props = parquet::     WriterProperties::Builder().compression(arrow::Compression::SNAPPY) -> build();
+  auto arrow_props = parquet::ArrowWriterProperties::Builder().store_schema() -> build();
+  writer = parquet::arrow::FileWriter::Open( *schema, pool, outfile,
+                                             file_props, arrow_props).ValueOrDie();
+
 }
 
 arrow::Result<std::shared_ptr<arrow::Table>> parquet_writer::make_table() {
@@ -63,12 +71,14 @@ arrow::Status parquet_writer::append(const G4ThreeVector& pos, std::unordered_ma
     n = counts.contains(i) ? counts[i] : 0;
     ARROW_RETURN_NOT_OK(counts_builder[i] -> Append(n));
   }
-  return write();
-  //  return arrow::Status::OK();
+  n_rows++;
+  return n_rows == chunk_size ? write() : arrow::Status::OK();
 }
 
 arrow::Status parquet_writer::write() {
+  std::cerr << "CALLING WRITE" << std::endl;
   ARROW_ASSIGN_OR_RAISE(auto data, make_table());
-  PARQUET_THROW_NOT_OK(parquet::arrow::WriteTable(*data, pool, outfile, chunk_size));
+  ARROW_RETURN_NOT_OK(writer -> WriteTable( *data.get(), n_rows));
+  n_rows = 0;
   return arrow::Status::OK();
 }

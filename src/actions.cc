@@ -136,14 +136,7 @@ n4::actions* create_actions(run_stats& stats) {
     }
   };
 
-  auto run_action = [&] (const G4Run*) {
-    auto status = writer.write();
-    if (! status.ok() ) {
-      std::cerr << "Could not write to disk" << std::endl;
-    }
-  };
-
   return (new n4::      actions{select_generator()()})
- -> set( (new n4::  run_action {                    }) -> end(     run_action))
- -> set( (new n4::event_action {                    }) -> end(my_event_action));
+ -> set( (new n4::event_action {                    }) -> end(my_event_action))
+    ;
 }
