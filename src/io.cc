@@ -3,9 +3,14 @@
 
 #include <arrow/io/api.h>
 
+#include <boost/algorithm/string/split.hpp>          // boost::split
+#include <boost/algorithm/string/classification.hpp> // boost::is_any_of
+
+#include <cstdlib>
 #include <memory>
 #include <string>
 #include <unordered_map>
+#include <vector>
 
 std::vector<std::shared_ptr<arrow::Field>> fields() {
   std::vector<std::shared_ptr<arrow::Field>> fields;
@@ -30,22 +35,39 @@ std::vector<std::shared_ptr<arrow::UInt16Builder>> counts(arrow::MemoryPool* poo
 }
 
 
+#define EXIT(stuff) std::cerr << "\n\n    " << stuff << "\n\n\n"; std::exit(EXIT_FAILURE);
 std::tuple<arrow::Compression::type, unsigned short> parse_compression_spec(std::string spec) {
-  char* s = spec.data();
-  char* c_type  = std::strtok(s      , "-"); std::string s_type {c_type};
-  char* c_level = std::strtok(nullptr, "-"); std::string s_level{c_level};
+  // Split spec into algorithm and (maybe) level
+  std::vector<std::string> result;
+  boost::split(result, spec, boost::is_any_of("-"));
 
-  std::cout << "s_type: " << s_type << "  s_level: " << s_level << std::endl;
+  // Detect and report errors relating to number of split parts
+  if (result.empty())    { EXIT("Not enough information in compression spec: '" << spec << "'."); }
+  if (result.size() > 2) { EXIT("Too many '-'s in compression spec: '" << spec <<"'.")  }
 
+  auto& type_spec = result[0];
   arrow::Compression::type type;
-  int level;
+  int level = -1;
 
-  for (auto& c: s_type) { c = std::tolower(c); }
-  if (s_type == "snappy") { type = arrow::Compression::SNAPPY; level = -1; }
-  if (s_type == "gzip"  ) { type = arrow::Compression::GZIP  ; level =  6; }
-  if (s_type == "zstd  ") { type = arrow::Compression::ZSTD  ; level =  9; }
+  for (auto& c: type_spec) { c = std::tolower(c); }
+  if      (type_spec == "brotli" ) { type = arrow::Compression::BROTLI; level = 11; }
+  else if (type_spec == "bz2"    ) { type = arrow::Compression::BZ2   ; level =  9; }
+  else if (type_spec == "gzip"   ) { type = arrow::Compression::GZIP  ; level =  6; }
+  else if (type_spec == "lz4"    ) { type = arrow::Compression::LZ4   ; level =  9; }
+  else if (type_spec == "lzo"    ) { type = arrow::Compression::LZO   ; level =  9; }
+  else if (type_spec == "snappy" ) { type = arrow::Compression::SNAPPY;             }
+  else if (type_spec == "zstd"   ) { type = arrow::Compression::ZSTD  ; level =  9; }
+  else if (type_spec == "none"   ) { type = arrow::Compression::UNCOMPRESSED; }
+  else { EXIT("Unrecognized compression algorithm '" << type_spec << "'") }
 
-  if (! s_level.empty()) { level = std::stoi(s_level); }
+  if (result.size() == 2) {
+    const auto& level_spec = result[1];
+    try {
+      level = std::stoi(level_spec);
+    } catch (const std::exception& e) {
+      EXIT("Could not parse compression level '" << level_spec << "'")
+    }
+  }
 
   std::cout
     << "RESULT OF PARSING COMPRESSION SPEC   RESULT OF PARSING COMPRESSION SPEC   RESULT OF PARSING COMPRESSION SPEC\n"
@@ -53,6 +75,7 @@ std::tuple<arrow::Compression::type, unsigned short> parse_compression_spec(std:
 
   return {type, level};
 }
+#undef EXIT
 
 std::unique_ptr<parquet::arrow::FileWriter> make_writer(
   std::shared_ptr<arrow::Schema> schema,
