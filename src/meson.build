@@ -33,10 +33,20 @@ geant4 = dependency( 'Geant4'
                                , 'Geant4::G4UIVisDefinitions'
                                ])
 
-crystal_deps     = [nain4, geant4]
+arrow = dependency( 'arrow'
+                  , method   : 'pkg-config'
+                  , required : true
+                  )
+
+parquet = dependency('parquet'
+                    , method   : 'pkg-config'
+                    , required : true
+                    )
+
+crystal_deps     = [nain4, geant4, arrow, parquet]
 crystal_include  = include_directories('.')
-crystal_sources  = ['main-crystal.cc', 'actions.cc', 'config.cc', 'geometry.cc', 'materials.cc', 'run_stats.cc', 'physics-list.cc']
-crystal_includes =                    ['actions.hh', 'config.hh', 'geometry.hh', 'materials.hh', 'run_stats.hh', 'physics-list.hh']
+crystal_sources  = ['main-crystal.cc', 'actions.cc', 'config.cc', 'geometry.cc', 'io.cc', 'materials.cc', 'run_stats.cc', 'physics-list.cc']
+crystal_includes =                    ['actions.hh', 'config.hh', 'geometry.hh', 'io.hh', 'materials.hh', 'run_stats.hh', 'physics-list.hh']
 
 geant4_include = geant4.get_variable(cmake    : 'Geant4_INCLUDE_DIRS')
 nain4_include  =  nain4.get_variable(pkgconfig: 'includedir'         )

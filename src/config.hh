@@ -7,7 +7,9 @@
 #include <G4UnitsTable.hh>
 #include <Randomize.hh>
 
+#include <cstdint>
 #include <optional>
+#include <unordered_map>
 
 
 enum class scintillator_type_enum { lyso, bgo, csi };
@@ -51,19 +53,26 @@ public:
   size_t                   sipm_threshold     = 1;
   std::optional<double>   reflectivity        = std::nullopt;
   std::string             generator           = "gammas_from_outside_crystal";
+  std::string             outfile             = "crystal-out.parquet";
+  int64_t                 chunk_size          = 1024; // TODO find out what chuck_size default should be
+  std::string             compression         = "brotli";
+
   config();
 
   G4ThreeVector scint_size() const;
   const std::vector<G4ThreeVector>& sipm_positions() const;
   const scint_parameters scint_params() const;
+  size_t n_sipms() const;
+  std::unordered_map<std::string, std::string> as_map();
+
 private:
 
   void set_config_type(const std::string& s);
   void set_scint      (const std::string& s) { overrides.scint = string_to_scintillator_type(s); }
   void set_scint_depth(double   d)           { overrides.scint_depth = d; }
-  void set_n_sipms_x  (unsigned n)           { overrides.n_sipms_x   = n; }
-  void set_n_sipms_y  (unsigned n)           { overrides.n_sipms_y   = n; }
-  void set_sipm_size  (double   d)           { overrides.sipm_size   = d; }
+  void set_n_sipms_x  (unsigned n)           { overrides.n_sipms_x   = n; sipm_positions_need_recalculating = true; }
+  void set_n_sipms_y  (unsigned n)           { overrides.n_sipms_y   = n; sipm_positions_need_recalculating = true; }
+  void set_sipm_size  (double   d)           { overrides.sipm_size   = d; sipm_positions_need_recalculating = true; }
 
   void set_scint_yield(double   y) { scint_yield = y; }
   void set_random_seed(long  seed) { G4Random::setTheSeed(seed); }
