@@ -119,12 +119,13 @@ config_type_enum string_to_config_type(std::string s) {
 
 void config::set_config_type(const std::string& s) {
   switch (string_to_config_type(s)) {
-    case config_type_enum::lyso    : scint_params_ = lyso; return;
-    case config_type_enum::bgo     : scint_params_ = bgo; return;
-    case config_type_enum::csi     : scint_params_ = csi; return;
-    case config_type_enum::csi_mono: scint_params_ = csi_mono; return;
+    case config_type_enum::lyso    : scint_params_ = lyso     ; break;
+    case config_type_enum::bgo     : scint_params_ = bgo      ; break;
+    case config_type_enum::csi     : scint_params_ = csi      ; break;
+    case config_type_enum::csi_mono: scint_params_ = csi_mono ; break;
   }
-  throw "[config::set_config_type] unreachable";
+  sipm_positions_need_recalculating = true;
+  return;
 }
 
 G4ThreeVector config::scint_size() const {
