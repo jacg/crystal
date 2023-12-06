@@ -118,6 +118,13 @@ parquet_writer::parquet_writer() :
 , writer        {make_writer(schema, pool)}
 {}
 
+parquet_writer::~parquet_writer() {
+  arrow::Status status;
+  status = write();           if (! status.ok()) { std::cerr << "Could not write to file" << std::endl; }
+  status = writer -> Close(); if (! status.ok()) { std::cerr << "Could not close the file properly" << std::endl; }
+}
+
+
 arrow::Result<std::shared_ptr<arrow::Table>> parquet_writer::make_table() {
   auto n_sipms = my.n_sipms();
   std::vector<std::shared_ptr<arrow::Array>> arrays;
