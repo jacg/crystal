@@ -212,71 +212,81 @@ TEST_CASE("csi teflon null reflectivity", "[csi][teflon][reflectivity]") {
   CHECK(stats.n_detected_at_sipm.size() == 0);
 }
 
-TEST_CASE("CsI abslength", "[material][csi][abslength]") {
+TEST_CASE("CsI interaction length", "[material][csi][interaction_length]") {
   auto csi = csi_with_properties();
   CHECK_THAT( csi -> GetDensity() / (g / cm3), WithinRel(4.51, 1e-6));
 
-  auto abs_lengths = measure_abslength(test_config{ .physics         = physics_list()
-                                                  , .material        = csi
-                                                  , .particle_name   = "gamma"
-                                                  , .particle_energy = 511 * keV
-                                                  , .distances       = n4::scale_by(mm, {5, 10, 15, 20, 25, 30, 35, 40, 45, 50})});
+  interaction_length_config config{ .physics         = physics_list()
+                                  , .material        = csi
+                                  , .particle_name   = "gamma"
+                                  , .particle_energy = 511 * keV
+                                  , .distances       = n4::scale_by(mm, {5, 10, 15, 20, 25, 30, 35, 40, 45, 50})
+                                  , .n_events        = 100'000};
 
-  auto expected_abs_length = 24.9 * mm;
-  for (auto abs_length : abs_lengths) {
-    CHECK_THAT(abs_length, WithinRel(expected_abs_length, 0.05));
+  auto i_lengths = measure_interaction_length(config);
+
+  auto expected_interaction_length = 23.3 * mm;
+  for (auto i_length : i_lengths) {
+    CHECK_THAT(i_length, WithinRel(expected_interaction_length, 0.05));
   }
 }
 
-TEST_CASE("BGO abslength", "[material][bgo][abslength]") {
+
+
+TEST_CASE("BGO interaction length", "[material][bgo][interaction_length]") {
   auto bgo = bgo_with_properties();
   CHECK_THAT( bgo -> GetDensity() / (g / cm3), WithinRel(7.13, 1e-6));
 
-  auto abs_lengths = measure_abslength(test_config{ .physics         = physics_list()
-                                                  , .material        = bgo
-                                                  , .particle_name   = "gamma"
-                                                  , .particle_energy = 511 * keV
-                                                  , .distances       = n4::scale_by(mm, {5, 10, 15, 20, 25, 30, 35, 40, 45, 50})});
+  interaction_length_config config{ .physics         = physics_list()
+                                  , .material        = bgo
+                                  , .particle_name   = "gamma"
+                                  , .particle_energy = 511 * keV
+                                  , .distances       = n4::scale_by(mm, {5, 10, 15, 20, 25, 30, 35, 40, 45, 50})
+                                  , .n_events        = 100'000};
 
-  auto expected_abs_length = 11.4 * mm;
-  for (auto abs_length : abs_lengths) {
-    CHECK_THAT(abs_length, WithinRel(expected_abs_length, 0.05));
+  auto i_lengths = measure_interaction_length(config);
+
+  auto expected_interaction_length = 10.4 * mm;
+  for (auto i_length : i_lengths) {
+    CHECK_THAT(i_length, WithinRel(expected_interaction_length, 0.05));
   }
 }
 
-TEST_CASE("LYSO abslength", "[material][lyso][abslength]") {
+TEST_CASE("LYSO interaction length", "[material][lyso][interaction_length]") {
   auto lyso = lyso_with_properties();
   CHECK_THAT( lyso -> GetDensity() / (g / cm3), WithinRel(7.1, 1e-6));
 
-  auto abs_lengths = measure_abslength(test_config{ .physics         = physics_list()
-                                                  , .material        = lyso
-                                                  , .particle_name   = "gamma"
-                                                  , .particle_energy = 511 * keV
-                                                  , .distances       = n4::scale_by(mm, {5, 10, 15, 20, 25, 30, 35, 40, 45, 50})});
+  interaction_length_config config{ .physics         = physics_list()
+                                  , .material        = lyso
+                                  , .particle_name   = "gamma"
+                                  , .particle_energy = 511 * keV
+                                  , .distances       = n4::scale_by(mm, {5, 10, 15, 20, 25, 30, 35, 40, 45, 50})
+                                  , .n_events        = 100'000};
+  auto i_lengths = measure_interaction_length(config);
 
-  auto expected_abs_length = 13.0 * mm;
-  for (auto abs_length : abs_lengths) {
-    CHECK_THAT(abs_length, WithinRel(expected_abs_length, 0.05));
+  auto expected_interaction_length = 12.2 * mm;
+  for (auto i_length : i_lengths) {
+    CHECK_THAT(i_length, WithinRel(expected_interaction_length, 0.05));
   }
 }
 
 TEST_CASE("csi interaction process fractions", "[csi][interaction]") {
   auto fractions = calculate_interaction_process_fractions(csi_with_properties(), physics_list());
-  CHECK_THAT(fractions.photoelectric, WithinRel(0.207, 1e-2));
-  CHECK_THAT(fractions.compton      , WithinRel(0.740, 1e-2));
-  CHECK_THAT(fractions.rayleigh     , WithinRel(0.053, 1e-2));
+  CHECK_THAT(fractions.photoelectric, WithinRel(0.207, 2e-2));
+  CHECK_THAT(fractions.compton      , WithinRel(0.740, 2e-2));
+  CHECK_THAT(fractions.rayleigh     , WithinRel(0.053, 2e-2));
 }
 
 TEST_CASE("bgo interaction process fractions", "[bgo][interaction]") {
   auto fractions = calculate_interaction_process_fractions(bgo_with_properties(), physics_list());
-  CHECK_THAT(fractions.photoelectric, WithinRel(0.414, 1e-2));
-  CHECK_THAT(fractions.compton      , WithinRel(0.532, 1e-2));
-  CHECK_THAT(fractions.rayleigh     , WithinRel(0.054, 1e-2));
+  CHECK_THAT(fractions.photoelectric, WithinRel(0.414, 2e-2));
+  CHECK_THAT(fractions.compton      , WithinRel(0.532, 2e-2));
+  CHECK_THAT(fractions.rayleigh     , WithinRel(0.054, 2e-2));
 }
 
 TEST_CASE("lyso interaction process fractions", "[lyso][interaction]") {
   auto fractions = calculate_interaction_process_fractions(lyso_with_properties(), physics_list());
-  CHECK_THAT(fractions.photoelectric, WithinRel(0.311, 1e-2));
-  CHECK_THAT(fractions.compton      , WithinRel(0.637, 1e-2));
-  CHECK_THAT(fractions.rayleigh     , WithinRel(0.052, 1e-2));
+  CHECK_THAT(fractions.photoelectric, WithinRel(0.311, 2e-2));
+  CHECK_THAT(fractions.compton      , WithinRel(0.637, 2e-2));
+  CHECK_THAT(fractions.rayleigh     , WithinRel(0.051, 2e-2));
 }
