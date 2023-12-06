@@ -50,7 +50,7 @@
     # Activated by `nix develop <URL to this flake>#gcc`
     devShells.gcc = pkgs.mkShell (shell-shared // {
       name = "crystal-gcc-devenv";
-      packages = nain4.deps.dev-shell-packages + [ pkgs.arrow-cpp ];
+      packages = nain4.deps.dev-shell-packages ++ [ pkgs.arrow-cpp ];
     });
 
     # 1. `nix build` .#singularity
