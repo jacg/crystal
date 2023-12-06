@@ -45,18 +45,11 @@ parquet = dependency('parquet'
 
 crystal_deps     = [nain4, geant4, arrow, parquet]
 crystal_include  = include_directories('.')
-crystal_sources  = ['main-crystal.cc', 'actions.cc', 'config.cc', 'geometry.cc', 'io.cc', 'materials.cc', 'run_stats.cc', 'physics-list.cc']
-crystal_includes =                    ['actions.hh', 'config.hh', 'geometry.hh', 'io.hh', 'materials.hh', 'run_stats.hh', 'physics-list.hh']
+crystal_sources  = ['actions.cc', 'config.cc', 'geometry.cc', 'io.cc', 'materials.cc', 'run_stats.cc', 'physics-list.cc']
+crystal_includes = ['actions.hh', 'config.hh', 'geometry.hh', 'io.hh', 'materials.hh', 'run_stats.hh', 'physics-list.hh']
 
 geant4_include = geant4.get_variable(cmake    : 'Geant4_INCLUDE_DIRS')
 nain4_include  =  nain4.get_variable(pkgconfig: 'includedir'         )
-
-crystal_exe = executable( 'crystal'
-                        , crystal_sources
-                        , include_directories: [crystal_include, nain4_include, geant4_include]
-                        , dependencies       : crystal_deps
-                        , install            : true
-                        )
 
 crystal_lib = shared_library( 'crystal'
                             , crystal_sources
@@ -65,13 +58,21 @@ crystal_lib = shared_library( 'crystal'
                             , install            : true
                             )
 
-stats_sources  = ['main-stats.cc', 'config.cc', 'materials.cc', 'physics-list.cc']
+crystal_exe = executable( 'crystal'
+                        , ['main-crystal.cc']
+                        , include_directories: [crystal_include, nain4_include, geant4_include]
+                        , dependencies       : crystal_deps
+                        , link_with          : crystal_lib
+                        , install            : true
+                        )
+
 stats_exe = executable( 'stats'
-                          , stats_sources
-                          , include_directories: [crystal_include, nain4_include, geant4_include]
-                          , dependencies       : crystal_deps
-                          , install            : true
-                          )
+                      , ['main-stats.cc']
+                      , include_directories: [crystal_include, nain4_include, geant4_include]
+                      , dependencies       : crystal_deps
+                      , link_with          : crystal_lib
+                      , install            : true
+                      )
 
 install_headers(crystal_includes)
 
