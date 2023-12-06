@@ -44,8 +44,12 @@ catch2 = dependency( 'catch2'
                    , method   : 'pkg-config'
                    , required : true)
 
-crystal_test_deps    = [crystal, nain4, geant4, catch2]
-crystal_test_sources = ['catch2-main-test.cc', 'test-actions.cc', 'test-config.cc', 'test-geometry.cc', 'test-materials.cc'  , 'test-sensitive.cc']
+arrow = dependency( 'arrow'
+                  , method   : 'pkg-config'
+                  , required : true)
+
+crystal_test_deps    = [crystal, nain4, geant4, catch2, arrow]
+crystal_test_sources = ['catch2-main-test.cc', 'test-actions.cc', 'test-config.cc', 'test-geometry.cc', 'test-io.cc', 'test-materials.cc'  , 'test-sensitive.cc']
 catch2_demo_sources  = ['catch2-main-test.cc', 'test-catch2-demo.cc']
 
 geant4_include  =  geant4.get_variable(cmake    : 'Geant4_INCLUDE_DIRS')
