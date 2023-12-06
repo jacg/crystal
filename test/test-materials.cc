@@ -225,7 +225,7 @@ TEST_CASE("CsI interaction length", "[material][csi][interaction_length]") {
 
   auto i_lengths = measure_interaction_length(config);
 
-  auto expected_interaction_length = 24.9 * mm;
+  auto expected_interaction_length = 23.3 * mm;
   for (auto i_length : i_lengths) {
     CHECK_THAT(i_length, WithinRel(expected_interaction_length, 0.05));
   }
@@ -246,7 +246,7 @@ TEST_CASE("BGO interaction length", "[material][bgo][interaction_length]") {
 
   auto i_lengths = measure_interaction_length(config);
 
-  auto expected_interaction_length = 11.4 * mm;
+  auto expected_interaction_length = 10.4 * mm;
   for (auto i_length : i_lengths) {
     CHECK_THAT(i_length, WithinRel(expected_interaction_length, 0.05));
   }
@@ -264,7 +264,7 @@ TEST_CASE("LYSO interaction length", "[material][lyso][interaction_length]") {
                                   , .n_events        = 100'000};
   auto i_lengths = measure_interaction_length(config);
 
-  auto expected_interaction_length = 13.0 * mm;
+  auto expected_interaction_length = 12.2 * mm;
   for (auto i_length : i_lengths) {
     CHECK_THAT(i_length, WithinRel(expected_interaction_length, 0.05));
   }
