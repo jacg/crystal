@@ -32,3 +32,15 @@ private:
 
   unsigned n_rows = 0;
 };
+
+
+arrow::Result<
+  std::vector<
+    std::pair<
+      G4ThreeVector, std::unordered_map<size_t, size_t>
+      >
+    >
+  > read_entire_file(const std::string& filename);
+
+
+
