@@ -112,12 +112,12 @@ n4::actions* create_actions(run_stats& stats) {
   auto my_event_action = [&] (const G4Event* event) {
     stats.n_over_threshold += stats.n_detected_evt >= my.event_threshold;
     stats.n_detected_total += stats.n_detected_evt;
-    auto n_sipms_over_threshold = stats.n_sipms_over_threshold(my.sipm_threshold);
 
     std::cout << n4::event_number() << ' ';
     std::cout.flush();
     if (n4::event_number() % 100 == 0) { std::cout << std::endl; }
 
+    // auto n_sipms_over_threshold = stats.n_sipms_over_threshold(my.sipm_threshold);
     // using std::setw; using std::fixed; using std::setprecision;
     // std::cout
     //     << "event "
