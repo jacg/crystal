@@ -36,7 +36,7 @@ std::vector<std::shared_ptr<arrow::UInt16Builder>> counts(arrow::MemoryPool* poo
 
 
 #define EXIT(stuff) std::cerr << "\n\n    " << stuff << "\n\n\n"; std::exit(EXIT_FAILURE);
-std::tuple<arrow::Compression::type, unsigned short> parse_compression_spec(std::string spec) {
+std::tuple<arrow::Compression::type, std::optional<int>> parse_compression_spec(std::string spec) {
   // Split spec into algorithm and (maybe) level
   std::vector<std::string> result;
   boost::split(result, spec, boost::is_any_of("-"));
@@ -47,7 +47,7 @@ std::tuple<arrow::Compression::type, unsigned short> parse_compression_spec(std:
 
   auto& type_spec = result[0];
   arrow::Compression::type type;
-  int level = -1;
+  std::optional<int> level{};
 
   for (auto& c: type_spec) { c = std::tolower(c); }
   if      (type_spec == "brotli" ) { type = arrow::Compression::BROTLI; level = 11; }
@@ -70,8 +70,9 @@ std::tuple<arrow::Compression::type, unsigned short> parse_compression_spec(std:
   }
 
   std::cout
-    << "RESULT OF PARSING COMPRESSION SPEC   RESULT OF PARSING COMPRESSION SPEC   RESULT OF PARSING COMPRESSION SPEC\n"
-    << "type: " << type << "   level: " << level  << std::endl;
+    << "Chosen compression type: " << type
+    << "   level: " << (level.has_value() ? std::to_string(level.value()) : "NONE")
+    << std::endl;
 
   return {type, level};
 }
@@ -83,21 +84,16 @@ std::unique_ptr<parquet::arrow::FileWriter> make_writer(
 {
   // Choose compression and opt to store Arrow schema for easier reads
   // back into Arrow
-
-  // auto  file_props = parquet::     WriterProperties::Builder();
-  // file_props.compression(compression);
-  // file_props.compression_level(8);
-  // //if (level >= 0) { file_props.compression_level(level); }
-
   auto [compression, level] = parse_compression_spec(my.compression);
-  auto  file_props = parquet::     WriterProperties::Builder()
-    .compression(compression)
-    //-> compression_level(level)
-    -> build();
+
+  auto  file_props_builder = parquet::     WriterProperties::Builder();
+  file_props_builder.compression(compression);
+  if (level.has_value()) { file_props_builder.compression_level(level.value()); }
+  auto file_props = file_props_builder.build();
+
   auto arrow_props = parquet::ArrowWriterProperties::Builder().store_schema() -> build();
   auto outfile = arrow::io::FileOutputStream::Open(my.outfile).ValueOrDie();
-  return parquet::arrow::FileWriter::Open( *schema, pool, outfile,
-                                           file_props, arrow_props).ValueOrDie();
+  return parquet::arrow::FileWriter::Open(*schema, pool, outfile, file_props, arrow_props).ValueOrDie();
 }
 
 std::shared_ptr<const arrow::KeyValueMetadata> metadata() {
