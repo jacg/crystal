@@ -19,7 +19,7 @@ std::vector<std::shared_ptr<arrow::Field>> fields() {
   fields.push_back(arrow::field("x", arrow::float32()));
   fields.push_back(arrow::field("y", arrow::float32()));
   fields.push_back(arrow::field("z", arrow::float32()));
-  for (auto n=0; n<n_sipms; n++) {
+  for (size_t n=0; n<n_sipms; n++) {
     fields.push_back(arrow::field("sipm_" + std::to_string(n), arrow::uint16()));
   }
   return fields;
@@ -28,7 +28,7 @@ std::vector<std::shared_ptr<arrow::Field>> fields() {
 std::vector<std::shared_ptr<arrow::UInt16Builder>> counts(arrow::MemoryPool* pool) {
   std::vector<std::shared_ptr<arrow::UInt16Builder>> counts;
   counts.reserve(my.n_sipms());
-  for (auto n=0; n<my.n_sipms(); n++) {
+  for (size_t n=0; n<my.n_sipms(); n++) {
     counts.push_back(std::make_shared<arrow::UInt16Builder>(pool));
   }
   return counts;
@@ -127,7 +127,7 @@ arrow::Result<std::shared_ptr<arrow::Table>> parquet_writer::make_table() {
   ARROW_ASSIGN_OR_RAISE(auto y_array, y_builder -> Finish()); arrays.push_back(y_array);
   ARROW_ASSIGN_OR_RAISE(auto z_array, z_builder -> Finish()); arrays.push_back(z_array);
 
-  for (auto n=0; n<n_sipms; n++) {
+  for (size_t n=0; n<n_sipms; n++) {
     ARROW_ASSIGN_OR_RAISE(auto c_array, counts_builder[n] -> Finish());
     arrays.push_back(c_array);
   }
@@ -141,7 +141,7 @@ arrow::Status parquet_writer::append(const G4ThreeVector& pos, std::unordered_ma
   ARROW_RETURN_NOT_OK(z_builder -> Append(pos.z()));
 
   unsigned n;
-  for (auto i=0; i<my.n_sipms(); i++) {
+  for (size_t i=0; i<my.n_sipms(); i++) {
     n = counts.contains(i) ? counts[i] : 0;
     ARROW_RETURN_NOT_OK(counts_builder[i] -> Append(n));
   }
