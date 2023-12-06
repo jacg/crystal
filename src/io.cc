@@ -54,10 +54,10 @@ std::tuple<arrow::Compression::type, unsigned short> parse_compression_spec(std:
   else if (type_spec == "bz2"    ) { type = arrow::Compression::BZ2   ; level =  9; }
   else if (type_spec == "gzip"   ) { type = arrow::Compression::GZIP  ; level =  6; }
   else if (type_spec == "lz4"    ) { type = arrow::Compression::LZ4   ; level =  9; }
-  else if (type_spec == "lzo"    ) { type = arrow::Compression::LZO   ; level =  9; }
   else if (type_spec == "snappy" ) { type = arrow::Compression::SNAPPY;             }
   else if (type_spec == "zstd"   ) { type = arrow::Compression::ZSTD  ; level =  9; }
   else if (type_spec == "none"   ) { type = arrow::Compression::UNCOMPRESSED; }
+  else if (type_spec == "lzo"    ) { type = arrow::Compression::LZO; EXIT("LZO not available in C++") }
   else { EXIT("Unrecognized compression algorithm '" << type_spec << "'") }
 
   if (result.size() == 2) {
