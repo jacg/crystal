@@ -73,6 +73,7 @@ config::config()
   msg -> DeclareMethodWithUnit("scint_depth", "mm", &config::set_scint_depth);
   msg -> DeclareMethod        ("n_sipms_x"  ,       &config::set_n_sipms_x);
   msg -> DeclareMethod        ("n_sipms_y"  ,       &config::set_n_sipms_y);
+  msg -> DeclareMethod        ("n_sipms_xy" ,       &config::set_n_sipms_xy);
   msg -> DeclareMethodWithUnit("sipm_size"  , "mm", &config::set_sipm_size);
 
   set_random_seed(seed);

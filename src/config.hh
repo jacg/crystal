@@ -72,6 +72,7 @@ private:
   void set_scint_depth(double   d)           { overrides.scint_depth = d; }
   void set_n_sipms_x  (unsigned n)           { overrides.n_sipms_x   = n; sipm_positions_need_recalculating = true; }
   void set_n_sipms_y  (unsigned n)           { overrides.n_sipms_y   = n; sipm_positions_need_recalculating = true; }
+  void set_n_sipms_xy (unsigned n)           { set_n_sipms_x(n); set_n_sipms_y(n); }
   void set_sipm_size  (double   d)           { overrides.sipm_size   = d; sipm_positions_need_recalculating = true; }
 
   void set_scint_yield(double   y) { scint_yield = y; }
