@@ -40,7 +40,7 @@ generator_fn photoelectric_electrons() {
                                            + 2 * electron_K * electron_mass);
   auto [sx, sy, sz]             = n4::unpack(my.scint_size());
 
-  return [isotropic, electron_momentum, sx, sy, sz] (G4Event *event) {
+  return [isotropic, electron_momentum, &sx=sx, &sy=sy, &sz=sz] (G4Event *event) {
     static auto particle_type = n4::find_particle("e-");
     auto x0 =  n4::random::uniform_width(sx);
     auto y0 =  n4::random::uniform_width(sy);
@@ -64,7 +64,7 @@ generator_fn pointlike_photon_source() {
   auto isotropic    = n4::random::direction{};
   auto [sx, sy, sz] = n4::unpack(my.scint_size());
 
-  return [isotropic, sx, sy, sz] (G4Event *event) {
+  return [isotropic, &sx=sx, &sy=sy, &sz=sz] (G4Event *event) {
     static auto particle_type = n4::find_particle("opticalphoton");
     auto x0 =  n4::random::uniform_width(sx);
     auto y0 =  n4::random::uniform_width(sy);
