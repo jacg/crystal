@@ -8,24 +8,9 @@
 
 using Catch::Matchers::WithinULP;
 
-TEST_CASE("test reader", "[io][reader]") {
-  // Match schema with generation
-  auto UI = G4UImanager::GetUIpointer();
-  UI -> ApplyCommand("/my/n_sipms_x 2");
-  UI -> ApplyCommand("/my/n_sipms_y 2");
-
-  // Expected values
-  auto z = -40.91999816894531;
-  std::vector<G4ThreeVector>       source_pos{{-3, -3, z}, {-3, 3, z}, {3, -3, z}, {3, 3, z}};
-  std::vector<size_t       >       sipm_ids  {          0,          1,          2,         3};
-  std::vector<std::vector<size_t>> counts{   {       4472,       4579,       4539,      4556},
-                                             {       1592,       1677,       1640,      1711},
-                                             {       3990,       4054,       4015,      3936},
-                                             {       1501,       1560,       1496,      1589}
-  };
-
+void read_and_check(const auto& filename, const auto& source_pos, const auto& sipm_ids, const auto& counts) {
   // Read data
-  auto maybe_data = read_entire_file("data/reader-test.parquet");
+  auto maybe_data = read_entire_file(filename);
   CHECK(maybe_data.ok());
   auto rows = maybe_data.ValueOrDie();
 
@@ -48,4 +33,23 @@ TEST_CASE("test reader", "[io][reader]") {
       CHECK  (map[sipm_id] == counts[i][sipm_id]);
     }
   }
+}
+
+TEST_CASE("io reader", "[io][reader]") {
+  // Match schema with generation
+  auto UI = G4UImanager::GetUIpointer();
+  UI -> ApplyCommand("/my/n_sipms_x 2");
+  UI -> ApplyCommand("/my/n_sipms_y 2");
+
+  // Expected values
+  auto z = -40.91999816894531;
+  std::vector<G4ThreeVector>       source_pos{{-3, -3, z}, {-3, 3, z}, {3, -3, z}, {3, 3, z}};
+  std::vector<size_t       >       sipm_ids  {          0,          1,          2,         3};
+  std::vector<std::vector<size_t>> counts{   {       4472,       4579,       4539,      4556},
+                                             {       1592,       1677,       1640,      1711},
+                                             {       3990,       4054,       4015,      3936},
+                                             {       1501,       1560,       1496,      1589}
+  };
+
+  read_and_check("data/reader-test.parquet", source_pos, sipm_ids, counts);
 }
