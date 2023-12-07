@@ -53,3 +53,34 @@ TEST_CASE("io reader", "[io][reader]") {
 
   read_and_check("data/reader-test.parquet", source_pos, sipm_ids, counts);
 }
+
+TEST_CASE("io writer", "[io][writer]") {
+  std::string filename = "/tmp/writer-test.parquet";
+  auto UI = G4UImanager::GetUIpointer();
+  UI -> ApplyCommand("/my/n_sipms_x 2");
+  UI -> ApplyCommand("/my/n_sipms_y 2");
+  UI -> ApplyCommand("/my/outfile " + filename);
+
+  std::vector<G4ThreeVector>       source_pos{{0, 1, 2}, {0.25, 1.25, 2.25}, {0.5, 1.5, 2.5}, {0.75, 1.75, 2.75}};
+  std::vector<size_t       >       sipm_ids  {        0,                  1,               2,                 3};
+  std::vector<std::vector<size_t>> counts{   {       16,                 15,              14,                13},
+                                             {       12,                 11,              10,                 9},
+                                             {        8,                  7,               6,                 5},
+                                             {        4,                  3,               2,                 1}
+  };
+
+  {
+    auto writer = parquet_writer();
+    std::unordered_map<size_t, size_t> map;
+    arrow::Status status;
+    for (auto i=0; i<source_pos.size(); i++) {
+      for (auto sipm_id : sipm_ids) {
+        map[sipm_id] = counts[i][sipm_id];
+      }
+      status = writer.append(source_pos[i], map);
+      REQUIRE(status.ok());
+    }
+  } // writer goes out of scope, file should be written
+
+  read_and_check(filename, source_pos, sipm_ids, counts);
+}
