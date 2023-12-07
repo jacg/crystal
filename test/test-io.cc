@@ -6,6 +6,8 @@
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 
+#include <cstdio>
+
 using Catch::Matchers::WithinULP;
 
 void read_and_check(const auto& filename, const auto& source_pos, const auto& sipm_ids, const auto& counts) {
@@ -55,7 +57,7 @@ TEST_CASE("io reader", "[io][reader]") {
 }
 
 TEST_CASE("io writer", "[io][writer]") {
-  std::string filename = "/tmp/writer-test.parquet";
+  std::string filename = std::tmpnam(nullptr);
   auto UI = G4UImanager::GetUIpointer();
   UI -> ApplyCommand("/my/n_sipms_x 2");
   UI -> ApplyCommand("/my/n_sipms_y 2");
