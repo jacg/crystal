@@ -11,7 +11,7 @@ using Catch::Matchers::WithinULP;
 void read_and_check(const auto& filename, const auto& source_pos, const auto& sipm_ids, const auto& counts) {
   // Read data
   auto maybe_data = read_entire_file(filename);
-  CHECK(maybe_data.ok());
+  REQUIRE(maybe_data.ok());
   auto rows = maybe_data.ValueOrDie();
 
   // Check values
