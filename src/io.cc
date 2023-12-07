@@ -3,9 +3,12 @@
 
 #include <arrow/io/api.h>
 
+#include <parquet/arrow/reader.h>
+
 #include <boost/algorithm/string/split.hpp>          // boost::split
 #include <boost/algorithm/string/classification.hpp> // boost::is_any_of
 
+#include <cstdint>
 #include <cstdlib>
 #include <memory>
 #include <string>
@@ -33,7 +36,6 @@ std::vector<std::shared_ptr<arrow::UInt16Builder>> counts(arrow::MemoryPool* poo
   }
   return counts;
 }
-
 
 #define EXIT(stuff) std::cerr << "\n\n    " << stuff << "\n\n\n"; std::exit(EXIT_FAILURE);
 std::tuple<arrow::Compression::type, std::optional<int>> parse_compression_spec(std::string spec) {
@@ -108,6 +110,10 @@ std::shared_ptr<const arrow::KeyValueMetadata> metadata() {
   return std::make_shared<const arrow::KeyValueMetadata>(keys, values);
 }
 
+std::shared_ptr<arrow::Schema> make_schema() {
+  return std::make_shared<arrow::Schema>(fields(), metadata());
+}
+
 parquet_writer::parquet_writer() :
   pool          {arrow::default_memory_pool()}
 , x_builder     {std::make_shared<arrow::FloatBuilder>(pool)}
@@ -117,6 +123,12 @@ parquet_writer::parquet_writer() :
 , schema        {std::make_shared<arrow::Schema>(fields(), metadata())}
 , writer        {make_writer(schema, pool)}
 {}
+
+parquet_writer::~parquet_writer() {
+  arrow::Status status;
+  status = write();           if (! status.ok()) { std::cerr << "Could not write to file" << std::endl; }
+  status = writer -> Close(); if (! status.ok()) { std::cerr << "Could not close the file properly" << std::endl; }
+}
 
 arrow::Result<std::shared_ptr<arrow::Table>> parquet_writer::make_table() {
   auto n_sipms = my.n_sipms();
@@ -154,4 +166,46 @@ arrow::Status parquet_writer::write() {
   ARROW_RETURN_NOT_OK(writer -> WriteTable( *data.get(), n_rows));
   n_rows = 0;
   return arrow::Status::OK();
+}
+
+arrow::Result<
+  std::vector<
+    std::pair<
+      G4ThreeVector, std::unordered_map<size_t, size_t>
+    >
+  >
+>
+read_entire_file(const std::string& filename) {
+  arrow::MemoryPool* pool = arrow::default_memory_pool();
+  std::shared_ptr<arrow::io::RandomAccessFile> input;
+  std::unique_ptr<parquet::arrow::FileReader> reader;
+  std::shared_ptr<arrow::Table>                table;
+
+  ARROW_ASSIGN_OR_RAISE(input, arrow::io::ReadableFile::Open(filename));
+  ARROW_RETURN_NOT_OK  (parquet::arrow::OpenFile(input, pool, &reader));
+  ARROW_RETURN_NOT_OK  (reader -> ReadTable(&table));
+
+  if (! make_schema() -> Equals(*table->schema())) { return arrow::Status::Invalid("Schemas do not match"); }
+
+  auto batch   = table -> CombineChunksToBatch().ValueOrDie();
+  auto columns = batch -> columns();
+  const auto* x = columns[0] -> data() -> GetValues<float>(1); // I do not understand the meaning of 1
+  const auto* y = columns[1] -> data() -> GetValues<float>(1); // I do not understand the meaning of 1
+  const auto* z = columns[2] -> data() -> GetValues<float>(1); // I do not understand the meaning of 1
+  std::vector<const uint16_t*> c;
+  c.reserve(table -> num_columns() - 3);
+  for (auto col=3; col<table -> num_columns(); col++) {
+    const auto* c_col = columns[col] -> data() -> GetValues<std::uint16_t>(1);
+    c.push_back(c_col);
+  }
+
+  std::vector<std::pair<G4ThreeVector, std::unordered_map<size_t, size_t>>> rows;
+  for (auto row=0; row< table -> num_rows(); row++) {
+    std::unordered_map<size_t, size_t> map;
+    for (auto col=0; col<table -> num_columns() - 3; col++) {
+      map.insert({col, c[col][row]});
+    }
+    rows.push_back({ {x[row], y[row], z[row]}, map });
+  }
+  return rows;
 }

@@ -12,11 +12,7 @@
 class parquet_writer {
 public:
   parquet_writer();
-  ~parquet_writer() {
-    arrow::Status status;
-    status = write();           if (! status.ok()) { std::cerr << "Could not write to file" << std::endl; }
-    status = writer -> Close(); if (! status.ok()) { std::cerr << "Could not close the file properly" << std::endl; }
-  }
+  ~parquet_writer();
 
   arrow::Status append(const G4ThreeVector& pos, std::unordered_map<size_t, size_t> counts);
   arrow::Status write();
@@ -36,3 +32,15 @@ private:
 
   unsigned n_rows = 0;
 };
+
+
+arrow::Result<
+  std::vector<
+    std::pair<
+      G4ThreeVector, std::unordered_map<size_t, size_t>
+      >
+    >
+  > read_entire_file(const std::string& filename);
+
+
+
