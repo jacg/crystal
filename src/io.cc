@@ -98,15 +98,36 @@ std::unique_ptr<parquet::arrow::FileWriter> make_writer(
   return parquet::arrow::FileWriter::Open(*schema, pool, outfile, file_props, arrow_props).ValueOrDie();
 }
 
+std::string run_shell_cmd(const std::string& cmd, size_t buffer_size = 1024) {
+  std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd.c_str(), "r"), pclose);
+  if (!pipe) { std::cerr << "popen() failed!" << std::endl; exit(EXIT_FAILURE); }
+
+  char buffer[buffer_size];
+  std::string result;
+  while (fgets(buffer, buffer_size, pipe.get()) != nullptr) { result += buffer; }
+  return result;
+}
+
 std::shared_ptr<const arrow::KeyValueMetadata> metadata() {
   auto config_map = my.as_map();
   auto N = config_map.size();
-  std::vector<std::string> keys  ; keys  .reserve(N);
-  std::vector<std::string> values; values.reserve(N);
+  std::vector<std::string> keys  ; keys  .reserve(N + 3);
+  std::vector<std::string> values; values.reserve(N + 3);
   for (const auto& [k, v]: config_map) {
     keys  .push_back(k);
     values.push_back(v);
   }
+
+  auto commit_hash = run_shell_cmd("git log -1 | grep \"commit\" | head -1 | cut -d \" \" -f 2 | tr -d '\n'");
+  auto commit_date = run_shell_cmd("git log -1 | grep \"Date\" | cut -d \" \" -f 2,3,4,5,6,7 | tr -d '\n'");
+  auto commit_msg  = run_shell_cmd("git log --oneline | head -1 | cut -d \" \" -f 2- | tr -d '\n'");
+  keys.push_back("crystal-commit-hash");
+  keys.push_back("crystal-commit-date");
+  keys.push_back("crystal-commit-msg" );
+  values.push_back(commit_hash);
+  values.push_back(commit_date);
+  values.push_back(commit_msg );
+
   return std::make_shared<const arrow::KeyValueMetadata>(keys, values);
 }
 
