@@ -11,3 +11,5 @@ n4::generator::function pointlike_photon_source();
 std::function<n4::generator::function((void))> select_generator();
 
 n4::actions* create_actions(run_stats& data);
+
+extern const double xe_kshell_binding_energy;

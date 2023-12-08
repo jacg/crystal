@@ -30,10 +30,10 @@ generator_fn gammas_from_outside_crystal() {
   };
 }
 
+const double xe_kshell_binding_energy = 34.56 * keV;
 
 generator_fn photoelectric_electrons() {
   auto isotropic                = n4::random::direction{};
-  auto xe_kshell_binding_energy = 34.56 * keV;
   auto electron_K               = my.particle_energy - xe_kshell_binding_energy;
   auto electron_mass            = 0.510'998'91 * MeV;
   auto electron_momentum        = std::sqrt(     electron_K * electron_K

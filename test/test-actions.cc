@@ -42,7 +42,7 @@ TEST_CASE("gamma generator", "[generator][gamma]") {
 TEST_CASE("electron generator", "[generator][electron]") {
   n4::test::default_run_manager().run(0);
   auto generator       = photoelectric_electrons();
-  auto is_given_energy = WithinULP(my.particle_energy - 34.56*keV, 5);
+  auto is_given_energy = WithinULP(my.particle_energy - xe_kshell_binding_energy, 5);
   auto electron        = n4::find_particle("e-");
   auto [sx, sy, sz]    = n4::unpack(my.scint_size());
 
