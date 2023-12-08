@@ -23,11 +23,11 @@
         "nosys": "nosys"
       },
       "locked": {
-        "lastModified": 1701866760,
-        "narHash": "sha256-yS6TqSrLMN4xaNrauZ17EQuIT7gyf8gnTru9wCfEZcM=",
+        "lastModified": 1702048858,
+        "narHash": "sha256-j01/hKKk+jN1aicTLvmDkBh/SVrH++6S0CtvnbJPtUs=",
         "owner": "jacg",
         "repo": "nain4",
-        "rev": "4c209e1ffb8a5f595cd26a1571c86347d3111900",
+        "rev": "3247b05ac1b32b560baa04b712fcd90a50a255aa",
         "type": "github"
       },
       "original": {

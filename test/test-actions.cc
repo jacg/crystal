@@ -38,24 +38,10 @@ TEST_CASE("gamma generator", "[generator][gamma]") {
   }
 }
 
-
-// TODO: donate to nain4
-template<class CONTAINER>
-auto min_max(const CONTAINER& data) -> std::tuple<typename CONTAINER::value_type, typename CONTAINER::value_type> {
-  auto min = std::numeric_limits<typename CONTAINER::value_type>::max();
-  auto max = std::numeric_limits<typename CONTAINER::value_type>::min();
-  for (const auto& x: data) {
-    min = std::min(x, min);
-    max = std::max(x, max);
-  }
-  return {min, max};
-}
-
-
 G4ThreeVector range_of_vectors(auto positions) {
-  auto [min_x, max_x] = min_max(n4::map<double>([] (G4ThreeVector v) {return v.x();}, positions));
-  auto [min_y, max_y] = min_max(n4::map<double>([] (G4ThreeVector v) {return v.y();}, positions));
-  auto [min_z, max_z] = min_max(n4::map<double>([] (G4ThreeVector v) {return v.z();}, positions));
+  auto [min_x, max_x] = n4::stats::min_max(n4::map<double>([] (G4ThreeVector v) {return v.x();}, positions));
+  auto [min_y, max_y] = n4::stats::min_max(n4::map<double>([] (G4ThreeVector v) {return v.y();}, positions));
+  auto [min_z, max_z] = n4::stats::min_max(n4::map<double>([] (G4ThreeVector v) {return v.z();}, positions));
   return {
     max_x - min_x,
     max_y - min_y,
