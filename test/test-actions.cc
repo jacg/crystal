@@ -39,35 +39,71 @@ TEST_CASE("gamma generator", "[generator][gamma]") {
 }
 
 
+// TODO: donate to nain4
+template<class CONTAINER>
+auto min_max(const CONTAINER& data) -> std::tuple<typename CONTAINER::value_type, typename CONTAINER::value_type> {
+  auto min = std::numeric_limits<typename CONTAINER::value_type>::max();
+  auto max = std::numeric_limits<typename CONTAINER::value_type>::min();
+  for (const auto& x: data) {
+    min = std::min(x, min);
+    max = std::max(x, max);
+  }
+  return {min, max};
+}
+
+
+G4ThreeVector range_of_vectors(auto positions) {
+  auto [min_x, max_x] = min_max(n4::map<double>([] (G4ThreeVector v) {return v.x();}, positions));
+  auto [min_y, max_y] = min_max(n4::map<double>([] (G4ThreeVector v) {return v.y();}, positions));
+  auto [min_z, max_z] = min_max(n4::map<double>([] (G4ThreeVector v) {return v.z();}, positions));
+  return {
+    max_x - min_x,
+    max_y - min_y,
+    max_z - min_z
+  };
+}
+
+// Check particle type, energy, isotropic directions, and distribution of positions
 TEST_CASE("electron generator", "[generator][electron]") {
   n4::test::default_run_manager().run(0);
   auto generator       = photoelectric_electrons();
-  auto is_given_energy = WithinULP(my.particle_energy - 34.56*keV, 5);
+  auto is_given_energy = WithinULP(my.particle_energy - xe_kshell_binding_energy, 5);
   auto electron        = n4::find_particle("e-");
+  auto [sx, sy, sz]    = n4::unpack(my.scint_size());
 
-  G4ThreeVector average_p{};
+  G4ThreeVector              average_mom{};
+  std::vector<G4ThreeVector> positions{};
   auto n_events = 10'000;
   for (auto i=0; i<n_events; i++) {
     G4Event event{};
     generator(&event);
-    REQUIRE(event.GetNumberOfPrimaryVertex() == 1);
-    auto vertex = event.GetPrimaryVertex(0);
-    REQUIRE(vertex -> GetNumberOfParticle() == 1);
-    auto particle = vertex -> GetPrimary(0);
+    // Check that each event generates correct particle (e-) with correct energy
+    REQUIRE(event  .  GetNumberOfPrimaryVertex() == 1); auto vertex = event.GetPrimaryVertex(0);
+    REQUIRE(vertex -> GetNumberOfParticle     () == 1); auto particle = vertex -> GetPrimary(0);
     CHECK     (particle -> GetParticleDefinition()  == electron    );
     CHECK_THAT(particle -> GetKineticEnergy()     , is_given_energy);
 
-    average_p += particle -> GetMomentumDirection();
+    // Check isotropy of generated particles
+    average_mom += particle -> GetMomentumDirection();
+    positions.push_back(vertex -> GetPosition());
   }
-  average_p /= n_events;
+  average_mom /= n_events;
+
+  auto range = range_of_vectors(positions);
 
   auto is_close_to_zero = WithinAbs(0, 2e-2);
-  CHECK_THAT(average_p.x(), is_close_to_zero);
-  CHECK_THAT(average_p.y(), is_close_to_zero);
-  CHECK_THAT(average_p.z(), is_close_to_zero);
+  // Isotropic directions should average out to zero
+  CHECK_THAT(average_mom.x(), is_close_to_zero);
+  CHECK_THAT(average_mom.y(), is_close_to_zero);
+  CHECK_THAT(average_mom.z(), is_close_to_zero);
+  // Uniform distribution within crystal should cover most of crystal size
+  auto tol = 0.1;
+  CHECK(range.x() > sx * (1 - tol));
+  CHECK(range.y() > sy * (1 - tol));
+  CHECK(range.z() > sz * (1 - tol));
 }
 
-
+// Check particle type, energy, isotropic directions, and distribution of positions
 TEST_CASE("pointlike photon source generator", "[generator][photon][pointlike]") {
   n4::test::default_run_manager().run(0);
 
@@ -77,13 +113,18 @@ TEST_CASE("pointlike photon source generator", "[generator][photon][pointlike]")
   auto generator        = pointlike_photon_source();
   auto optical_photon   = n4::find_particle("opticalphoton");
   auto is_given_energy  = WithinULP(my.particle_energy, 2);
-  auto is_close_to_zero = WithinAbs(0, 2e-2);
+  auto [sx, sy, sz]     = n4::unpack(my.scint_size());
 
   G4UImanager::GetUIpointer() -> ApplyCommand("/source/nphotons " + std::to_string(n_phot_per_event));
 
+  std::vector<G4ThreeVector> positions{};
+
+  // Matcher combination outside macro does not work
+  auto is_zero = WithinULP(0., 1);
+
   auto n_events = 10;
   for (auto i=0; i<n_events; i++) {
-    G4ThreeVector average_p{};
+    G4ThreeVector average_mom{};
     G4Event event{};
     generator(&event);
     REQUIRE(event.GetNumberOfPrimaryVertex() == 1);
@@ -91,18 +132,30 @@ TEST_CASE("pointlike photon source generator", "[generator][photon][pointlike]")
     REQUIRE(vertex -> GetNumberOfParticle() == n_phot_per_event);
     for (auto j=0; j<n_phot_per_event; j++) {
       auto particle = vertex -> GetPrimary(j);
+      // Check that each event generates correct particle (opt photon) with correct energy etc.
       CHECK     (particle -> GetParticleDefinition() == optical_photon);
       CHECK_THAT(particle -> GetKineticEnergy()      , is_given_energy);
       CHECK_THAT(particle -> GetTotalEnergy  ()      , is_given_energy);
       CHECK_THAT(particle -> GetMomentum     ().mag(), is_given_energy);
-      average_p += particle -> GetMomentumDirection();
+      average_mom += particle -> GetMomentumDirection();
     }
-    average_p /= n_phot_per_event;
+    average_mom /= n_phot_per_event;
 
-    CHECK_THAT(average_p.x(), is_close_to_zero);
-    CHECK_THAT(average_p.y(), is_close_to_zero);
-    CHECK_THAT(average_p.z(), is_close_to_zero);
+    auto is_close_to_zero = WithinAbs(0, 2e-2);
+    // Isotropic directions of photons should average out to zero
+    CHECK_THAT(average_mom.x(), is_close_to_zero);
+    CHECK_THAT(average_mom.y(), is_close_to_zero);
+    CHECK_THAT(average_mom.z(), is_close_to_zero);
+
+    positions.push_back(vertex -> GetPosition());
   }
+
+  auto range = range_of_vectors(positions);
+  auto tol = 0.3; // Events are costly, and low event count requires high tolerance
+  // Uniform distribution within crystal should cover most of crystal size
+  CHECK(range.x() > sx * (1 - tol));
+  CHECK(range.y() > sy * (1 - tol));
+  CHECK(range.z() > sz * (1 - tol));
 }
 
 TEST_CASE("test selector", "[selector]") {
