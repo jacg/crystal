@@ -46,35 +46,34 @@ TEST_CASE("electron generator", "[generator][electron]") {
   auto electron        = n4::find_particle("e-");
   auto [sx, sy, sz]    = n4::unpack(my.scint_size());
 
-  G4ThreeVector average_p  {};
+  G4ThreeVector average_mom{};
   G4ThreeVector average_pos{};
   auto n_events = 10'000;
   for (auto i=0; i<n_events; i++) {
     G4Event event{};
     generator(&event);
-    REQUIRE(event.GetNumberOfPrimaryVertex() == 1);
-    auto vertex = event.GetPrimaryVertex(0);
-    REQUIRE(vertex -> GetNumberOfParticle() == 1);
-    auto particle = vertex -> GetPrimary(0);
+    // Check that each event generates correct particle (e-) with correct energy
+    REQUIRE(event  .  GetNumberOfPrimaryVertex() == 1); auto vertex = event.GetPrimaryVertex(0);
+    REQUIRE(vertex -> GetNumberOfParticle     () == 1); auto particle = vertex -> GetPrimary(0);
     CHECK     (particle -> GetParticleDefinition()  == electron    );
     CHECK_THAT(particle -> GetKineticEnergy()     , is_given_energy);
 
-    average_p   += particle -> GetMomentumDirection();
+    // Check isotropy of generated particles
+    average_mom += particle -> GetMomentumDirection();
     average_pos += vertex   -> GetPosition();
   }
-  average_p   /= n_events;
+  average_mom /= n_events;
   average_pos /= n_events;
   average_pos  = { average_pos.x() / (sx/2)
                  , average_pos.y() / (sy/2)
                  , average_pos.z() / (sz/2) + 1};
 
-
   // Matcher combination outside macro does not work
   auto is_close_to_zero = WithinAbs(0, 2e-2);
-  auto is_zero          = WithinULP(0., 1);
-  CHECK_THAT(average_p  .x(), is_close_to_zero && ! is_zero);
-  CHECK_THAT(average_p  .y(), is_close_to_zero && ! is_zero);
-  CHECK_THAT(average_p  .z(), is_close_to_zero && ! is_zero);
+  auto is_zero          = WithinULP(0., 1); // Why exclude ZERO ?
+  CHECK_THAT(average_mom.x(), is_close_to_zero && ! is_zero);
+  CHECK_THAT(average_mom.y(), is_close_to_zero && ! is_zero);
+  CHECK_THAT(average_mom.z(), is_close_to_zero && ! is_zero);
   CHECK_THAT(average_pos.x(), is_close_to_zero && ! is_zero);
   CHECK_THAT(average_pos.y(), is_close_to_zero && ! is_zero);
   CHECK_THAT(average_pos.z(), is_close_to_zero && ! is_zero);
@@ -95,12 +94,13 @@ TEST_CASE("pointlike photon source generator", "[generator][photon][pointlike]")
   G4UImanager::GetUIpointer() -> ApplyCommand("/source/nphotons " + std::to_string(n_phot_per_event));
 
   G4ThreeVector average_pos{};
+
   // Matcher combination outside macro does not work
-  auto is_zero          = WithinULP(0., 1);
+  auto is_zero = WithinULP(0., 1);
 
   auto n_events = 10;
   for (auto i=0; i<n_events; i++) {
-    G4ThreeVector average_p  {};
+    G4ThreeVector average_mom{};
     G4Event event{};
     generator(&event);
     REQUIRE(event.GetNumberOfPrimaryVertex() == 1);
@@ -112,15 +112,15 @@ TEST_CASE("pointlike photon source generator", "[generator][photon][pointlike]")
       CHECK_THAT(particle -> GetKineticEnergy()      , is_given_energy);
       CHECK_THAT(particle -> GetTotalEnergy  ()      , is_given_energy);
       CHECK_THAT(particle -> GetMomentum     ().mag(), is_given_energy);
-      average_p   += particle -> GetMomentumDirection();
+      average_mom += particle -> GetMomentumDirection();
     }
-    average_pos += vertex   -> GetPosition();
-    average_p   /= n_phot_per_event;
+    average_pos += vertex -> GetPosition();
+    average_mom /= n_phot_per_event;
 
     auto is_close_to_zero = WithinAbs(0, 2e-2);
-    CHECK_THAT(average_p  .x(), is_close_to_zero && ! is_zero);
-    CHECK_THAT(average_p  .y(), is_close_to_zero && ! is_zero);
-    CHECK_THAT(average_p  .z(), is_close_to_zero && ! is_zero);
+    CHECK_THAT(average_mom.x(), is_close_to_zero && ! is_zero);
+    CHECK_THAT(average_mom.y(), is_close_to_zero && ! is_zero);
+    CHECK_THAT(average_mom.z(), is_close_to_zero && ! is_zero);
   }
   average_pos /= n_events;
   average_pos  = { average_pos.x() / (sx/2)
