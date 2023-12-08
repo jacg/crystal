@@ -39,6 +39,13 @@ TEST_CASE("gamma generator", "[generator][gamma]") {
 }
 
 
+G4ThreeVector std_of_vectors(auto positions) {
+  double x = n4::stats::std_dev_sample(n4::map<double>([] (G4ThreeVector v) {return v.x();}, positions)).value();
+  double y = n4::stats::std_dev_sample(n4::map<double>([] (G4ThreeVector v) {return v.y();}, positions)).value();
+  double z = n4::stats::std_dev_sample(n4::map<double>([] (G4ThreeVector v) {return v.z();}, positions)).value();
+  return {x, y, z};
+}
+
 TEST_CASE("electron generator", "[generator][electron]") {
   n4::test::default_run_manager().run(0);
   auto generator       = photoelectric_electrons();
@@ -46,8 +53,8 @@ TEST_CASE("electron generator", "[generator][electron]") {
   auto electron        = n4::find_particle("e-");
   auto [sx, sy, sz]    = n4::unpack(my.scint_size());
 
-  G4ThreeVector average_mom{};
-  G4ThreeVector average_pos{};
+  G4ThreeVector              average_mom{};
+  std::vector<G4ThreeVector> positions{};
   auto n_events = 10'000;
   for (auto i=0; i<n_events; i++) {
     G4Event event{};
@@ -60,13 +67,11 @@ TEST_CASE("electron generator", "[generator][electron]") {
 
     // Check isotropy of generated particles
     average_mom += particle -> GetMomentumDirection();
-    average_pos += vertex   -> GetPosition();
+    positions.push_back(vertex -> GetPosition());
   }
   average_mom /= n_events;
-  average_pos /= n_events;
-  average_pos  = { average_pos.x() / (sx/2)
-                 , average_pos.y() / (sy/2)
-                 , average_pos.z() / (sz/2) + 1};
+
+  auto std = std_of_vectors(positions);
 
   // Matcher combination outside macro does not work
   auto is_close_to_zero = WithinAbs(0, 2e-2);
@@ -74,11 +79,10 @@ TEST_CASE("electron generator", "[generator][electron]") {
   CHECK_THAT(average_mom.x(), is_close_to_zero && ! is_zero);
   CHECK_THAT(average_mom.y(), is_close_to_zero && ! is_zero);
   CHECK_THAT(average_mom.z(), is_close_to_zero && ! is_zero);
-  CHECK_THAT(average_pos.x(), is_close_to_zero && ! is_zero);
-  CHECK_THAT(average_pos.y(), is_close_to_zero && ! is_zero);
-  CHECK_THAT(average_pos.z(), is_close_to_zero && ! is_zero);
+  CHECK_THAT(std.x()        ,                     ! is_zero);
+  CHECK_THAT(std.y()        ,                     ! is_zero);
+  CHECK_THAT(std.z()        ,                     ! is_zero);
 }
-
 
 TEST_CASE("pointlike photon source generator", "[generator][photon][pointlike]") {
   n4::test::default_run_manager().run(0);
@@ -93,7 +97,7 @@ TEST_CASE("pointlike photon source generator", "[generator][photon][pointlike]")
 
   G4UImanager::GetUIpointer() -> ApplyCommand("/source/nphotons " + std::to_string(n_phot_per_event));
 
-  G4ThreeVector average_pos{};
+  std::vector<G4ThreeVector> positions{};
 
   // Matcher combination outside macro does not work
   auto is_zero = WithinULP(0., 1);
@@ -114,23 +118,20 @@ TEST_CASE("pointlike photon source generator", "[generator][photon][pointlike]")
       CHECK_THAT(particle -> GetMomentum     ().mag(), is_given_energy);
       average_mom += particle -> GetMomentumDirection();
     }
-    average_pos += vertex -> GetPosition();
     average_mom /= n_phot_per_event;
 
     auto is_close_to_zero = WithinAbs(0, 2e-2);
     CHECK_THAT(average_mom.x(), is_close_to_zero && ! is_zero);
     CHECK_THAT(average_mom.y(), is_close_to_zero && ! is_zero);
     CHECK_THAT(average_mom.z(), is_close_to_zero && ! is_zero);
-  }
-  average_pos /= n_events;
-  average_pos  = { average_pos.x() / (sx/2)
-                 , average_pos.y() / (sy/2)
-                 , average_pos.z() / (sz/2) + 1};
 
-  auto is_close_to_zero = WithinAbs(0, 0.25);
-  CHECK_THAT(average_pos.x(), is_close_to_zero && ! is_zero);
-  CHECK_THAT(average_pos.y(), is_close_to_zero && ! is_zero);
-  CHECK_THAT(average_pos.z(), is_close_to_zero && ! is_zero);
+    positions.push_back(vertex -> GetPosition());
+  }
+
+  auto std = std_of_vectors(positions);
+  CHECK_THAT(std.x(), ! is_zero);
+  CHECK_THAT(std.y(), ! is_zero);
+  CHECK_THAT(std.z(), ! is_zero);
 }
 
 TEST_CASE("test selector", "[selector]") {
