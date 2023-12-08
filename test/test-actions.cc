@@ -39,13 +39,31 @@ TEST_CASE("gamma generator", "[generator][gamma]") {
 }
 
 
-G4ThreeVector std_of_vectors(auto positions) {
-  double x = n4::stats::std_dev_sample(n4::map<double>([] (G4ThreeVector v) {return v.x();}, positions)).value();
-  double y = n4::stats::std_dev_sample(n4::map<double>([] (G4ThreeVector v) {return v.y();}, positions)).value();
-  double z = n4::stats::std_dev_sample(n4::map<double>([] (G4ThreeVector v) {return v.z();}, positions)).value();
-  return {x, y, z};
+// TODO: donate to nain4
+template<class CONTAINER>
+auto min_max(const CONTAINER& data) -> std::tuple<typename CONTAINER::value_type, typename CONTAINER::value_type> {
+  auto min = std::numeric_limits<typename CONTAINER::value_type>::max();
+  auto max = std::numeric_limits<typename CONTAINER::value_type>::min();
+  for (const auto& x: data) {
+    min = std::min(x, min);
+    max = std::max(x, max);
+  }
+  return {min, max};
 }
 
+
+G4ThreeVector range_of_vectors(auto positions) {
+  auto [min_x, max_x] = min_max(n4::map<double>([] (G4ThreeVector v) {return v.x();}, positions));
+  auto [min_y, max_y] = min_max(n4::map<double>([] (G4ThreeVector v) {return v.y();}, positions));
+  auto [min_z, max_z] = min_max(n4::map<double>([] (G4ThreeVector v) {return v.z();}, positions));
+  return {
+    max_x - min_x,
+    max_y - min_y,
+    max_z - min_z
+  };
+}
+
+// Check particle type, energy, isotropic directions, and distribution of positions
 TEST_CASE("electron generator", "[generator][electron]") {
   n4::test::default_run_manager().run(0);
   auto generator       = photoelectric_electrons();
@@ -71,19 +89,21 @@ TEST_CASE("electron generator", "[generator][electron]") {
   }
   average_mom /= n_events;
 
-  auto std = std_of_vectors(positions);
+  auto range = range_of_vectors(positions);
 
-  // Matcher combination outside macro does not work
   auto is_close_to_zero = WithinAbs(0, 2e-2);
-  auto is_zero          = WithinULP(0., 1); // Why exclude ZERO ?
-  CHECK_THAT(average_mom.x(), is_close_to_zero && ! is_zero);
-  CHECK_THAT(average_mom.y(), is_close_to_zero && ! is_zero);
-  CHECK_THAT(average_mom.z(), is_close_to_zero && ! is_zero);
-  CHECK_THAT(std.x()        ,                     ! is_zero);
-  CHECK_THAT(std.y()        ,                     ! is_zero);
-  CHECK_THAT(std.z()        ,                     ! is_zero);
+  // Isotropic directions should average out to zero
+  CHECK_THAT(average_mom.x(), is_close_to_zero);
+  CHECK_THAT(average_mom.y(), is_close_to_zero);
+  CHECK_THAT(average_mom.z(), is_close_to_zero);
+  // Uniform distribution within crystal should cover most of crystal size
+  auto tol = 0.1;
+  CHECK(range.x() > sx * (1 - tol));
+  CHECK(range.y() > sy * (1 - tol));
+  CHECK(range.z() > sz * (1 - tol));
 }
 
+// Check particle type, energy, isotropic directions, and distribution of positions
 TEST_CASE("pointlike photon source generator", "[generator][photon][pointlike]") {
   n4::test::default_run_manager().run(0);
 
@@ -112,6 +132,7 @@ TEST_CASE("pointlike photon source generator", "[generator][photon][pointlike]")
     REQUIRE(vertex -> GetNumberOfParticle() == n_phot_per_event);
     for (auto j=0; j<n_phot_per_event; j++) {
       auto particle = vertex -> GetPrimary(j);
+      // Check that each event generates correct particle (opt photon) with correct energy etc.
       CHECK     (particle -> GetParticleDefinition() == optical_photon);
       CHECK_THAT(particle -> GetKineticEnergy()      , is_given_energy);
       CHECK_THAT(particle -> GetTotalEnergy  ()      , is_given_energy);
@@ -121,17 +142,20 @@ TEST_CASE("pointlike photon source generator", "[generator][photon][pointlike]")
     average_mom /= n_phot_per_event;
 
     auto is_close_to_zero = WithinAbs(0, 2e-2);
-    CHECK_THAT(average_mom.x(), is_close_to_zero && ! is_zero);
-    CHECK_THAT(average_mom.y(), is_close_to_zero && ! is_zero);
-    CHECK_THAT(average_mom.z(), is_close_to_zero && ! is_zero);
+    // Isotropic directions of photons should average out to zero
+    CHECK_THAT(average_mom.x(), is_close_to_zero);
+    CHECK_THAT(average_mom.y(), is_close_to_zero);
+    CHECK_THAT(average_mom.z(), is_close_to_zero);
 
     positions.push_back(vertex -> GetPosition());
   }
 
-  auto std = std_of_vectors(positions);
-  CHECK_THAT(std.x(), ! is_zero);
-  CHECK_THAT(std.y(), ! is_zero);
-  CHECK_THAT(std.z(), ! is_zero);
+  auto range = range_of_vectors(positions);
+  auto tol = 0.3; // Events are costly, and low event count requires high tolerance
+  // Uniform distribution within crystal should cover most of crystal size
+  CHECK(range.x() > sx * (1 - tol));
+  CHECK(range.y() > sy * (1 - tol));
+  CHECK(range.z() > sz * (1 - tol));
 }
 
 TEST_CASE("test selector", "[selector]") {
