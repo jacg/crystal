@@ -33,12 +33,12 @@ generator_fn gammas_from_outside_crystal() {
 const double xe_kshell_binding_energy = 34.56 * keV;
 
 generator_fn photoelectric_electrons() {
-  auto isotropic                = n4::random::direction{};
-  auto electron_K               = my.particle_energy - xe_kshell_binding_energy;
-  auto electron_mass            = 0.510'998'91 * MeV;
-  auto electron_momentum        = std::sqrt(     electron_K * electron_K
-                                           + 2 * electron_K * electron_mass);
-  auto [sx, sy, sz]             = n4::unpack(my.scint_size());
+  auto isotropic         = n4::random::direction{};
+  auto electron_K        = my.particle_energy - xe_kshell_binding_energy;
+  auto electron_mass     = 0.510'998'91 * MeV;
+  auto electron_momentum = std::sqrt(     electron_K * electron_K
+                                    + 2 * electron_K * electron_mass);
+  auto [sx, sy, sz]      = n4::unpack(my.scint_size());
 
   return [isotropic, electron_momentum, sx=sx, sy=sy, sz=sz] (G4Event *event) {
     static auto particle_type = n4::find_particle("e-");
