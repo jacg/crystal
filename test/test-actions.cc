@@ -39,9 +39,9 @@ TEST_CASE("gamma generator", "[generator][gamma]") {
 }
 
 G4ThreeVector range_of_vectors(auto positions) {
-  auto [min_x, max_x] = n4::stats::min_max(n4::map<double>([] (G4ThreeVector v) {return v.x();}, positions));
-  auto [min_y, max_y] = n4::stats::min_max(n4::map<double>([] (G4ThreeVector v) {return v.y();}, positions));
-  auto [min_z, max_z] = n4::stats::min_max(n4::map<double>([] (G4ThreeVector v) {return v.z();}, positions));
+  auto [min_x, max_x] = n4::stats::min_max(n4::map<double>([] (G4ThreeVector v) {return v.x();}, positions)).value();
+  auto [min_y, max_y] = n4::stats::min_max(n4::map<double>([] (G4ThreeVector v) {return v.y();}, positions)).value();
+  auto [min_z, max_z] = n4::stats::min_max(n4::map<double>([] (G4ThreeVector v) {return v.z();}, positions)).value();
   return {
     max_x - min_x,
     max_y - min_y,
