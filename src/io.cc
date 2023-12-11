@@ -111,9 +111,9 @@ std::string run_shell_cmd(const std::string& cmd, size_t buffer_size = 1024) {
 std::unordered_map<std::string, std::string> git_metadata() {
   std::unordered_map<std::string, std::string> out;
 
-  auto commit_hash = run_shell_cmd("git log -1 | grep \"commit\" | head -1 | cut -d \" \" -f 2 | tr -d '\n'");
-  auto commit_date = run_shell_cmd("git log -1 | grep \"Date\" | cut -d \" \" -f 2,3,4,5,6,7 | tr -d '\n'");
-  auto commit_msg  = run_shell_cmd("git log --oneline | head -1 | cut -d \" \" -f 2- | tr -d '\n'");
+  auto commit_hash = run_shell_cmd("git log -1 --pretty=format:\"%H\"");
+  auto commit_date = run_shell_cmd("git log -1 --pretty=format:\"%ad\" --date=iso8601");
+  auto commit_msg  = run_shell_cmd("git log -1 --pretty=format:\"%s\"");
 
   out["commit-hash"] = commit_hash;
   out["commit-date"] = commit_date;
