@@ -44,6 +44,9 @@ void read_and_check(const auto& filename, const auto& source_pos, const auto& si
 }
 
 TEST_CASE("io reader", "[io][reader]") {
+  // Needed for CLI metadata
+  n4::test::default_run_manager().run(0);
+
   // Match schema with generation
   auto UI = G4UImanager::GetUIpointer();
   UI -> ApplyCommand("/my/n_sipms_x 2");
@@ -63,6 +66,9 @@ TEST_CASE("io reader", "[io][reader]") {
 }
 
 TEST_CASE("io writer", "[io][writer]") {
+  // Needed for CLI metadata
+  n4::test::default_run_manager().run(0);
+
   std::string filename = std::tmpnam(nullptr);
   auto UI = G4UImanager::GetUIpointer();
   UI -> ApplyCommand("/my/n_sipms_x 2");
