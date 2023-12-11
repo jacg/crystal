@@ -108,8 +108,11 @@ std::function<generator_fn((void))> select_generator() {
 }
 
 n4::actions* create_actions(run_stats& stats) {
-  static auto writer = parquet_writer();
-  auto my_event_action = [&] (const G4Event* event) {
+  std::optional<parquet_writer> writer;
+  auto  open_file = [&] (auto) {writer.emplace();};
+  auto close_file = [&] (auto) {writer.reset  ();};
+
+  auto store_event = [&] (const G4Event* event) {
     stats.n_over_threshold += stats.n_detected_evt >= my.event_threshold;
     stats.n_detected_total += stats.n_detected_evt;
 
@@ -131,7 +134,7 @@ n4::actions* create_actions(run_stats& stats) {
     //     << std::endl;
 
     auto primary_pos = event -> GetPrimaryVertex() -> GetPosition();
-    auto status = writer.append(primary_pos, stats.n_detected_at_sipm);
+    auto status = writer.value().append(primary_pos, stats.n_detected_at_sipm);
     if (! status.ok()) {
       std::cerr << "could not append event " << n4::event_number() << std::endl;
     }
@@ -140,6 +143,7 @@ n4::actions* create_actions(run_stats& stats) {
   };
 
   return (new n4::      actions{select_generator()()})
- -> set( (new n4::event_action {                    }) -> end(my_event_action))
+ -> set( (new n4::  run_action {                    }) -> begin(open_file) -> end(close_file))
+ -> set( (new n4::event_action {                    })                     -> end(store_event))
     ;
 }

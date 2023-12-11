@@ -1,5 +1,11 @@
+#include <actions.hh>
+#include <geometry.hh>
+#include <physics-list.hh>
+#include <run_stats.hh>
 #include <config.hh>
 #include <io.hh>
+
+#include <n4-all.hh>
 
 #include <G4UImanager.hh>
 
@@ -7,6 +13,7 @@
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 
 #include <cstdio>
+#include <unordered_map>
 
 using Catch::Matchers::WithinULP;
 
@@ -37,7 +44,10 @@ void read_and_check(const auto& filename, const auto& source_pos, const auto& si
   }
 }
 
-TEST_CASE("io reader", "[io][reader]") {
+TEST_CASE("io parquet reader", "[io][parquet][reader]") {
+  // Needed for CLI metadata
+  n4::test::default_run_manager().run(0);
+
   // Match schema with generation
   auto UI = G4UImanager::GetUIpointer();
   UI -> ApplyCommand("/my/n_sipms_x 2");
@@ -56,7 +66,10 @@ TEST_CASE("io reader", "[io][reader]") {
   read_and_check("data/reader-test.parquet", source_pos, sipm_ids, counts);
 }
 
-TEST_CASE("io writer", "[io][writer]") {
+TEST_CASE("io parquet writer", "[io][parquet][writer]") {
+  // Needed for CLI metadata
+  n4::test::default_run_manager().run(0);
+
   std::string filename = std::tmpnam(nullptr);
   auto UI = G4UImanager::GetUIpointer();
   UI -> ApplyCommand("/my/n_sipms_x 2");
@@ -85,4 +98,101 @@ TEST_CASE("io writer", "[io][writer]") {
   } // writer goes out of scope, file should be written
 
   read_and_check(filename, source_pos, sipm_ids, counts);
+}
+
+TEST_CASE("io parquet reader metadata", "[io][parquet][reader][metadata]") {
+  std::string filename = "data/reader-test.parquet";
+
+  auto maybe_meta = read_metadata(filename);
+  REQUIRE(maybe_meta.ok());
+
+  std::unordered_map<std::string, std::string> expected {
+    {"debug", "0"},
+    {"physics_verbosity", "0"},
+    {"particle_energy", "511.000000 keV"},
+    {"chunk_size", "1024"},
+    {"sipm_thickness", "1.000000 mm"},
+    {"sipm_size", "6.000000 mm"},
+    {"sipm_threshold", "1"},
+    {"event_threshold", "1"},
+    {"reflector_thickness", "0.250000 mm"},
+    {"n_sipms_x", "2"},
+    {"n_sipms_y", "2"},
+    {"scint", "CsI"},
+    {"seed", "123456789"},
+    {"scint_depth", "37.200000 mm"},
+    {"scint_yield", "NULL"},
+    {"reflectivity", "NULL"},
+    {"generator", "gammas_from_outside_crystal"},
+    {"outfile", "data/reader-test.parquet"},
+    {"x_0", "-3.000000"},
+    {"x_1", "-3.000000"},
+    {"x_2",  "3.000000"},
+    {"x_3",  "3.000000"},
+    {"y_0", "-3.000000"},
+    {"y_1",  "3.000000"},
+    {"y_2", "-3.000000"},
+    {"y_3",  "3.000000"},
+  };
+
+  auto meta = maybe_meta.ValueOrDie();
+
+  CHECK(meta.size() == expected.size() + 1); // Schema missing from `expected`
+
+  for (const auto& [key, value]: expected) {
+    CHECK(meta.contains(key));
+    CHECK(meta[key] == value);
+  }
+
+  CHECK(  meta.contains("ARROW:schema"));
+  CHECK(! meta["ARROW:schema"].empty());
+}
+
+TEST_CASE("io parquet writer metadata", "[io][parquet][writer][metadata]") {
+  std::string filename = std::tmpnam(nullptr);
+  auto nevt = "2";
+  auto args_list = std::initializer_list<std::string>{
+      "progname"
+    , "-n", nevt
+    , "-e"
+    , "/my/outfile " + filename
+    , "/my/scint_depth 13 mm"
+    , "/my/scint_yield 123"
+    , "/my/seed 9876"
+    , "/my/n_sipms_y 19"
+    , "/my/sipm_size 83 mm"
+  };
+  auto args = n4::test::argcv(args_list);
+
+  run_stats stats;
+  n4::run_manager::create()
+    .ui("progname", args.argc, args.argv)
+    .apply_cli_early()
+    .physics(physics_list())
+    .geometry([&] {return crystal_geometry(stats);})
+    .actions(create_actions(stats))
+    .run();
+
+  auto args_vec = std::vector<std::string>{args_list};
+  auto maybe_meta = read_metadata(filename);
+  REQUIRE(maybe_meta.ok());
+
+  auto meta = maybe_meta.ValueOrDie();
+  REQUIRE(meta.contains("-n"));
+  CHECK  (meta["-n"] == args_vec[2]);
+
+  REQUIRE(meta.contains("-e"));
+  const auto& early = meta["-e"];
+  for (auto i=4; i<args_vec.size(); i++) {
+    CHECK(early.find(args_vec[i]) != std::string::npos);
+  }
+
+  REQUIRE(meta.contains("commit-hash"));
+  CHECK(! meta["commit-hash"].empty());
+
+  REQUIRE(meta.contains("commit-date"));
+  CHECK(! meta["commit-date"].empty());
+
+  REQUIRE(meta.contains("commit-msg"));
+  CHECK(! meta["commit-msg"].empty());
 }

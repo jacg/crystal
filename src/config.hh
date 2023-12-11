@@ -7,6 +7,8 @@
 #include <G4UnitsTable.hh>
 #include <Randomize.hh>
 
+#include <n4-run-manager.hh>
+
 #include <cstdint>
 #include <optional>
 #include <unordered_map>
@@ -64,6 +66,7 @@ public:
   const scint_parameters scint_params() const;
   size_t n_sipms() const;
   std::unordered_map<std::string, std::string> as_map();
+  std::unordered_map<std::string, std::string> cli_args() {return n4::run_manager::get_ui().arg_map();}
 
 private:
 

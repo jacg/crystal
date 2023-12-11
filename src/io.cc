@@ -98,15 +98,46 @@ std::unique_ptr<parquet::arrow::FileWriter> make_writer(
   return parquet::arrow::FileWriter::Open(*schema, pool, outfile, file_props, arrow_props).ValueOrDie();
 }
 
+std::string run_shell_cmd(const std::string& cmd, size_t buffer_size = 1024) {
+  std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd.c_str(), "r"), pclose);
+  if (!pipe) { std::cerr << "popen() failed!" << std::endl; exit(EXIT_FAILURE); }
+
+  char buffer[buffer_size];
+  std::string result;
+  while (fgets(buffer, buffer_size, pipe.get()) != nullptr) { result += buffer; }
+  return result;
+}
+
+std::unordered_map<std::string, std::string> git_metadata() {
+  std::unordered_map<std::string, std::string> out;
+
+  auto commit_hash = run_shell_cmd("git log -1 --pretty=format:\"%H\"");
+  auto commit_date = run_shell_cmd("git log -1 --pretty=format:\"%ad\" --date=iso8601");
+  auto commit_msg  = run_shell_cmd("git log -1 --pretty=format:\"%s\"");
+
+  out["commit-hash"] = commit_hash;
+  out["commit-date"] = commit_date;
+  out["commit-msg" ] = commit_msg ;
+
+  return out;
+}
+
 std::shared_ptr<const arrow::KeyValueMetadata> metadata() {
   auto config_map = my.as_map();
-  auto N = config_map.size();
+  auto   git_meta = git_metadata();
+  auto   cli_args = my.cli_args();
+
+  auto N = config_map.size()
+         +   git_meta.size()
+         +   cli_args.size();
   std::vector<std::string> keys  ; keys  .reserve(N);
   std::vector<std::string> values; values.reserve(N);
-  for (const auto& [k, v]: config_map) {
-    keys  .push_back(k);
-    values.push_back(v);
-  }
+
+  auto insert = [&] (const auto& map) { for (const auto& [k, v]: map) { keys.push_back(k); values.push_back(v);} };
+  insert(config_map);
+  insert(  git_meta);
+  insert(  cli_args);
+
   return std::make_shared<const arrow::KeyValueMetadata>(keys, values);
 }
 
@@ -208,4 +239,19 @@ read_entire_file(const std::string& filename) {
     rows.push_back({ {x[row], y[row], z[row]}, map });
   }
   return rows;
+}
+
+arrow::Result< std::unordered_map<std::string, std::string>>
+read_metadata(const std::string& filename) {
+  arrow::MemoryPool* pool = arrow::default_memory_pool();
+  std::shared_ptr<arrow::io::RandomAccessFile> input;
+  std::unique_ptr<parquet::arrow::FileReader> reader;
+
+  ARROW_ASSIGN_OR_RAISE(input, arrow::io::ReadableFile::Open(filename));
+  ARROW_RETURN_NOT_OK  (parquet::arrow::OpenFile(input, pool, &reader));
+
+  auto kv_meta = reader -> parquet_reader() -> metadata() -> key_value_metadata();
+  std::unordered_map<std::string, std::string> meta;
+  kv_meta -> ToUnorderedMap(&meta);
+  return meta;
 }
