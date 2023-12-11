@@ -42,5 +42,6 @@ arrow::Result<
     >
   > read_entire_file(const std::string& filename);
 
-
-
+arrow::Result<
+  std::unordered_map<std::string, std::string>
+> read_metadata(const std::string& filename);

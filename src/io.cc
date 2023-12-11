@@ -240,3 +240,18 @@ read_entire_file(const std::string& filename) {
   }
   return rows;
 }
+
+arrow::Result< std::unordered_map<std::string, std::string>>
+read_metadata(const std::string& filename) {
+  arrow::MemoryPool* pool = arrow::default_memory_pool();
+  std::shared_ptr<arrow::io::RandomAccessFile> input;
+  std::unique_ptr<parquet::arrow::FileReader> reader;
+
+  ARROW_ASSIGN_OR_RAISE(input, arrow::io::ReadableFile::Open(filename));
+  ARROW_RETURN_NOT_OK  (parquet::arrow::OpenFile(input, pool, &reader));
+
+  auto kv_meta = reader -> parquet_reader() -> metadata() -> key_value_metadata();
+  std::unordered_map<std::string, std::string> meta;
+  kv_meta -> ToUnorderedMap(&meta);
+  return meta;
+}
