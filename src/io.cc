@@ -108,25 +108,35 @@ std::string run_shell_cmd(const std::string& cmd, size_t buffer_size = 1024) {
   return result;
 }
 
-std::shared_ptr<const arrow::KeyValueMetadata> metadata() {
-  auto config_map = my.as_map();
-  auto N = config_map.size();
-  std::vector<std::string> keys  ; keys  .reserve(N + 3);
-  std::vector<std::string> values; values.reserve(N + 3);
-  for (const auto& [k, v]: config_map) {
-    keys  .push_back(k);
-    values.push_back(v);
-  }
+std::unordered_map<std::string, std::string> git_metadata() {
+  std::unordered_map<std::string, std::string> out;
 
   auto commit_hash = run_shell_cmd("git log -1 | grep \"commit\" | head -1 | cut -d \" \" -f 2 | tr -d '\n'");
   auto commit_date = run_shell_cmd("git log -1 | grep \"Date\" | cut -d \" \" -f 2,3,4,5,6,7 | tr -d '\n'");
   auto commit_msg  = run_shell_cmd("git log --oneline | head -1 | cut -d \" \" -f 2- | tr -d '\n'");
-  keys.push_back("crystal-commit-hash");
-  keys.push_back("crystal-commit-date");
-  keys.push_back("crystal-commit-msg" );
-  values.push_back(commit_hash);
-  values.push_back(commit_date);
-  values.push_back(commit_msg );
+
+  out["crystal-commit-hash"] = commit_hash;
+  out["crystal-commit-date"] = commit_date;
+  out["crystal-commit-msg" ] = commit_msg ;
+
+  return out;
+}
+
+std::shared_ptr<const arrow::KeyValueMetadata> metadata() {
+  auto config_map = my.as_map();
+  auto   git_meta = git_metadata();
+  auto   cli_args = my.cli_args();
+
+  auto N = config_map.size()
+         +   git_meta.size()
+         +   cli_args.size();
+  std::vector<std::string> keys  ; keys  .reserve(N);
+  std::vector<std::string> values; values.reserve(N);
+
+  auto insert = [&] (const auto& map) { for (const auto& [k, v]: map) { keys.push_back(k); values.push_back(v);} };
+  insert(config_map);
+  insert(  git_meta);
+  insert(  cli_args);
 
   return std::make_shared<const arrow::KeyValueMetadata>(keys, values);
 }
