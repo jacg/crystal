@@ -75,6 +75,12 @@ TEST_CASE("scint params overrides", "[config]") {
   CHECK     (params1.n_sipms_x  == nx);
   CHECK     (params1.n_sipms_y  == ny);
   CHECK_THAT(params1.sipm_size  ,  WithinULP(sipm_size, 1));
+
+  auto nxy = 13;
+  UI -> ApplyCommand("/my/n_sipms_xy " + std::to_string(nxy));
+  auto params2 = my.scint_params();
+  CHECK(params2.n_sipms_x == nxy);
+  CHECK(params2.n_sipms_y == nxy);
 }
 
 TEST_CASE("number of sipms is updated", "[config]") {
@@ -89,10 +95,14 @@ TEST_CASE("number of sipms is updated", "[config]") {
   auto pos2 = my.sipm_positions();
   CHECK(pos2.size() == 3*pos1.size());
 
+  UI -> ApplyCommand("/my/n_sipms_xy 6"); // pos2 contained 2x3, so this multiplies no. sipms by 6
+  auto pos3 = my.sipm_positions();
+  CHECK(pos3.size() == 6*pos2.size());
+
   auto current_sipm_size = my.scint_params().sipm_size / mm;
   UI -> ApplyCommand("/my/sipm_size " + std::to_string(current_sipm_size/4) + " mm");
-  auto pos3 = my.sipm_positions();
-  CHECK(pos3.size() == pos2.size()); // Changing size doesn't change the number of sipms
+  auto pos4 = my.sipm_positions();
+  CHECK(pos4.size() == pos3.size()); // Changing size doesn't change the number of sipms
 }
 
 TEST_CASE("sipm positions are consistent", "[config]") {
