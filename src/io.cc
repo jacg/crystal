@@ -115,9 +115,9 @@ std::unordered_map<std::string, std::string> git_metadata() {
   auto commit_date = run_shell_cmd("git log -1 | grep \"Date\" | cut -d \" \" -f 2,3,4,5,6,7 | tr -d '\n'");
   auto commit_msg  = run_shell_cmd("git log --oneline | head -1 | cut -d \" \" -f 2- | tr -d '\n'");
 
-  out["crystal-commit-hash"] = commit_hash;
-  out["crystal-commit-date"] = commit_date;
-  out["crystal-commit-msg" ] = commit_msg ;
+  out["commit-hash"] = commit_hash;
+  out["commit-date"] = commit_date;
+  out["commit-msg" ] = commit_msg ;
 
   return out;
 }
