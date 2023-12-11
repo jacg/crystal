@@ -1,5 +1,11 @@
+#include <actions.hh>
+#include <geometry.hh>
+#include <physics-list.hh>
+#include <run_stats.hh>
 #include <config.hh>
 #include <io.hh>
+
+#include <n4-all.hh>
 
 #include <G4UImanager.hh>
 
@@ -85,4 +91,53 @@ TEST_CASE("io writer", "[io][writer]") {
   } // writer goes out of scope, file should be written
 
   read_and_check(filename, source_pos, sipm_ids, counts);
+}
+
+TEST_CASE("io writer metadata", "[io][writer][metadata]") {
+  std::string filename = std::tmpnam(nullptr);
+  auto nevt = "2";
+  auto args_list = std::initializer_list<std::string>{
+      "progname"
+    , "-n", nevt
+    , "-e"
+    , "/my/outfile " + filename
+    , "/my/scint_depth 13 mm"
+    , "/my/scint_yield 123"
+    , "/my/seed 9876"
+    , "/my/n_sipms_y 19"
+    , "/my/sipm_size 83 mm"
+  };
+  auto args = n4::test::argcv(args_list);
+
+  run_stats stats;
+  n4::run_manager::create()
+    .ui("progname", args.argc, args.argv)
+    .apply_cli_early()
+    .physics(physics_list())
+    .geometry([&] {return crystal_geometry(stats);})
+    .actions(create_actions(stats))
+    .run();
+
+  auto args_vec = std::vector<std::string>{args_list};
+  auto maybe_meta = read_metadata(filename);
+  REQUIRE(maybe_meta.ok());
+
+  auto meta = maybe_meta.ValueOrDie();
+  REQUIRE(meta.contains("-n"));
+  CHECK  (meta["-n"] == args_vec[2]);
+
+  REQUIRE(meta.contains("-e"));
+  const auto& early = meta["-e"];
+  for (auto i=4; i<args_vec.size(); i++) {
+    CHECK(early.find(args_vec[i]) != std::string::npos);
+  }
+
+  REQUIRE(meta.contains("commit-hash"));
+  CHECK(! meta["commit-hash"].empty());
+
+  REQUIRE(meta.contains("commit-date"));
+  CHECK(! meta["commit-date"].empty());
+
+  REQUIRE(meta.contains("commit-msg"));
+  CHECK(! meta["commit-msg"].empty());
 }
