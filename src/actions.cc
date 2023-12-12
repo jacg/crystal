@@ -13,15 +13,31 @@
 
 using generator_fn = n4::generator::function;
 
+auto at_centre() {
+  static auto const sipm_positions = my.sipm_positions();
+  static auto params = my.scint_params();
+  static size_t event_number = 0;
+  const auto N = event_number++ % (params.n_sipms_x * params.n_sipms_y);
+  auto [x, y, _] = n4::unpack(sipm_positions[N]);
+  return new G4PrimaryVertex(x, y, -params.scint_depth, 0);
+}
+
+auto uniform(bool in_volume) {
+  static auto [sx, sy, sz] = n4::unpack(my.scint_size());
+  auto x =              n4::random::uniform_width(sx);
+  auto y =              n4::random::uniform_width(sy);
+  auto z = in_volume ? -n4::random::uniform   (0, sz) :
+                                                 -sz ;
+  return new G4PrimaryVertex(x, y, z, 0);
+}
+
 generator_fn gammas_from_outside_crystal() {
-  auto params = my.scint_params();
-  auto const sipm_positions = my.sipm_positions();
-  return [params, sipm_positions](G4Event *event) {
-    static size_t event_number = 0;
+  static G4GenericMessenger msg{nullptr, "/source/", "Commands specific to gamma generator"};
+  static bool sipm_centres = true;
+  msg.DeclareProperty("sipm_centres", sipm_centres);
+  return [](G4Event *event) {
     static auto particle_type = n4::find_particle("gamma");
-    const auto N = event_number++ % (params.n_sipms_x * params.n_sipms_y);
-    auto [x, y, _] = n4::unpack(sipm_positions[N]);
-    auto vertex = new G4PrimaryVertex(x, y, -params.scint_depth * 1.1, 0);
+    auto vertex = sipm_centres ? at_centre() : uniform(false) ;
     vertex -> SetPrimary(new G4PrimaryParticle(
                            particle_type,
                            0,0, my.particle_energy // parallel to z-axis
@@ -38,15 +54,9 @@ generator_fn photoelectric_electrons() {
   auto electron_mass     = 0.510'998'91 * MeV;
   auto electron_momentum = std::sqrt(     electron_K * electron_K
                                     + 2 * electron_K * electron_mass);
-  auto [sx, sy, sz]      = n4::unpack(my.scint_size());
-
-  return [isotropic, electron_momentum, sx=sx, sy=sy, sz=sz] (G4Event *event) {
+  return [isotropic, electron_momentum] (G4Event *event) {
     static auto particle_type = n4::find_particle("e-");
-    auto x0 =  n4::random::uniform_width(sx);
-    auto y0 =  n4::random::uniform_width(sy);
-    auto z0 = -n4::random::uniform   (0, sz);
-    auto vertex = new G4PrimaryVertex(x0, y0, z0, 0);
-
+    auto vertex = uniform(true);
     auto p  = isotropic.get() * electron_momentum;
     vertex -> SetPrimary(new G4PrimaryParticle(
                            particle_type,
@@ -57,19 +67,15 @@ generator_fn photoelectric_electrons() {
 }
 
 generator_fn pointlike_photon_source() {
-  static G4GenericMessenger msg{nullptr, "/source/", "Commands specific to this generator"};
+  static G4GenericMessenger msg{nullptr, "/source/", "Commands specific to photon generator"};
   static unsigned nphot = 1'000;
   msg.DeclareProperty("nphotons", nphot);
 
-  auto isotropic    = n4::random::direction{};
-  auto [sx, sy, sz] = n4::unpack(my.scint_size());
+  auto isotropic = n4::random::direction{};
 
-  return [isotropic, sx=sx, sy=sy, sz=sz] (G4Event *event) {
+  return [isotropic] (G4Event *event) {
     static auto particle_type = n4::find_particle("opticalphoton");
-    auto x0 =  n4::random::uniform_width(sx);
-    auto y0 =  n4::random::uniform_width(sy);
-    auto z0 = -n4::random::uniform   (0, sz);
-    auto vertex = new G4PrimaryVertex(x0, y0, z0, 0);
+    auto vertex = uniform(true);
 
     for (unsigned i=0; i<nphot; ++i) {
       auto p  = isotropic.get() * my.particle_energy;
