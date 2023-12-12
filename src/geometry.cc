@@ -25,13 +25,13 @@ G4PVPlacement* crystal_geometry(run_stats& stats) {
   auto reflector = n4::box("reflector")
     .x(sx + 2*my.reflector_thickness)
     .y(sy + 2*my.reflector_thickness)
-    .z(sz +   my.reflector_thickness)
-    .place(teflon).at_z(-(sz + my.reflector_thickness) / 2)
+    .z(sz                           )
+    .place(teflon).at_z(-sz/2)
     .in(world).now();
 
   auto crystal = n4::box("crystal")
     .xyz(sx, sy, sz)
-    .place(scintillator).at_z(my.reflector_thickness / 2)
+    .place(scintillator)
     .in(reflector).now();
 
   auto process_hits = [&stats] (G4Step* step) {
