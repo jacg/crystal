@@ -16,6 +16,7 @@
 G4PVPlacement* crystal_geometry(run_stats& stats) {
   auto scintillator = scintillator_material(my.scint_params().scint);
   auto air     = n4::material("G4_AIR");
+  auto vacuum  = n4::material("G4_Galactic");
   auto silicon = silicon_with_properties();
   auto teflon  =  teflon_with_properties();
 
@@ -27,6 +28,13 @@ G4PVPlacement* crystal_geometry(run_stats& stats) {
     .y(sy + 2*my.reflector_thickness)
     .z(sz                           )
     .place(teflon).at_z(-sz/2)
+    .in(world).now();
+
+  n4::box("absorber")
+    .x(sx + 2*my.reflector_thickness)
+    .y(sy + 2*my.reflector_thickness)
+    .z(       my.reflector_thickness)
+    .place(vacuum).at_z(-sz -my.reflector_thickness / 2)
     .in(world).now();
 
   auto crystal = n4::box("crystal")
