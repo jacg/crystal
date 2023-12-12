@@ -100,6 +100,10 @@ TEST_CASE("io parquet writer", "[io][parquet][writer]") {
   read_and_check(filename, source_pos, sipm_ids, counts);
 }
 
+// The parquet test file was generated with
+//
+//   just run -e "/my/n_sipms_xy 2" -n 4
+//
 TEST_CASE("io parquet reader metadata", "[io][parquet][reader][metadata]") {
   std::string filename = "data/reader-test.parquet";
 
@@ -107,6 +111,14 @@ TEST_CASE("io parquet reader metadata", "[io][parquet][reader][metadata]") {
   REQUIRE(maybe_meta.ok());
 
   std::unordered_map<std::string, std::string> expected {
+    {"-e", "/my/n_sipms_xy 2"},
+    {"-g", "vis.mac"},
+    {"-m", "macs:"},
+    {"commit-date", "2023-12-12 13:16:05 +0100"},
+    {"-n", "4"},
+    {"-l", "NOT SET"},
+    {"commit-msg", "Increase SiPM photon count size from 16 to 32 bits"},
+    {"commit-hash", "2463942aba253899288708421fb096322b9ba81e"},
     {"debug", "0"},
     {"physics_verbosity", "0"},
     {"particle_energy", "511.000000 keV"},
@@ -124,7 +136,7 @@ TEST_CASE("io parquet reader metadata", "[io][parquet][reader][metadata]") {
     {"scint_yield", "NULL"},
     {"reflectivity", "NULL"},
     {"generator", "gammas_from_outside_crystal"},
-    {"outfile", "data/reader-test.parquet"},
+    {"outfile", "crystal-out.parquet"},
     {"x_0", "-3.000000"},
     {"x_1", "-3.000000"},
     {"x_2",  "3.000000"},

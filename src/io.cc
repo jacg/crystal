@@ -23,16 +23,16 @@ std::vector<std::shared_ptr<arrow::Field>> fields() {
   fields.push_back(arrow::field("y", arrow::float32()));
   fields.push_back(arrow::field("z", arrow::float32()));
   for (size_t n=0; n<n_sipms; n++) {
-    fields.push_back(arrow::field("sipm_" + std::to_string(n), arrow::uint16()));
+    fields.push_back(arrow::field("sipm_" + std::to_string(n), arrow::uint32()));
   }
   return fields;
 }
 
-std::vector<std::shared_ptr<arrow::UInt16Builder>> counts(arrow::MemoryPool* pool) {
-  std::vector<std::shared_ptr<arrow::UInt16Builder>> counts;
+std::vector<std::shared_ptr<arrow::UInt32Builder>> counts(arrow::MemoryPool* pool) {
+  std::vector<std::shared_ptr<arrow::UInt32Builder>> counts;
   counts.reserve(my.n_sipms());
   for (size_t n=0; n<my.n_sipms(); n++) {
-    counts.push_back(std::make_shared<arrow::UInt16Builder>(pool));
+    counts.push_back(std::make_shared<arrow::UInt32Builder>(pool));
   }
   return counts;
 }
@@ -223,10 +223,10 @@ read_entire_file(const std::string& filename) {
   const auto* x = columns[0] -> data() -> GetValues<float>(1); // I do not understand the meaning of 1
   const auto* y = columns[1] -> data() -> GetValues<float>(1); // I do not understand the meaning of 1
   const auto* z = columns[2] -> data() -> GetValues<float>(1); // I do not understand the meaning of 1
-  std::vector<const uint16_t*> c;
+  std::vector<const uint32_t*> c;
   c.reserve(table -> num_columns() - 3);
   for (auto col=3; col<table -> num_columns(); col++) {
-    const auto* c_col = columns[col] -> data() -> GetValues<std::uint16_t>(1);
+    const auto* c_col = columns[col] -> data() -> GetValues<std::uint32_t>(1);
     c.push_back(c_col);
   }
 
