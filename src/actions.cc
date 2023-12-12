@@ -54,15 +54,9 @@ generator_fn photoelectric_electrons() {
   auto electron_mass     = 0.510'998'91 * MeV;
   auto electron_momentum = std::sqrt(     electron_K * electron_K
                                     + 2 * electron_K * electron_mass);
-  auto [sx, sy, sz]      = n4::unpack(my.scint_size());
-
-  return [isotropic, electron_momentum, sx=sx, sy=sy, sz=sz] (G4Event *event) {
+  return [isotropic, electron_momentum] (G4Event *event) {
     static auto particle_type = n4::find_particle("e-");
-    auto x0 =  n4::random::uniform_width(sx);
-    auto y0 =  n4::random::uniform_width(sy);
-    auto z0 = -n4::random::uniform   (0, sz);
-    auto vertex = new G4PrimaryVertex(x0, y0, z0, 0);
-
+    auto vertex = uniform(true);
     auto p  = isotropic.get() * electron_momentum;
     vertex -> SetPrimary(new G4PrimaryParticle(
                            particle_type,
@@ -77,15 +71,11 @@ generator_fn pointlike_photon_source() {
   static unsigned nphot = 1'000;
   msg.DeclareProperty("nphotons", nphot);
 
-  auto isotropic    = n4::random::direction{};
-  auto [sx, sy, sz] = n4::unpack(my.scint_size());
+  auto isotropic = n4::random::direction{};
 
-  return [isotropic, sx=sx, sy=sy, sz=sz] (G4Event *event) {
+  return [isotropic] (G4Event *event) {
     static auto particle_type = n4::find_particle("opticalphoton");
-    auto x0 =  n4::random::uniform_width(sx);
-    auto y0 =  n4::random::uniform_width(sy);
-    auto z0 = -n4::random::uniform   (0, sz);
-    auto vertex = new G4PrimaryVertex(x0, y0, z0, 0);
+    auto vertex = uniform(true);
 
     for (unsigned i=0; i<nphot; ++i) {
       auto p  = isotropic.get() * my.particle_energy;
