@@ -15,7 +15,8 @@
 #include <unordered_map>
 #include <vector>
 
-#define DBG(stuff) std::cerr << "* * * * * * * * * * " << __FILE__ ":" << __LINE__ << "  " << stuff << std::endl;
+#define DBG(stuff) std::cerr << "* * * * * * * * * * " << __FILE__ ":" << __LINE__ << "  " << stuff << std::endl; \
+                   std::cout << "* * * * * * * * * * " << __FILE__ ":" << __LINE__ << "  " << stuff << std::endl;
 
 const bool NOT_NULLABLE = false;
 
@@ -173,7 +174,6 @@ auto make_interaction_builder() {
     std::make_shared<arrow:: FloatBuilder>(pool),
     std::make_shared<arrow::UInt32Builder>(pool)
   };
-  DBG("MAKE_INTERACTION_BUILDER returning");
   return std::make_shared<arrow::StructBuilder>(interaction_type, pool, vec_of_builders);
 }
 
@@ -186,7 +186,7 @@ parquet_writer::parquet_writer() :
 , counts_builder      {counts(pool)}
 , schema              {std::make_shared<arrow::Schema>(fields(), metadata())}
 , writer              {make_writer(schema, pool)}
-{DBG("Constructing parquet writer")}
+{}
 
 parquet_writer::~parquet_writer() {
   arrow::Status status;
@@ -234,12 +234,13 @@ arrow::Status parquet_writer::append(const G4ThreeVector& pos, const std::vector
   auto it_builder = static_cast<arrow::UInt32Builder*>(interaction_builder -> field_builder(4));
 
   for (const auto& i: interactions) {
+    auto type = static_cast<uint32_t>(i.type);
     ARROW_RETURN_NOT_OK(interaction_builder -> Append());
     ARROW_RETURN_NOT_OK(ix_builder->Append(i.x));
     ARROW_RETURN_NOT_OK(iy_builder->Append(i.y));
     ARROW_RETURN_NOT_OK(iz_builder->Append(i.z));
     ARROW_RETURN_NOT_OK(ie_builder->Append(i.edep));
-    ARROW_RETURN_NOT_OK(it_builder->Append(i.type));
+    ARROW_RETURN_NOT_OK(it_builder->Append(  type));
   }
 
   unsigned n;

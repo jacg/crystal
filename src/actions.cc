@@ -123,7 +123,7 @@ n4::actions* create_actions(run_stats& stats) {
   std::optional<parquet_writer> writer;
   auto  open_file = [&] (auto) {writer.emplace();};
   auto close_file = [&] (auto) {writer.reset  ();};
-  std::shared_ptr<std::vector<interaction>> interactions_in_event;
+  auto interactions_in_event = std::make_shared<std::vector<interaction>>();
 
   auto clear_interactions = [interactions_in_event] (auto) { interactions_in_event -> clear(); };
 

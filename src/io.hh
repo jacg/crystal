@@ -9,6 +9,8 @@
 #include <unordered_map>
 
 
+#define DBG(stuff) std::cerr << "* * * * * * * * * * " << __FILE__ ":" << __LINE__ << "  " << stuff << std::endl;
+
 struct interaction {
   float x, y, z;
   float edep;
@@ -17,6 +19,8 @@ struct interaction {
 
 class parquet_writer {
 public:
+  // parquet_writer(const parquet_writer& ) = delete;
+  // parquet_writer(      parquet_writer&&) = delete;
   parquet_writer();
   ~parquet_writer();
 
