@@ -183,7 +183,7 @@ parquet_writer::parquet_writer() :
 , x_builder           {std::make_shared<arrow::FloatBuilder>(pool)}
 , y_builder           {std::make_shared<arrow::FloatBuilder>(pool)}
 , z_builder           {std::make_shared<arrow::FloatBuilder>(pool)}
-, interactions_builder{std::make_shared<arrow:: ListBuilder>(pool, make_interaction_builder())}
+, interactions_builder{std::make_shared<arrow:: ListBuilder>(pool, make_interaction_builder(), interaction_type)}
 , counts_builder      {counts(pool)}
 , schema              {std::make_shared<arrow::Schema>(fields(), metadata())}
 , writer              {make_writer(schema, pool)}
