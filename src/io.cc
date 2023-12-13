@@ -191,8 +191,8 @@ parquet_writer::parquet_writer() :
 
 parquet_writer::~parquet_writer() {
   arrow::Status status;
-  status = write();           if (! status.ok()) { std::cerr << "Could not write to file" << std::endl; }
-  status = writer -> Close(); if (! status.ok()) { std::cerr << "Could not close the file properly" << std::endl; }
+  status = write();           if (! status.ok()) { std::cerr << "\nCould not write to file " << status.ToString() << std::endl; }
+  status = writer -> Close(); if (! status.ok()) { std::cerr << "\nCould not close the file properly " << status.ToString()  << std::endl; }
 }
 
 arrow::Result<std::shared_ptr<arrow::Table>> parquet_writer::make_table() {
