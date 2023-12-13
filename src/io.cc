@@ -15,19 +15,36 @@
 #include <unordered_map>
 #include <vector>
 
+const bool NOT_NULLABLE = false;
+
+auto interaction_type = arrow::struct_({
+  arrow::field("x"   , arrow::float32(), NOT_NULLABLE),
+  arrow::field("y"   , arrow::float32(), NOT_NULLABLE),
+  arrow::field("z"   , arrow::float32(), NOT_NULLABLE),
+  arrow::field("edep", arrow::float32(), NOT_NULLABLE),
+  arrow::field("type", arrow:: uint32(), NOT_NULLABLE),
+});
+
+
 std::vector<std::shared_ptr<arrow::Field>> fields() {
   std::vector<std::shared_ptr<arrow::Field>> fields {
     arrow::field("x", arrow::float32()),
     arrow::field("y", arrow::float32()),
-    arrow::field("z", arrow::float32())
+    arrow::field("z", arrow::float32()),
+    arrow::field("interactions"
+                , arrow::list(arrow::field( "interaction"
+                                          , interaction_type
+                                          , NOT_NULLABLE))
+                , NOT_NULLABLE)
   };
   auto n_sipms = my.n_sipms();
-  fields.reserve(n_sipms + 3);
+  fields.reserve(n_sipms + 4);
   for (size_t n=0; n<n_sipms; n++) {
     fields.push_back(arrow::field("sipm_" + std::to_string(n), arrow::uint32()));
   }
   return fields;
 }
+
 
 std::vector<std::shared_ptr<arrow::UInt32Builder>> counts(arrow::MemoryPool* pool) {
   std::vector<std::shared_ptr<arrow::UInt32Builder>> counts;
@@ -146,14 +163,26 @@ std::shared_ptr<arrow::Schema> make_schema() {
   return std::make_shared<arrow::Schema>(fields(), metadata());
 }
 
+auto make_interaction_builder() {
+  auto pool = arrow::default_memory_pool();
+  std::vector<std::shared_ptr<arrow::ArrayBuilder>> vec_of_builders {
+    std::make_shared<arrow:: FloatBuilder>(pool),
+    std::make_shared<arrow:: FloatBuilder>(pool),
+    std::make_shared<arrow:: FloatBuilder>(pool),
+    std::make_shared<arrow::UInt32Builder>(pool)
+  };
+  return std::make_shared<arrow::StructBuilder>(interaction_type, pool, vec_of_builders);
+}
+
 parquet_writer::parquet_writer() :
-  pool          {arrow::default_memory_pool()}
-, x_builder     {std::make_shared<arrow::FloatBuilder>(pool)}
-, y_builder     {std::make_shared<arrow::FloatBuilder>(pool)}
-, z_builder     {std::make_shared<arrow::FloatBuilder>(pool)}
-, counts_builder{counts(pool)}
-, schema        {std::make_shared<arrow::Schema>(fields(), metadata())}
-, writer        {make_writer(schema, pool)}
+  pool                {arrow::default_memory_pool()}
+, x_builder           {std::make_shared<arrow::FloatBuilder>(pool)}
+, y_builder           {std::make_shared<arrow::FloatBuilder>(pool)}
+, z_builder           {std::make_shared<arrow::FloatBuilder>(pool)}
+, interactions_builder{std::make_shared<arrow:: ListBuilder>(pool, make_interaction_builder())}
+, counts_builder      {counts(pool)}
+, schema              {std::make_shared<arrow::Schema>(fields(), metadata())}
+, writer              {make_writer(schema, pool)}
 {}
 
 parquet_writer::~parquet_writer() {
@@ -179,10 +208,29 @@ arrow::Result<std::shared_ptr<arrow::Table>> parquet_writer::make_table() {
   return arrow::Table::Make(schema, arrays);
 };
 
-arrow::Status parquet_writer::append(const G4ThreeVector& pos, std::unordered_map<size_t, size_t> counts) {
+arrow::Status parquet_writer::append(const G4ThreeVector& pos, const std::vector<interaction>& interactions, std::unordered_map<size_t, size_t> counts) {
   ARROW_RETURN_NOT_OK(x_builder -> Append(pos.x()));
   ARROW_RETURN_NOT_OK(y_builder -> Append(pos.y()));
   ARROW_RETURN_NOT_OK(z_builder -> Append(pos.z()));
+
+  ARROW_RETURN_NOT_OK(interactions_builder -> Append());
+
+  auto interaction_builder = static_cast<arrow::StructBuilder*>(interactions_builder -> value_builder());
+
+  auto ix_builder = static_cast<arrow:: FloatBuilder*>(interaction_builder -> field_builder(0));
+  auto iy_builder = static_cast<arrow:: FloatBuilder*>(interaction_builder -> field_builder(1));
+  auto iz_builder = static_cast<arrow:: FloatBuilder*>(interaction_builder -> field_builder(2));
+  auto ie_builder = static_cast<arrow:: FloatBuilder*>(interaction_builder -> field_builder(3));
+  auto it_builder = static_cast<arrow::UInt32Builder*>(interaction_builder -> field_builder(4));
+
+  for (const auto& i: interactions) {
+    ARROW_RETURN_NOT_OK(interaction_builder -> Append());
+    ARROW_RETURN_NOT_OK(ix_builder->Append(i.x));
+    ARROW_RETURN_NOT_OK(iy_builder->Append(i.y));
+    ARROW_RETURN_NOT_OK(iz_builder->Append(i.z));
+    ARROW_RETURN_NOT_OK(ie_builder->Append(i.edep));
+    ARROW_RETURN_NOT_OK(it_builder->Append(i.type));
+  }
 
   unsigned n;
   for (size_t i=0; i<my.n_sipms(); i++) {

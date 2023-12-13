@@ -140,7 +140,8 @@ n4::actions* create_actions(run_stats& stats) {
     //     << std::endl;
 
     auto primary_pos = event -> GetPrimaryVertex() -> GetPosition();
-    auto status = writer.value().append(primary_pos, stats.n_detected_at_sipm);
+    std::vector<interaction> TODO_interactions;
+    auto status = writer.value().append(primary_pos, TODO_interactions, stats.n_detected_at_sipm);
     if (! status.ok()) {
       std::cerr << "could not append event " << n4::event_number() << std::endl;
     }

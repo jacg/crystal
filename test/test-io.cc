@@ -88,11 +88,12 @@ TEST_CASE("io parquet writer", "[io][parquet][writer]") {
     auto writer = parquet_writer();
     std::unordered_map<size_t, size_t> map;
     arrow::Status status;
+    std::vector<interaction> TODO_interactions;
     for (auto i=0; i<source_pos.size(); i++) {
       for (auto sipm_id : sipm_ids) {
         map[sipm_id] = counts[i][sipm_id];
       }
-      status = writer.append(source_pos[i], map);
+      status = writer.append(source_pos[i], TODO_interactions, map);
       REQUIRE(status.ok());
     }
   } // writer goes out of scope, file should be written
