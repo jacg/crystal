@@ -1,9 +1,11 @@
 { self
 , nixpkgs # <---- This `nixpkgs` has systems removed e.g. legacyPackages.zlib
+, newpkgs
 , nain4
 , ...
 }: let
   inherit (nixpkgs.legacyPackages) pkgs;
+  pkgs-new = newpkgs.legacyPackages.pkgs;
   inherit (import ./helpers.nix { inherit nain4 pkgs self; }) shell-shared;
   inherit (nain4.deps) args-from-cli make-app;
   in {
@@ -43,7 +45,7 @@
       name = "crystal-clang-devenv";
       packages = nain4.deps.dev-shell-packages ++ [
         nain4.packages.clang_16 pkgs.arrow-cpp pkgs.gdb
-        (pkgs.python3.withPackages(ps: with ps; [parquet pandas ipython pyarrow]))
+        (pkgs-new.python3.withPackages(ps: with ps; [parquet pandas ipython pyarrow polars]))
       ];
     });
 
