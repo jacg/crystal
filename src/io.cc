@@ -228,13 +228,12 @@ arrow::Status parquet_writer::append(const G4ThreeVector& pos, const std::vector
   auto it_builder = static_cast<arrow::UInt32Builder*>(interaction_builder -> field_builder(4));
 
   for (const auto& i: interactions) {
-    auto type = static_cast<uint32_t>(i.type);
     ARROW_RETURN_NOT_OK(interaction_builder -> Append());
     ARROW_RETURN_NOT_OK(ix_builder->Append(i.x));
     ARROW_RETURN_NOT_OK(iy_builder->Append(i.y));
     ARROW_RETURN_NOT_OK(iz_builder->Append(i.z));
     ARROW_RETURN_NOT_OK(ie_builder->Append(i.edep));
-    ARROW_RETURN_NOT_OK(it_builder->Append(  type));
+    ARROW_RETURN_NOT_OK(it_builder->Append(i.type));
   }
 
   unsigned n;
