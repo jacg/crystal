@@ -172,6 +172,7 @@ auto make_interaction_builder() {
     std::make_shared<arrow:: FloatBuilder>(pool),
     std::make_shared<arrow:: FloatBuilder>(pool),
     std::make_shared<arrow:: FloatBuilder>(pool),
+    std::make_shared<arrow:: FloatBuilder>(pool),
     std::make_shared<arrow::UInt32Builder>(pool)
   };
   return std::make_shared<arrow::StructBuilder>(interaction_type, pool, vec_of_builders);
