@@ -195,20 +195,13 @@ parquet_writer::~parquet_writer() {
 }
 
 arrow::Result<std::shared_ptr<arrow::Table>> parquet_writer::make_table() {
-  DBG("make_table");
   auto n_sipms = my.n_sipms();
-  DBG("make_table");
   std::vector<std::shared_ptr<arrow::Array>> arrays;
-  DBG("make_table");
   arrays.reserve(n_sipms);
-  DBG("make_table");
 
   ARROW_ASSIGN_OR_RAISE(auto x_array, x_builder -> Finish()); arrays.push_back(x_array);
-  DBG("make_table");
   ARROW_ASSIGN_OR_RAISE(auto y_array, y_builder -> Finish()); arrays.push_back(y_array);
-  DBG("make_table");
   ARROW_ASSIGN_OR_RAISE(auto z_array, z_builder -> Finish()); arrays.push_back(z_array);
-  DBG("make_table");
 
   for (size_t n=0; n<n_sipms; n++) {
     ARROW_ASSIGN_OR_RAISE(auto c_array, counts_builder[n] -> Finish());
