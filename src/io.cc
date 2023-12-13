@@ -200,9 +200,10 @@ arrow::Result<std::shared_ptr<arrow::Table>> parquet_writer::make_table() {
   std::vector<std::shared_ptr<arrow::Array>> arrays;
   arrays.reserve(n_sipms);
 
-  ARROW_ASSIGN_OR_RAISE(auto x_array, x_builder -> Finish()); arrays.push_back(x_array);
-  ARROW_ASSIGN_OR_RAISE(auto y_array, y_builder -> Finish()); arrays.push_back(y_array);
-  ARROW_ASSIGN_OR_RAISE(auto z_array, z_builder -> Finish()); arrays.push_back(z_array);
+  ARROW_ASSIGN_OR_RAISE(auto x_array,            x_builder -> Finish()); arrays.push_back(x_array);
+  ARROW_ASSIGN_OR_RAISE(auto y_array,            y_builder -> Finish()); arrays.push_back(y_array);
+  ARROW_ASSIGN_OR_RAISE(auto z_array,            z_builder -> Finish()); arrays.push_back(z_array);
+  ARROW_ASSIGN_OR_RAISE(auto i_array, interactions_builder -> Finish()); arrays.push_back(i_array);
 
   for (size_t n=0; n<n_sipms; n++) {
     ARROW_ASSIGN_OR_RAISE(auto c_array, counts_builder[n] -> Finish());
