@@ -158,23 +158,24 @@ n4::actions* create_actions(run_stats& stats) {
   };
 
   auto record_interaction = [interactions_in_event] (const G4Step* step) {
+    static auto gamma = n4::find_particle("gamma");
+    if (step -> GetTrack() -> GetParticleDefinition() != gamma) { return; }
     auto pt = step -> GetPostStepPoint();
     auto process_name = pt -> GetProcessDefinedStep() -> GetProcessName();
     std::optional<unsigned short> process{};
-    if (process_name == std::string{"Rayleigh"}) { process = 1; }
-    if (process_name == std::string{"phot"}    ) { process = 2; }
-    if (process_name == std::string{"compton"} ) { process = 3; }
+    if (process_name == std::string{"compt"}   ) { process = 0; }
+    if (process_name == std::string{"phot"}    ) { process = 1; }
+    if (process_name == std::string{"Rayleigh"}) { process = 666; }
     if (process.has_value()) {
       auto [x, y, z] = n4::unpack(pt -> GetPosition());
-      float TODO_edep = 1.234;
-      unsigned short TODO_process_id = 0;
-      interactions_in_event -> emplace_back(x, y, z, TODO_edep, TODO_process_id);
+      float edep = -step -> GetDeltaEnergy();
+      interactions_in_event -> emplace_back(x, y, z, edep, process.value());
     }
   };
 
   return (new n4::      actions  {select_generator()()})
  -> set( (new n4::  run_action   {                    }) -> begin(open_file)          -> end(close_file))
  -> set( (new n4::event_action   {                    }) -> begin(clear_interactions) -> end(store_event))
- -> set( (new n4::stepping_action{record_interaction  })   )
+ -> set( (new n4::stepping_action{record_interaction  }) )
     ;
 }
