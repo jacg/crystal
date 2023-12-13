@@ -11,6 +11,9 @@
 
 #include <cstddef>
 
+#define DBG(stuff) std::cerr << "* * * * * * * * * * " << __FILE__ ":" << __LINE__ << "  " << stuff << std::endl;
+
+
 using generator_fn = n4::generator::function;
 
 auto at_centre() {
