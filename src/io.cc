@@ -16,12 +16,13 @@
 #include <vector>
 
 std::vector<std::shared_ptr<arrow::Field>> fields() {
-  std::vector<std::shared_ptr<arrow::Field>> fields;
+  std::vector<std::shared_ptr<arrow::Field>> fields {
+    arrow::field("x", arrow::float32()),
+    arrow::field("y", arrow::float32()),
+    arrow::field("z", arrow::float32())
+  };
   auto n_sipms = my.n_sipms();
   fields.reserve(n_sipms + 3);
-  fields.push_back(arrow::field("x", arrow::float32()));
-  fields.push_back(arrow::field("y", arrow::float32()));
-  fields.push_back(arrow::field("z", arrow::float32()));
   for (size_t n=0; n<n_sipms; n++) {
     fields.push_back(arrow::field("sipm_" + std::to_string(n), arrow::uint32()));
   }
