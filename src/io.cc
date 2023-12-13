@@ -16,13 +16,12 @@
 #include <vector>
 
 std::vector<std::shared_ptr<arrow::Field>> fields() {
-  std::vector<std::shared_ptr<arrow::Field>> fields;
-  fields.reserve(4);
-  fields.push_back(arrow::field("x", arrow::float32()));
-  fields.push_back(arrow::field("y", arrow::float32()));
-  fields.push_back(arrow::field("z", arrow::float32()));
-  fields.push_back(arrow::field("photon_counts", arrow::fixed_size_list(arrow::uint32(), my.n_sipms())));
-  return fields;
+  return {
+    arrow::field("x", arrow::float32()),
+    arrow::field("y", arrow::float32()),
+    arrow::field("z", arrow::float32()),
+    arrow::field("photon_counts", arrow::fixed_size_list(arrow::uint32(), my.n_sipms()))
+  };
 }
 
 std::shared_ptr<arrow::FixedSizeListBuilder> counts(arrow::MemoryPool* pool) {
