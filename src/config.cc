@@ -64,6 +64,7 @@ config::config()
   msg -> DeclareProperty        ("event_threshold"     ,           event_threshold         );
   msg -> DeclareProperty        ( "sipm_threshold"     ,            sipm_threshold         );
   msg -> DeclareMethod          ("reflectivity"        ,          &config::set_reflectivity);
+  msg -> DeclareProperty        ("absorbent_opposite"  ,           absorbent_opposite      );
   msg -> DeclareProperty        ( "generator"          ,           generator               );
   msg -> DeclareProperty        ( "outfile"            ,           outfile                 );
   msg -> DeclareProperty        ( "chunk_size"         ,           chunk_size              );

@@ -30,11 +30,11 @@ G4PVPlacement* crystal_geometry(run_stats& stats) {
     .place(teflon).at_z(-sz/2)
     .in(world).now();
 
-  n4::box("absorber")
+  auto opposite = n4::box("opposite")
     .x(sx + 2*my.reflector_thickness)
     .y(sy + 2*my.reflector_thickness)
     .z(       my.reflector_thickness)
-    .place(vacuum).at_z(-sz -my.reflector_thickness / 2)
+    .place(my.absorbent_opposite ? vacuum : teflon).at_z(-sz -my.reflector_thickness / 2)
     .in(world).now();
 
   auto crystal = n4::box("crystal")
@@ -75,6 +75,8 @@ G4PVPlacement* crystal_geometry(run_stats& stats) {
 
   teflon_surface -> SetMaterialPropertiesTable(teflon_properties());
   new G4LogicalBorderSurface("teflon_surface", crystal, reflector, teflon_surface);
-
+  if (! my.absorbent_opposite) {
+    new G4LogicalBorderSurface("teflon_surface", crystal, opposite , teflon_surface);
+  }
   return world;
 }

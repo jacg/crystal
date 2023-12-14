@@ -54,6 +54,7 @@ public:
   size_t                  event_threshold     = 1;
   size_t                   sipm_threshold     = 1;
   std::optional<double>   reflectivity        = std::nullopt;
+  bool                    absorbent_opposite  = true;
   std::string             generator           = "gammas_from_outside_crystal";
   std::string             outfile             = "crystal-out.parquet";
   int64_t                 chunk_size          = 1024; // TODO find out what chuck_size default should be
