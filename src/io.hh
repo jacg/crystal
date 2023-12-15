@@ -41,13 +41,11 @@ private:
 };
 
 
-arrow::Result<
-  std::vector<
-    std::pair<
-      G4ThreeVector, std::unordered_map<size_t, size_t>
-      >
-    >
-  > read_entire_file(const std::string& filename);
+//using EVENT = std::tuple<G4ThreeVector, std::vector<interaction>, std::unordered_map<size_t, size_t>>;
+using EVENT =   std::tuple<G4ThreeVector                          , std::unordered_map<size_t, size_t>>;
+using MAYBE_EVENTS = arrow::Result<std::vector<EVENT>>;
+
+MAYBE_EVENTS read_entire_file(const std::string& filename);
 
 arrow::Result<
   std::unordered_map<std::string, std::string>

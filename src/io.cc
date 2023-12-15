@@ -1,6 +1,8 @@
 #include "config.hh"
 #include "io.hh"
 
+#include <n4-sequences.hh>
+
 #include <arrow/io/api.h>
 
 #include <parquet/arrow/reader.h>
@@ -238,14 +240,7 @@ arrow::Status parquet_writer::write() {
   return arrow::Status::OK();
 }
 
-arrow::Result<
-  std::vector<
-    std::pair<
-      G4ThreeVector, std::unordered_map<size_t, size_t>
-    >
-  >
->
-read_entire_file(const std::string& filename) {
+MAYBE_EVENTS read_entire_file(const std::string& filename) {
   arrow::MemoryPool* pool = arrow::default_memory_pool();
   std::shared_ptr<arrow::io::RandomAccessFile> input;
   std::unique_ptr<parquet::arrow::FileReader> reader;
@@ -262,20 +257,17 @@ read_entire_file(const std::string& filename) {
   const auto* x = columns[0] -> data() -> GetValues<float>(1); // I do not understand the meaning of 1
   const auto* y = columns[1] -> data() -> GetValues<float>(1); // I do not understand the meaning of 1
   const auto* z = columns[2] -> data() -> GetValues<float>(1); // I do not understand the meaning of 1
-  std::vector<const uint32_t*> c;
-  c.reserve(table -> num_columns() - 3);
-  for (auto col=3; col<table -> num_columns(); col++) {
-    const auto* c_col = columns[col] -> data() -> GetValues<std::uint32_t>(1);
-    c.push_back(c_col);
-  }
+  //const auto* interactions = columns[3] -> data() -> GetValues<float>(1); // I do not understand the meaning of 1
+  const auto counts_list  = static_pointer_cast<arrow::FixedSizeListArray>(columns[4]);
+  const auto counts_start = static_pointer_cast<arrow::UInt32Array>(counts_list -> values()) -> raw_values();
 
-  std::vector<std::pair<G4ThreeVector, std::unordered_map<size_t, size_t>>> rows;
+  std::vector<EVENT> rows;
   for (auto row=0; row< table -> num_rows(); row++) {
-    std::unordered_map<size_t, size_t> map;
-    for (auto col=0; col<table -> num_columns() - 3; col++) {
-      map.insert({col, c[col][row]});
-    }
-    rows.push_back({ {x[row], y[row], z[row]}, map });
+    auto counts_vec = std::vector<uint32_t> ( counts_start + counts_list -> value_offset(row    )
+                                            , counts_start + counts_list -> value_offset(row + 1));
+    std::unordered_map<size_t, size_t> counts_map;
+    for (auto [sipm_id, count] : n4::enumerate(counts_vec)) { counts_map.insert({sipm_id, count}); }
+    rows.push_back({ {x[row], y[row], z[row]}, counts_map });
   }
   return rows;
 }
