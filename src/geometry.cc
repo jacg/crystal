@@ -29,6 +29,7 @@ G4Colour crystal_colour() {
     case scintillator_type_enum::csi:  return  csi_colour;
     case scintillator_type_enum::lyso: return lyso_colour;
   }
+  return csi_colour; // Unreachable, but GCC complains
 }
 
 G4Colour reflector_colour() {
