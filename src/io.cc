@@ -17,24 +17,16 @@
 
 std::vector<std::shared_ptr<arrow::Field>> fields() {
   std::vector<std::shared_ptr<arrow::Field>> fields;
-  auto n_sipms = my.n_sipms();
-  fields.reserve(n_sipms + 3);
+  fields.reserve(4);
   fields.push_back(arrow::field("x", arrow::float32()));
   fields.push_back(arrow::field("y", arrow::float32()));
   fields.push_back(arrow::field("z", arrow::float32()));
-  for (size_t n=0; n<n_sipms; n++) {
-    fields.push_back(arrow::field("sipm_" + std::to_string(n), arrow::uint32()));
-  }
+  fields.push_back(arrow::field("photon_counts", arrow::fixed_size_list(arrow::uint32(), my.n_sipms())));
   return fields;
 }
 
-std::vector<std::shared_ptr<arrow::UInt32Builder>> counts(arrow::MemoryPool* pool) {
-  std::vector<std::shared_ptr<arrow::UInt32Builder>> counts;
-  counts.reserve(my.n_sipms());
-  for (size_t n=0; n<my.n_sipms(); n++) {
-    counts.push_back(std::make_shared<arrow::UInt32Builder>(pool));
-  }
-  return counts;
+std::shared_ptr<arrow::FixedSizeListBuilder> counts(arrow::MemoryPool* pool) {
+  return std::make_shared<arrow::FixedSizeListBuilder>(pool, std::make_shared<arrow::UInt32Builder>(), my.n_sipms());
 }
 
 #define EXIT(stuff) std::cerr << "\n\n    " << stuff << "\n\n\n"; std::exit(EXIT_FAILURE);
@@ -162,31 +154,29 @@ parquet_writer::~parquet_writer() {
 }
 
 arrow::Result<std::shared_ptr<arrow::Table>> parquet_writer::make_table() {
-  auto n_sipms = my.n_sipms();
   std::vector<std::shared_ptr<arrow::Array>> arrays;
-  arrays.reserve(n_sipms);
+  arrays.reserve(4);
 
-  ARROW_ASSIGN_OR_RAISE(auto x_array, x_builder -> Finish()); arrays.push_back(x_array);
-  ARROW_ASSIGN_OR_RAISE(auto y_array, y_builder -> Finish()); arrays.push_back(y_array);
-  ARROW_ASSIGN_OR_RAISE(auto z_array, z_builder -> Finish()); arrays.push_back(z_array);
-
-  for (size_t n=0; n<n_sipms; n++) {
-    ARROW_ASSIGN_OR_RAISE(auto c_array, counts_builder[n] -> Finish());
-    arrays.push_back(c_array);
-  }
+  ARROW_ASSIGN_OR_RAISE(auto x_array      , x_builder      -> Finish()); arrays.push_back(x_array);
+  ARROW_ASSIGN_OR_RAISE(auto y_array      , y_builder      -> Finish()); arrays.push_back(y_array);
+  ARROW_ASSIGN_OR_RAISE(auto z_array      , z_builder      -> Finish()); arrays.push_back(z_array);
+  ARROW_ASSIGN_OR_RAISE(auto photon_counts, counts_builder -> Finish()); arrays.push_back(photon_counts);
 
   return arrow::Table::Make(schema, arrays);
 };
 
 arrow::Status parquet_writer::append(const G4ThreeVector& pos, std::unordered_map<size_t, size_t> counts) {
-  ARROW_RETURN_NOT_OK(x_builder -> Append(pos.x()));
-  ARROW_RETURN_NOT_OK(y_builder -> Append(pos.y()));
-  ARROW_RETURN_NOT_OK(z_builder -> Append(pos.z()));
+  ARROW_RETURN_NOT_OK(x_builder      -> Append(pos.x()));
+  ARROW_RETURN_NOT_OK(y_builder      -> Append(pos.y()));
+  ARROW_RETURN_NOT_OK(z_builder      -> Append(pos.z()));
+  ARROW_RETURN_NOT_OK(counts_builder -> Append());
+
+  auto sipm_count_builder = static_cast<arrow::UInt32Builder*>(counts_builder -> value_builder());
 
   unsigned n;
   for (size_t i=0; i<my.n_sipms(); i++) {
     n = counts.contains(i) ? counts[i] : 0;
-    ARROW_RETURN_NOT_OK(counts_builder[i] -> Append(n));
+    ARROW_RETURN_NOT_OK(sipm_count_builder -> Append(n));
   }
   n_rows++;
   return n_rows == my.chunk_size ? write() : arrow::Status::OK();

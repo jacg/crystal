@@ -22,10 +22,10 @@ private:
   arrow::MemoryPool* pool;
 
   // Half float doesn't work
-  std::shared_ptr<arrow::FloatBuilder>               x_builder;
-  std::shared_ptr<arrow::FloatBuilder>               y_builder;
-  std::shared_ptr<arrow::FloatBuilder>               z_builder;
-  std::vector<std::shared_ptr<arrow::UInt32Builder>> counts_builder;
+  std::shared_ptr<arrow::FloatBuilder>         x_builder;
+  std::shared_ptr<arrow::FloatBuilder>         y_builder;
+  std::shared_ptr<arrow::FloatBuilder>         z_builder;
+  std::shared_ptr<arrow::FixedSizeListBuilder> counts_builder;
 
   std::shared_ptr<arrow::Schema>               schema;
   std::unique_ptr<parquet::arrow::FileWriter>  writer;
