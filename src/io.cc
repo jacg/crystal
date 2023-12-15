@@ -29,9 +29,9 @@ auto interaction_type = arrow::struct_({
 
 std::vector<std::shared_ptr<arrow::Field>> fields() {
   return {
-    arrow::field("x", arrow::float32()),
-    arrow::field("y", arrow::float32()),
-    arrow::field("z", arrow::float32()),
+    arrow::field("x", arrow::float32(), NOT_NULLABLE),
+    arrow::field("y", arrow::float32(), NOT_NULLABLE),
+    arrow::field("z", arrow::float32(), NOT_NULLABLE),
     arrow::field("interactions"
                 , arrow::list(arrow::field( "interaction"
                                           , interaction_type
