@@ -29,7 +29,7 @@ void read_and_check(const auto& filename, const auto& source_pos, const auto& si
   REQUIRE(rows.size() == source_pos.size());
 
   for (auto i=0; i<rows.size(); i++) {
-    auto [pos, map] = rows[i];
+    auto [pos, TODO_interactions, map] = rows[i];
 
     CHECK_THAT(pos.x(), WithinULP(source_pos[i].x(), 1));
     CHECK_THAT(pos.y(), WithinULP(source_pos[i].y(), 1));
@@ -62,7 +62,6 @@ TEST_CASE("io parquet reader", "[io][parquet][reader]") {
                                              {        414,        411,        412,       408},
                                              {          0,          0,          0,         0}
   };
-
   read_and_check("data/reader-test.parquet", source_pos, sipm_ids, counts);
 }
 
@@ -115,11 +114,11 @@ TEST_CASE("io parquet reader metadata", "[io][parquet][reader][metadata]") {
     {"-e", "/my/n_sipms_xy 2"},
     {"-g", "vis.mac"},
     {"-m", "macs:"},
-    {"commit-date", "2023-12-19 13:07:38 +0100"},
+    {"commit-date", "2023-12-15 15:15:06 +0100"},
     {"-n", "4"},
     {"-l", "NOT SET"},
-    {"commit-msg", "Unwrap lines in sipm_pde()"},
-    {"commit-hash", "db9f8b1e4b35aa02865e6cad65cadfaa8b7e017f"},
+    {"commit-msg", "Port reader from separate columns to list of SiPM photon counts"},
+    {"commit-hash", "9266feb459176e750fadbab1b981f04791c9e350"},
     {"debug", "0"},
     {"physics_verbosity", "0"},
     {"particle_energy", "511.000000 keV"},

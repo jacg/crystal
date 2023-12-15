@@ -257,7 +257,15 @@ MAYBE_EVENTS read_entire_file(const std::string& filename) {
   const auto* x = columns[0] -> data() -> GetValues<float>(1); // I do not understand the meaning of 1
   const auto* y = columns[1] -> data() -> GetValues<float>(1); // I do not understand the meaning of 1
   const auto* z = columns[2] -> data() -> GetValues<float>(1); // I do not understand the meaning of 1
-  //const auto* interactions = columns[3] -> data() -> GetValues<float>(1); // I do not understand the meaning of 1
+
+  const auto  interactions_list   = static_pointer_cast<arrow::  ListArray>(columns[3]);
+  const auto  interactions_fields = static_pointer_cast<arrow::StructArray>(interactions_list -> values()) -> fields();
+  const auto* i_x    = interactions_fields[0] -> data() -> GetValues<float         >(1);
+  const auto* i_y    = interactions_fields[1] -> data() -> GetValues<float         >(1);
+  const auto* i_z    = interactions_fields[2] -> data() -> GetValues<float         >(1);
+  const auto* i_edep = interactions_fields[3] -> data() -> GetValues<float         >(1);
+  const auto* i_type = interactions_fields[4] -> data() -> GetValues<unsigned short>(1);
+
   const auto counts_list  = static_pointer_cast<arrow::FixedSizeListArray>(columns[4]);
   const auto counts_start = static_pointer_cast<arrow::UInt32Array>(counts_list -> values()) -> raw_values();
 
@@ -265,9 +273,19 @@ MAYBE_EVENTS read_entire_file(const std::string& filename) {
   for (auto row=0; row< table -> num_rows(); row++) {
     auto counts_vec = std::vector<uint32_t> ( counts_start + counts_list -> value_offset(row    )
                                             , counts_start + counts_list -> value_offset(row + 1));
+
+    std::vector<interaction> interactions;
+    for (auto i = interactions_list -> value_offset(row    ) ;
+              i < interactions_list -> value_offset(row + 1) ;
+            ++i                                               )
+    {
+      interactions.emplace_back(i_x[i], i_y[i], i_z[i], i_edep[i], i_type[i]);
+    }
+
     std::unordered_map<size_t, size_t> counts_map;
     for (auto [sipm_id, count] : n4::enumerate(counts_vec)) { counts_map.insert({sipm_id, count}); }
-    rows.push_back({ {x[row], y[row], z[row]}, counts_map });
+
+    rows.push_back({ {x[row], y[row], z[row]}, interactions, counts_map });
   }
   return rows;
 }
