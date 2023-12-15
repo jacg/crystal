@@ -9,9 +9,25 @@
 #include <n4-sequences.hh>
 #include <n4-shape.hh>
 
+#include <G4Colour.hh>
+
 #include <G4OpticalSurface.hh>
 #include <G4LogicalBorderSurface.hh>
 #include <G4TrackStatus.hh>
+
+G4Colour       bgo_colour{0.9, 0.6, 0.1, 0.3};
+G4Colour       csi_colour{0.0, 0.0, 0.6, 0.3};
+G4Colour      lyso_colour{0.1, 0.7, 0.6, 0.3};
+G4Colour    teflon_colour{1.0, 1.0, 1.0, 0.3};
+G4Colour absorbent_colour{0.5, 0.3, 0.1, 0.3};
+
+G4Colour crystal_colour() {
+  switch (my.scint_params().scint) {
+    case scintillator_type_enum::bgo:  return  bgo_colour;
+    case scintillator_type_enum::csi:  return  csi_colour;
+    case scintillator_type_enum::lyso: return lyso_colour;
+  }
+}
 
 G4PVPlacement* crystal_geometry(run_stats& stats) {
   auto scintillator = scintillator_material(my.scint_params().scint);
@@ -34,11 +50,13 @@ G4PVPlacement* crystal_geometry(run_stats& stats) {
     .x(sx + 2*my.reflector_thickness)
     .y(sy + 2*my.reflector_thickness)
     .z(       my.reflector_thickness)
+    .vis(n4::vis_attributes(my.absorbent_opposite ? absorbent_colour : teflon_colour))
     .place(my.absorbent_opposite ? vacuum : teflon).at_z(-sz -my.reflector_thickness / 2)
     .in(world).now();
 
   auto crystal = n4::box("crystal")
     .xyz(sx, sy, sz)
+    .vis(n4::vis_attributes{crystal_colour()})
     .place(scintillator)
     .in(reflector).now();
 

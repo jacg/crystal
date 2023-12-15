@@ -66,9 +66,7 @@
 
 #                        name    depth red green blue opacity
 /vis/geometry/set/colour world     0    0.2  0.2  0.2   .3
-/vis/geometry/set/colour crystal   0    0    0    0.6   .6
 /vis/geometry/set/colour reflector 0    1    1    1     .6
-/vis/geometry/set/colour opposite  0    0   0.1    0    .6
 /vis/geometry/set/colour sipm      0   0.6   0    0     .6
 
 # Two different rendering options
