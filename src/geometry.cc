@@ -29,6 +29,12 @@ G4Colour crystal_colour() {
   }
 }
 
+G4Colour reflector_colour() {
+  auto r = my.reflectivity;
+  return r.has_value() && r.value() == 0 ? absorbent_colour : teflon_colour;
+}
+
+
 G4PVPlacement* crystal_geometry(run_stats& stats) {
   auto scintillator = scintillator_material(my.scint_params().scint);
   auto air     = n4::material("G4_AIR");
@@ -43,6 +49,7 @@ G4PVPlacement* crystal_geometry(run_stats& stats) {
     .x(sx + 2*my.reflector_thickness)
     .y(sy + 2*my.reflector_thickness)
     .z(sz                           )
+    .vis(reflector_colour())
     .place(teflon).at_z(-sz/2)
     .in(world).now();
 
@@ -50,7 +57,7 @@ G4PVPlacement* crystal_geometry(run_stats& stats) {
     .x(sx + 2*my.reflector_thickness)
     .y(sy + 2*my.reflector_thickness)
     .z(       my.reflector_thickness)
-    .vis(n4::vis_attributes(my.absorbent_opposite ? absorbent_colour : teflon_colour))
+    .vis(n4::vis_attributes(my.absorbent_opposite ? absorbent_colour : reflector_colour()))
     .place(my.absorbent_opposite ? vacuum : teflon).at_z(-sz -my.reflector_thickness / 2)
     .in(world).now();
 
