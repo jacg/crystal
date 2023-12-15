@@ -204,6 +204,7 @@ std::unordered_map<std::string, std::string> config::as_map() {
   it["chunk_size"         ] = std::to_string(my.chunk_size);
   it["scint_yield"        ] = my.scint_yield .has_value() ? std::to_string(my.scint_yield .value()*MeV) + " MeV^-1" : "NULL";
   it["reflectivity"       ] = my.reflectivity.has_value() ? std::to_string(my.reflectivity.value()    )             : "NULL";
+  it["absorbent_opposite" ] = my.absorbent_opposite ? "true" : "false";
   it["generator"          ] = my.generator;
   it["outfile"            ] = my.outfile;
 
