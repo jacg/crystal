@@ -10,6 +10,7 @@
 #include <G4PrimaryVertex.hh>
 
 #include <cstddef>
+#include <optional>
 
 using generator_fn = n4::generator::function;
 
@@ -115,11 +116,15 @@ std::function<generator_fn((void))> select_generator() {
 }
 
 n4::actions* create_actions(run_stats& stats) {
-  std::optional<parquet_writer> writer;
-  auto  open_file = [&] (auto) {writer.emplace();};
-  auto close_file = [&] (auto) {writer.reset  ();};
+  static std::optional<parquet_writer> writer;
 
-  auto store_event = [&] (const G4Event* event) {
+  auto  open_file = [&] (auto) { writer.emplace();};
+  auto close_file = [&] (auto) { writer.reset  ();};
+  auto interactions_in_event = std::make_shared<std::vector<interaction>>();
+
+  auto clear_interactions = [interactions_in_event] (auto) { interactions_in_event -> clear(); };
+
+  auto store_event = [&, interactions_in_event] (const G4Event* event) {
     stats.n_over_threshold += stats.n_detected_evt >= my.event_threshold;
     stats.n_detected_total += stats.n_detected_evt;
 
@@ -141,7 +146,7 @@ n4::actions* create_actions(run_stats& stats) {
     //     << std::endl;
 
     auto primary_pos = event -> GetPrimaryVertex() -> GetPosition();
-    auto status = writer.value().append(primary_pos, stats.n_detected_at_sipm);
+    auto status = writer.value().append(primary_pos, *interactions_in_event, stats.n_detected_at_sipm);
     if (! status.ok()) {
       std::cerr << "could not append event " << n4::event_number() << std::endl;
     }
@@ -149,8 +154,25 @@ n4::actions* create_actions(run_stats& stats) {
     stats.n_detected_at_sipm.clear();
   };
 
-  return (new n4::      actions{select_generator()()})
- -> set( (new n4::  run_action {                    }) -> begin(open_file) -> end(close_file))
- -> set( (new n4::event_action {                    })                     -> end(store_event))
+  auto record_interaction = [interactions_in_event] (const G4Step* step) {
+    static auto gamma = n4::find_particle("gamma");
+    if (step -> GetTrack() -> GetParticleDefinition() != gamma) { return; }
+    auto pt = step -> GetPostStepPoint();
+    auto process_name = pt -> GetProcessDefinedStep() -> GetProcessName();
+    std::optional<unsigned short> process{};
+    if (process_name == std::string{"compt"}   ) { process = 0; }
+    if (process_name == std::string{"phot"}    ) { process = 1; }
+    if (process_name == std::string{"Rayleigh"}) { process = 666; }
+    if (process.has_value()) {
+      auto [x, y, z] = n4::unpack(pt -> GetPosition());
+      float edep = -step -> GetDeltaEnergy();
+      interactions_in_event -> emplace_back(x, y, z, edep, process.value());
+    }
+  };
+
+  return (new n4::      actions  {select_generator()()})
+ -> set( (new n4::  run_action   {                    }) -> begin(open_file)          -> end(close_file))
+ -> set( (new n4::event_action   {                    }) -> begin(clear_interactions) -> end(store_event))
+ -> set( (new n4::stepping_action{record_interaction  }) )
     ;
 }

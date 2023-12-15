@@ -15,11 +15,26 @@
 #include <unordered_map>
 #include <vector>
 
+const bool NOT_NULLABLE = false;
+
+auto interaction_type = arrow::struct_({
+  arrow::field("x"   , arrow::float32(), NOT_NULLABLE),
+  arrow::field("y"   , arrow::float32(), NOT_NULLABLE),
+  arrow::field("z"   , arrow::float32(), NOT_NULLABLE),
+  arrow::field("edep", arrow::float32(), NOT_NULLABLE),
+  arrow::field("type", arrow:: uint32(), NOT_NULLABLE),
+});
+
 std::vector<std::shared_ptr<arrow::Field>> fields() {
   return {
     arrow::field("x", arrow::float32()),
     arrow::field("y", arrow::float32()),
     arrow::field("z", arrow::float32()),
+    arrow::field("interactions"
+                , arrow::list(arrow::field( "interaction"
+                                          , interaction_type
+                                          , NOT_NULLABLE))
+                , NOT_NULLABLE),
     arrow::field("photon_counts", arrow::fixed_size_list(arrow::uint32(), my.n_sipms()))
   };
 }
@@ -136,40 +151,74 @@ std::shared_ptr<arrow::Schema> make_schema() {
   return std::make_shared<arrow::Schema>(fields(), metadata());
 }
 
+auto make_interaction_builder() {
+  auto pool = arrow::default_memory_pool();
+  std::vector<std::shared_ptr<arrow::ArrayBuilder>> vec_of_builders {
+    std::make_shared<arrow:: FloatBuilder>(pool),
+    std::make_shared<arrow:: FloatBuilder>(pool),
+    std::make_shared<arrow:: FloatBuilder>(pool),
+    std::make_shared<arrow:: FloatBuilder>(pool),
+    std::make_shared<arrow::UInt32Builder>(pool)
+  };
+  return std::make_shared<arrow::StructBuilder>(interaction_type, pool, vec_of_builders);
+}
+
 parquet_writer::parquet_writer() :
-  pool          {arrow::default_memory_pool()}
-, x_builder     {std::make_shared<arrow::FloatBuilder>(pool)}
-, y_builder     {std::make_shared<arrow::FloatBuilder>(pool)}
-, z_builder     {std::make_shared<arrow::FloatBuilder>(pool)}
-, counts_builder{counts(pool)}
-, schema        {std::make_shared<arrow::Schema>(fields(), metadata())}
-, writer        {make_writer(schema, pool)}
+  pool                {arrow::default_memory_pool()}
+, x_builder           {std::make_shared<arrow::FloatBuilder>(pool)}
+, y_builder           {std::make_shared<arrow::FloatBuilder>(pool)}
+, z_builder           {std::make_shared<arrow::FloatBuilder>(pool)}
+, interactions_builder{std::make_shared<arrow:: ListBuilder>(pool, make_interaction_builder(), interaction_type)}
+, counts_builder      {counts(pool)}
+, schema              {std::make_shared<arrow::Schema>(fields(), metadata())}
+, writer              {make_writer(schema, pool)}
 {}
 
 parquet_writer::~parquet_writer() {
   arrow::Status status;
-  status = write();           if (! status.ok()) { std::cerr << "\nCould not write to file " << status.ToString() << std::endl; }
+  status = write();           if (! status.ok()) { std::cerr << "\nCould not write to file "           << status.ToString() << std::endl; }
   status = writer -> Close(); if (! status.ok()) { std::cerr << "\nCould not close the file properly " << status.ToString()  << std::endl; }
 }
 
 arrow::Result<std::shared_ptr<arrow::Table>> parquet_writer::make_table() {
   std::vector<std::shared_ptr<arrow::Array>> arrays;
-  arrays.reserve(4);
+  arrays.reserve(5);
 
   ARROW_ASSIGN_OR_RAISE(auto x_array      , x_builder      -> Finish()); arrays.push_back(x_array);
   ARROW_ASSIGN_OR_RAISE(auto y_array      , y_builder      -> Finish()); arrays.push_back(y_array);
   ARROW_ASSIGN_OR_RAISE(auto z_array      , z_builder      -> Finish()); arrays.push_back(z_array);
+  ARROW_ASSIGN_OR_RAISE(auto i_array, interactions_builder -> Finish()); arrays.push_back(i_array);
   ARROW_ASSIGN_OR_RAISE(auto photon_counts, counts_builder -> Finish()); arrays.push_back(photon_counts);
 
   return arrow::Table::Make(schema, arrays);
 };
 
-arrow::Status parquet_writer::append(const G4ThreeVector& pos, std::unordered_map<size_t, size_t> counts) {
-  ARROW_RETURN_NOT_OK(x_builder      -> Append(pos.x()));
-  ARROW_RETURN_NOT_OK(y_builder      -> Append(pos.y()));
-  ARROW_RETURN_NOT_OK(z_builder      -> Append(pos.z()));
-  ARROW_RETURN_NOT_OK(counts_builder -> Append());
+arrow::Status parquet_writer::append(const G4ThreeVector& pos, const std::vector<interaction>& interactions, std::unordered_map<size_t, size_t> counts) {
+  ARROW_RETURN_NOT_OK(x_builder            -> Append(pos.x()));
+  ARROW_RETURN_NOT_OK(y_builder            -> Append(pos.y()));
+  ARROW_RETURN_NOT_OK(z_builder            -> Append(pos.z()));
+  ARROW_RETURN_NOT_OK(interactions_builder -> Append());
+  ARROW_RETURN_NOT_OK(counts_builder       -> Append());
 
+  // ----- Interactions --------------------------------------------------------------------------------------
+  auto interaction_builder = static_cast<arrow::StructBuilder*>(interactions_builder -> value_builder());
+
+  auto ix_builder = static_cast<arrow:: FloatBuilder*>(interaction_builder -> field_builder(0));
+  auto iy_builder = static_cast<arrow:: FloatBuilder*>(interaction_builder -> field_builder(1));
+  auto iz_builder = static_cast<arrow:: FloatBuilder*>(interaction_builder -> field_builder(2));
+  auto ie_builder = static_cast<arrow:: FloatBuilder*>(interaction_builder -> field_builder(3));
+  auto it_builder = static_cast<arrow::UInt32Builder*>(interaction_builder -> field_builder(4));
+
+  for (const auto& i: interactions) {
+    ARROW_RETURN_NOT_OK(interaction_builder -> Append());
+    ARROW_RETURN_NOT_OK(ix_builder->Append(i.x));
+    ARROW_RETURN_NOT_OK(iy_builder->Append(i.y));
+    ARROW_RETURN_NOT_OK(iz_builder->Append(i.z));
+    ARROW_RETURN_NOT_OK(ie_builder->Append(i.edep));
+    ARROW_RETURN_NOT_OK(it_builder->Append(i.type));
+  }
+
+  // ----- SiPM photon counts --------------------------------------------------------------------------------
   auto sipm_count_builder = static_cast<arrow::UInt32Builder*>(counts_builder -> value_builder());
 
   unsigned n;
@@ -177,6 +226,7 @@ arrow::Status parquet_writer::append(const G4ThreeVector& pos, std::unordered_ma
     n = counts.contains(i) ? counts[i] : 0;
     ARROW_RETURN_NOT_OK(sipm_count_builder -> Append(n));
   }
+
   n_rows++;
   return n_rows == my.chunk_size ? write() : arrow::Status::OK();
 }
