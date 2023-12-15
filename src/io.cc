@@ -37,12 +37,21 @@ std::vector<std::shared_ptr<arrow::Field>> fields() {
                                           , interaction_type
                                           , NOT_NULLABLE))
                 , NOT_NULLABLE),
-    arrow::field("photon_counts", arrow::fixed_size_list(arrow::uint32(), my.n_sipms()))
+    arrow::field("photon_counts"
+                , arrow::fixed_size_list(arrow::field("photon_count"
+                                                     , arrow:: uint32()
+                                                     , NOT_NULLABLE
+)
+                                        , my.n_sipms())
+                , NOT_NULLABLE)
   };
 }
 
 std::shared_ptr<arrow::FixedSizeListBuilder> counts(arrow::MemoryPool* pool) {
-  return std::make_shared<arrow::FixedSizeListBuilder>(pool, std::make_shared<arrow::UInt32Builder>(), my.n_sipms());
+  auto single_count_type  = arrow::uint32();
+  auto single_count_field = std::make_shared<arrow::Field>("photon_count", single_count_type, NOT_NULLABLE);
+  auto counts_list_type   = arrow::fixed_size_list(single_count_field, my.n_sipms());
+  return std::make_shared<arrow::FixedSizeListBuilder>(pool, std::make_shared<arrow::UInt32Builder>(), counts_list_type);
 }
 
 #define EXIT(stuff) std::cerr << "\n\n    " << stuff << "\n\n\n"; std::exit(EXIT_FAILURE);
