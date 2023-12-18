@@ -5,6 +5,7 @@
 
 #include <n4-inspect.hh>
 #include <n4-material.hh>
+#include <n4-random.hh>
 #include <n4-sensitive.hh>
 #include <n4-sequences.hh>
 #include <n4-shape.hh>
@@ -68,14 +69,20 @@ G4PVPlacement* crystal_geometry(run_stats& stats) {
     .place(scintillator)
     .in(reflector).now();
 
+  auto [pde_energies, pde_values] = sipm_pde();
+  static auto pde = n4::interpolator(std::move(pde_energies), std::move(pde_values));
+
   auto process_hits = [&stats] (G4Step* step) {
     static auto optical_photon = n4::find_particle("opticalphoton");
     auto track = step -> GetTrack();
     if (track -> GetDefinition() == optical_photon) {
-      stats.n_detected_evt++;
+      auto p = pde(step -> GetTrack() -> GetTotalEnergy());
+      if (n4::random::uniform() < p) {
+        stats.n_detected_evt++;
+        size_t n = step -> GetPreStepPoint() -> GetPhysicalVolume() -> GetCopyNo();
+        ++stats.n_detected_at_sipm[n];
+      }
       track -> SetTrackStatus(fStopAndKill);
-      size_t n = step -> GetPreStepPoint() -> GetPhysicalVolume() -> GetCopyNo();
-      ++stats.n_detected_at_sipm[n];
     }
     return true;
   };
