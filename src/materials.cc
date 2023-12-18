@@ -19,12 +19,11 @@ G4Material* csi_with_properties() {
   // rindex: values taken from "Optimization of Parameters for a CsI(Tl) Scintillator Detector Using GEANT4-Based Monte Carlo..." by Mitra et al (mainly page 3)
   //  scint: values from Fig. 2 in "A New Scintillation Material: Pure CsI with 10ns Decay Time" by Kubota et al (these are approximate...)
   // must be in increasing ENERGY order (decreasing wavelength) for scintillation to work properly
-  auto      energies = n4::scale_by(hc*eV, {1/0.55, 1/0.36, 1/0.3 , 1/0.26}); // denominator is wavelength in micrometres
-  auto energies_cold = n4::scale_by(hc*eV, {1/0.5 , 1/0.4 , 1/0.35, 1/0.27}); // denominator is wavelength in micrometres
-  // auto     energies = n4::scale_by(hc*eV, {1/0.9, 1/0.7, 1/0.54, 1/0.35});
-  vec_double rindex =                      {1.79  , 1.79  , 1.79 , 1.79  };  //vec_double rindex = {2.2094, 1.7611};
-  vec_double  scint =                      {0.0   , 0.1   , 1.0  , 0.0   };
-  auto    abslength = n4::scale_by(m    ,  {5     , 5     , 5    , 5     });
+
+  // latest numbers from https://refractiveindex.info/?shelf=main&book=CsI&page=Querry
+  auto energies = n4::const_over(hc/nm, {  460,   400,   380,   340,   320,   300,   280,   260}); // wl in nm
+  auto spectrum = n4::scale_by  (0.01 , {    4,    10,    29,    67,    88,    29,    10,     2});
+  auto rindex   = n4::scale_by  (1.0  , {1.766, 1.794, 1.806, 1.845, 1.867, 1.902, 1.955, 2.043});
   // Values from "Temperature dependence of pure CsI: scintillation light yield and decay time" by Amsler et al
   // "cold" refers to ~77K, i.e. liquid nitrogen temperature
   double scint_yield = my.scint_yield.value_or(50'000 / MeV); // 50000 / MeV in cold
@@ -32,9 +31,9 @@ G4Material* csi_with_properties() {
   double time_slow   =  1015 * ns;
   auto mpt = n4::material_properties()
     .add("RINDEX"                    , energies, rindex)
-    .add("SCINTILLATIONCOMPONENT1"   , energies, scint)
-    .add("SCINTILLATIONCOMPONENT2"   , energies, scint)
-    .add("ABSLENGTH"                 , energies, abslength)
+    .add("SCINTILLATIONCOMPONENT1"   , energies, spectrum)
+    .add("SCINTILLATIONCOMPONENT2"   , energies, spectrum)
+    .add("ABSLENGTH"                 , energies, 5*m)
     .add("SCINTILLATIONTIMECONSTANT1", time_fast)
     .add("SCINTILLATIONTIMECONSTANT2", time_slow)
     .add("SCINTILLATIONYIELD"        , scint_yield)
