@@ -2,6 +2,9 @@
 
 #include <G4Material.hh>
 
+std::pair<std::vector<double>, std::vector<double>> csi_scint_spectrum();
+
+
 G4Material*    csi_with_properties();
 G4Material*   lyso_with_properties();
 G4Material*    bgo_with_properties();
