@@ -59,13 +59,13 @@ G4PVPlacement* crystal_geometry(run_stats& stats) {
     .x(sx + 2*my.reflector_thickness)
     .y(sy + 2*my.reflector_thickness)
     .z(       my.reflector_thickness)
-    .vis(n4::vis_attributes(my.absorbent_opposite ? absorbent_colour : reflector_colour()))
+    .vis(my.absorbent_opposite ? absorbent_colour : reflector_colour())
     .place(my.absorbent_opposite ? vacuum : teflon).at_z(-sz -my.reflector_thickness / 2)
     .in(world).now();
 
   auto crystal = n4::box("crystal")
     .xyz(sx, sy, sz)
-    .vis(n4::vis_attributes{crystal_colour()})
+    .vis(crystal_colour())
     .place(scintillator)
     .in(reflector).now();
 
@@ -89,7 +89,7 @@ G4PVPlacement* crystal_geometry(run_stats& stats) {
 
   n4::box("optical-gel")
     .xyz(my.scint_size()).z(my.gel_thickness) // x,y from scint size, override z
-    .vis(n4::vis_attributes{gel_colour})
+    .vis(gel_colour)
     .place(gel).at_z(my.gel_thickness/2).in(world).now();
 
   auto sipm = n4::box("sipm")
