@@ -138,3 +138,49 @@ G4Material* silicon_with_properties() {
   si -> SetMaterialPropertiesTable(mpt);
   return si;
 }
+
+
+G4Material* optical_gel() {
+  // Silicone resin with a methyl group
+  // (https://en.wikipedia.org/wiki/Silicone_resin)
+  auto name = "OpticalSilicone";
+  auto density = 1.05*g/cm3;
+  return n4::material_from_elements_N( name
+                                     , density
+                                     , {.state=kStateSolid}
+                                     , { {"H", 3}, {"C", 1}, {"O", 1}, {"Si", 1} });
+}
+
+G4MaterialPropertiesTable* optical_gel_properties() {
+  // gel NyoGel OCK-451
+  auto r_index_fn = [] (auto e) {
+    auto wl = c4::hc / e;
+    static const auto  const_term = 1.4954;
+    static const auto square_term = 0.008022 * um*um;
+    return const_term + square_term/wl/wl;
+  };
+  auto [r_energies, r_index] = n4::interpolate(r_index_fn, 100, OPTPHOT_MIN_ENERGY, OPTPHOT_MAX_ENERGY);
+
+  // ABSORPTION LENGTH
+  // Values estimated from printed plot (to be improved).
+  const auto very_long = 1e6;
+  auto abs_energies = n4::scale_by(eV, {OPTPHOT_MIN_ENERGY/eV,
+                                           1.70,   1.77,    2.07,   2.48,   2.76,  2.92,
+                                           3.10,   3.31,    3.54,   3.81,   4.13,
+                                        OPTPHOT_MAX_ENERGY/eV});
+  auto abs_length = n4::scale_by(mm, {very_long,
+                                      very_long, 1132.8, 1132.8 , 1132.8, 666.17, 499.5,
+                                          399.5,  199.5,  132.83,   99.5,   4.5 ,
+                                        4.5});
+
+  return n4::material_properties()
+    .add("RINDEX", r_energies, r_index)
+    .add("ABSLENGTH", abs_energies, abs_length)
+    .done();
+}
+
+G4Material* optical_gel_with_properties() {
+  auto gel = optical_gel();
+  gel -> SetMaterialPropertiesTable(optical_gel_properties());
+  return gel;
+}
