@@ -44,7 +44,8 @@ private:
   scint_parameters        scint_params_;
   scint_overrides         overrides           =  {};
 public:
-  double                  sipm_thickness      =   1    * mm;
+  double                   gel_thickness      =   0.45 * mm;
+  double                  sipm_thickness      =   1    * mm - gel_thickness;
   double                  reflector_thickness =   0.25 * mm;
   double                  particle_energy     = 511    * keV;
   int                     physics_verbosity   =   0;

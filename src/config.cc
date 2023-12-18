@@ -169,10 +169,12 @@ void config::recalculate_sipm_positions() const {
   sipm_positions_.clear();
   auto Nx = params.n_sipms_x; auto lim_x = params.sipm_size * (Nx - 1) / 2.0;
   auto Ny = params.n_sipms_y; auto lim_y = params.sipm_size * (Ny - 1) / 2.0;
+  auto z  = gel_thickness + sipm_thickness/2;
+
   sipm_positions_.reserve(params.n_sipms_x * params.n_sipms_y);
   for   (auto x: n4::linspace(-lim_x, lim_x, Nx)) {
     for (auto y: n4::linspace(-lim_y, lim_y, Ny)) {
-      sipm_positions_.push_back({x,y,sipm_thickness/2});
+      sipm_positions_.push_back({x,y,z});
     }
   }
   sipm_positions_need_recalculating = false;

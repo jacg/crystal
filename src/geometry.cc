@@ -20,6 +20,7 @@ G4Colour       csi_colour{0.0, 0.0, 0.6, 0.3};
 G4Colour      lyso_colour{0.1, 0.7, 0.6, 0.3};
 G4Colour    teflon_colour{1.0, 1.0, 1.0, 0.3};
 G4Colour absorbent_colour{0.5, 0.3, 0.1, 0.3};
+G4Colour       gel_colour{0.0, 1.0, 1.0, 0.3};
 
 G4Colour crystal_colour() {
   switch (my.scint_params().scint) {
@@ -39,9 +40,9 @@ G4PVPlacement* crystal_geometry(run_stats& stats) {
   auto scintillator = scintillator_material(my.scint_params().scint);
   auto air     = n4::material("G4_AIR");
   auto vacuum  = n4::material("G4_Galactic");
-  auto silicon = silicon_with_properties();
-  auto teflon  =  teflon_with_properties();
-
+  auto silicon =     silicon_with_properties();
+  auto teflon  =      teflon_with_properties();
+  auto gel     = optical_gel_with_properties();
   auto [sx, sy, sz] = n4::unpack(my.scint_size());
 
   auto world  = n4::box("world").xyz(sx*1.5, sy*1.5, sz*2.5).place(air).now();
@@ -79,6 +80,11 @@ G4PVPlacement* crystal_geometry(run_stats& stats) {
     return true;
   };
 
+  n4::box("optical-gel")
+    .xyz(my.scint_size()).z(my.gel_thickness) // x,y from scint size, override z
+    .vis(n4::vis_attributes{gel_colour})
+    .place(gel).at_z(my.gel_thickness/2).in(world).now();
+
   auto sipm = n4::box("sipm")
     .xy(my.scint_params().sipm_size).z(my.sipm_thickness)
     .sensitive("sipm", process_hits)
@@ -97,11 +103,11 @@ G4PVPlacement* crystal_geometry(run_stats& stats) {
   teflon_surface -> SetFinish(groundfrontpainted);     // Lambertian
   //teflon_surface -> SetFinish(polishedfrontpainted); // Specular
   teflon_surface -> SetSigmaAlpha(0.0);
-
   teflon_surface -> SetMaterialPropertiesTable(teflon_properties());
   new G4LogicalBorderSurface("teflon_surface", crystal, reflector, teflon_surface);
   if (! my.absorbent_opposite) {
     new G4LogicalBorderSurface("teflon_surface", crystal, opposite , teflon_surface);
   }
+
   return world;
 }
