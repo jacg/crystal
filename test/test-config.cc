@@ -26,7 +26,7 @@ TEST_CASE("config has a sane default", "[config][default]") {
   CHECK(my.     sipm_thickness > 0);
   CHECK(my.reflector_thickness > 0);
 
-  CHECK(my.particle_energy > 0);
+  CHECK(my.particle_energy() > 0);
   CHECK(my.seed > 0);
 
   CHECK(! my.scint_yield .has_value());

@@ -21,7 +21,7 @@ using Catch::Matchers::WithinAbs;
 TEST_CASE("gamma generator", "[generator][gamma]") {
   n4::test::default_run_manager().run(0);
   auto generator       = gammas_from_outside_crystal();
-  auto is_given_energy = WithinULP(my.particle_energy, 1);
+  auto is_given_energy = WithinULP(my.particle_energy(), 1);
   auto gamma           = n4::find_particle("gamma");
 
   for (auto i=0; i<1'000; i++) {
@@ -53,7 +53,7 @@ G4ThreeVector range_of_vectors(auto positions) {
 TEST_CASE("electron generator", "[generator][electron]") {
   n4::test::default_run_manager().run(0);
   auto generator       = photoelectric_electrons();
-  auto is_given_energy = WithinULP(my.particle_energy - xe_kshell_binding_energy, 5);
+  auto is_given_energy = WithinULP(my.particle_energy() - xe_kshell_binding_energy, 5);
   auto electron        = n4::find_particle("e-");
   auto [sx, sy, sz]    = n4::unpack(my.scint_size());
 
@@ -94,11 +94,11 @@ TEST_CASE("pointlike photon source generator", "[generator][photon][pointlike]")
   n4::test::default_run_manager().run(0);
 
   // override particle energy
-  my.particle_energy    = 1.234 * eV;
+  G4UImanager::GetUIpointer() -> ApplyCommand("/my/particle_energy 1.234 eV");
   auto n_phot_per_event = 9876;
   auto generator        = pointlike_photon_source();
   auto optical_photon   = n4::find_particle("opticalphoton");
-  auto is_given_energy  = WithinULP(my.particle_energy, 2);
+  auto is_given_energy  = WithinULP(my.particle_energy(), 2);
   auto [sx, sy, sz]     = n4::unpack(my.scint_size());
 
   G4UImanager::GetUIpointer() -> ApplyCommand("/source/nphotons " + std::to_string(n_phot_per_event));

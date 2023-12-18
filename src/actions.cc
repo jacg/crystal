@@ -40,7 +40,7 @@ generator_fn gammas_from_outside_crystal() {
     auto vertex = sipm_centres ? at_centre() : uniform(false) ;
     vertex -> SetPrimary(new G4PrimaryParticle(
                            particle_type,
-                           0,0, my.particle_energy // parallel to z-axis
+                           0,0, my.particle_energy() // parallel to z-axis
                          ));
     event  -> AddPrimaryVertex(vertex);
   };
@@ -50,7 +50,7 @@ const double xe_kshell_binding_energy = 34.56 * keV;
 
 generator_fn photoelectric_electrons() {
   auto isotropic         = n4::random::direction{};
-  auto electron_K        = my.particle_energy - xe_kshell_binding_energy;
+  auto electron_K        = my.particle_energy() - xe_kshell_binding_energy;
   auto electron_mass     = 0.510'998'91 * MeV;
   auto electron_momentum = std::sqrt(     electron_K * electron_K
                                     + 2 * electron_K * electron_mass);
@@ -73,12 +73,13 @@ generator_fn pointlike_photon_source() {
 
   auto isotropic = n4::random::direction{};
 
+
   return [isotropic] (G4Event *event) {
     static auto particle_type = n4::find_particle("opticalphoton");
     auto vertex = uniform(true);
 
     for (unsigned i=0; i<nphot; ++i) {
-      auto p  = isotropic.get() * my.particle_energy;
+      auto p = isotropic.get() * my.particle_energy();
       auto particle = new G4PrimaryParticle(
                         particle_type,
                         p.x(), p.y(), p.z()
