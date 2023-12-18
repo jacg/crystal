@@ -13,3 +13,5 @@ G4Material* optical_gel_with_properties();
 
 G4MaterialPropertiesTable*      teflon_properties();
 G4MaterialPropertiesTable* optical_gel_properties();
+
+std::pair<std::vector<double>, std::vector<double>> sipm_pde();
