@@ -54,13 +54,13 @@ TEST_CASE("io parquet reader", "[io][parquet][reader]") {
   UI -> ApplyCommand("/my/n_sipms_y 2");
 
   // Expected values
-  auto z = -40.91999816894531;
+  float z = -37.2 * mm;
   std::vector<G4ThreeVector>       source_pos{{-3, -3, z}, {-3, 3, z}, {3, -3, z}, {3, 3, z}};
   std::vector<size_t       >       sipm_ids  {          0,          1,          2,         3};
-  std::vector<std::vector<size_t>> counts{   {       4472,       4579,       4539,      4556},
-                                             {       1592,       1677,       1640,      1711},
-                                             {       3990,       4054,       4015,      3936},
-                                             {       1501,       1560,       1496,      1589}
+  std::vector<std::vector<size_t>> counts{   {         46,         49,         50,        45},
+                                             {          0,          0,          0,         0},
+                                             {        414,        411,        412,       408},
+                                             {          0,          0,          0,         0}
   };
 
   read_and_check("data/reader-test.parquet", source_pos, sipm_ids, counts);
@@ -114,16 +114,17 @@ TEST_CASE("io parquet reader metadata", "[io][parquet][reader][metadata]") {
     {"-e", "/my/n_sipms_xy 2"},
     {"-g", "vis.mac"},
     {"-m", "macs:"},
-    {"commit-date", "2023-12-15 10:07:20 +0100"},
+    {"commit-date", "2023-12-19 13:07:38 +0100"},
     {"-n", "4"},
     {"-l", "NOT SET"},
-    {"commit-msg", "Make teflon dark if reflectivity = 0"},
-    {"commit-hash", "198e4133eb41e74ea28e98df03f35e1354b858af"},
+    {"commit-msg", "Unwrap lines in sipm_pde()"},
+    {"commit-hash", "db9f8b1e4b35aa02865e6cad65cadfaa8b7e017f"},
     {"debug", "0"},
     {"physics_verbosity", "0"},
     {"particle_energy", "511.000000 keV"},
+    {"fixed_energy", "1"},
     {"chunk_size", "1024"},
-    {"sipm_thickness", "1.000000 mm"},
+    {"sipm_thickness", "0.550000 mm"},
     {"sipm_size", "6.000000 mm"},
     {"sipm_threshold", "1"},
     {"event_threshold", "1"},
