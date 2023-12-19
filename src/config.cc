@@ -1,5 +1,6 @@
 #include "config.hh"
 #include "materials.hh"
+#include "n4-random.hh"
 
 #include <cstdlib>
 #include <n4-sequences.hh>
@@ -7,6 +8,7 @@
 #include <G4ThreeVector.hh>
 
 #include <cctype>
+#include <stdexcept>
 #include <string>
 #include <unordered_map>
 #include <utility>
@@ -54,20 +56,22 @@ config::config()
   G4UnitDefinition::BuildUnitsTable();
   new G4UnitDefinition("1/MeV","1/MeV", "1/Energy", 1/MeV);
 
-  msg -> DeclareMethod          ("config_type"         ,          &config::set_config_type );
-  msg -> DeclarePropertyWithUnit("reflector_thickness" ,    "mm",  reflector_thickness     );
-  msg -> DeclarePropertyWithUnit("particle_energy"     ,   "keV",  particle_energy         );
-  msg -> DeclareProperty        ("physics_verbosity"   ,           physics_verbosity       );
-  msg -> DeclareMethod          ("seed"                ,          &config::set_random_seed );
-  msg -> DeclareProperty        ("debug"               ,           debug                   );
-  msg -> DeclareMethodWithUnit  ("scint_yield"         , "1/MeV", &config::set_scint_yield );
-  msg -> DeclareProperty        ("event_threshold"     ,           event_threshold         );
-  msg -> DeclareProperty        ( "sipm_threshold"     ,            sipm_threshold         );
-  msg -> DeclareMethod          ("reflectivity"        ,          &config::set_reflectivity);
-  msg -> DeclareProperty        ( "generator"          ,           generator               );
-  msg -> DeclareProperty        ( "outfile"            ,           outfile                 );
-  msg -> DeclareProperty        ( "chunk_size"         ,           chunk_size              );
-  msg -> DeclareProperty        ( "compression"        ,           compression             );
+  msg -> DeclareMethod          ("config_type"         ,          &config::set_config_type    );
+  msg -> DeclarePropertyWithUnit("reflector_thickness" ,    "mm",  reflector_thickness        );
+  msg -> DeclareMethodWithUnit  ("particle_energy"     ,   "keV", &config::set_particle_energy);
+  msg -> DeclareProperty        (   "fixed_energy"     ,           fixed_energy               );
+  msg -> DeclareProperty        ("physics_verbosity"   ,           physics_verbosity          );
+  msg -> DeclareMethod          ("seed"                ,          &config::set_random_seed    );
+  msg -> DeclareProperty        ("debug"               ,           debug                      );
+  msg -> DeclareMethodWithUnit  ("scint_yield"         , "1/MeV", &config::set_scint_yield    );
+  msg -> DeclareProperty        ("event_threshold"     ,           event_threshold            );
+  msg -> DeclareProperty        ( "sipm_threshold"     ,            sipm_threshold            );
+  msg -> DeclareMethod          ("reflectivity"        ,          &config::set_reflectivity   );
+  msg -> DeclareProperty        ("absorbent_opposite"  ,           absorbent_opposite         );
+  msg -> DeclareProperty        ( "generator"          ,           generator                  );
+  msg -> DeclareProperty        ( "outfile"            ,           outfile                    );
+  msg -> DeclareProperty        ( "chunk_size"         ,           chunk_size                 );
+  msg -> DeclareProperty        ( "compression"        ,           compression                );
 
   msg -> DeclareMethod        ("scint"      ,       &config::set_scint);
   msg -> DeclareMethodWithUnit("scint_depth", "mm", &config::set_scint_depth);
@@ -129,6 +133,24 @@ void config::set_config_type(const std::string& s) {
   return;
 }
 
+n4::random::piecewise_linear_distribution scint_spectrum() {
+  std::string msg{"Scintillation spectrum not implemented for scintillator "};
+  std::pair<std::vector<double>, std::vector<double>> data;
+  switch (my.scint_params().scint) {
+    case scintillator_type_enum::csi : data = csi_scint_spectrum(); break;
+    case scintillator_type_enum::lyso: throw std::runtime_error(msg + "LYSO");
+    case scintillator_type_enum::bgo : throw std::runtime_error(msg +  "BGO");
+  }
+  return {std::move(data.first), std::move(data.second)};
+}
+
+
+double config::particle_energy() const {
+  if (fixed_energy) { return particle_energy_; }
+  if (! energy_spectrum.has_value()) { energy_spectrum.emplace(scint_spectrum()); }
+  return energy_spectrum.value().sample();
+}
+
 G4ThreeVector config::scint_size() const {
   auto params = scint_params();
   return { params.n_sipms_x * params.sipm_size
@@ -168,10 +190,12 @@ void config::recalculate_sipm_positions() const {
   sipm_positions_.clear();
   auto Nx = params.n_sipms_x; auto lim_x = params.sipm_size * (Nx - 1) / 2.0;
   auto Ny = params.n_sipms_y; auto lim_y = params.sipm_size * (Ny - 1) / 2.0;
+  auto z  = gel_thickness + sipm_thickness/2;
+
   sipm_positions_.reserve(params.n_sipms_x * params.n_sipms_y);
   for   (auto x: n4::linspace(-lim_x, lim_x, Nx)) {
     for (auto y: n4::linspace(-lim_y, lim_y, Ny)) {
-      sipm_positions_.push_back({x,y,sipm_thickness/2});
+      sipm_positions_.push_back({x,y,z});
     }
   }
   sipm_positions_need_recalculating = false;
@@ -194,7 +218,8 @@ std::unordered_map<std::string, std::string> config::as_map() {
   it["sipm_size"          ] = std::to_string(params.sipm_size/mm) + " mm";
   it["sipm_thickness"     ] = std::to_string(my.sipm_thickness/mm) + " mm";
   it["reflector_thickness"] = std::to_string(my.reflector_thickness/mm) + " mm";
-  it["particle_energy"    ] = std::to_string(my.particle_energy/keV) + " keV";
+  it["particle_energy"    ] = std::to_string(my.particle_energy_/keV) + " keV";
+  it["fixed_energy"       ] = std::to_string(my.fixed_energy);
   it["physics_verbosity"  ] = std::to_string(my.physics_verbosity);
   it["seed"               ] = std::to_string(my.seed);
   it["debug"              ] = std::to_string(my.debug);
@@ -203,6 +228,7 @@ std::unordered_map<std::string, std::string> config::as_map() {
   it["chunk_size"         ] = std::to_string(my.chunk_size);
   it["scint_yield"        ] = my.scint_yield .has_value() ? std::to_string(my.scint_yield .value()*MeV) + " MeV^-1" : "NULL";
   it["reflectivity"       ] = my.reflectivity.has_value() ? std::to_string(my.reflectivity.value()    )             : "NULL";
+  it["absorbent_opposite" ] = my.absorbent_opposite ? "true" : "false";
   it["generator"          ] = my.generator;
   it["outfile"            ] = my.outfile;
 

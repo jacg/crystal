@@ -1,3 +1,4 @@
+#include "n4-sequences.hh"
 #include <actions.hh>
 #include <config.hh>
 #include <geometry.hh>
@@ -17,11 +18,12 @@
 
 using Catch::Matchers::WithinULP;
 using Catch::Matchers::WithinAbs;
+using Catch::Matchers::WithinRel;
 
 TEST_CASE("gamma generator", "[generator][gamma]") {
   n4::test::default_run_manager().run(0);
   auto generator       = gammas_from_outside_crystal();
-  auto is_given_energy = WithinULP(my.particle_energy, 1);
+  auto is_given_energy = WithinULP(my.particle_energy(), 1);
   auto gamma           = n4::find_particle("gamma");
 
   for (auto i=0; i<1'000; i++) {
@@ -53,7 +55,7 @@ G4ThreeVector range_of_vectors(auto positions) {
 TEST_CASE("electron generator", "[generator][electron]") {
   n4::test::default_run_manager().run(0);
   auto generator       = photoelectric_electrons();
-  auto is_given_energy = WithinULP(my.particle_energy - xe_kshell_binding_energy, 5);
+  auto is_given_energy = WithinULP(my.particle_energy() - xe_kshell_binding_energy, 5);
   auto electron        = n4::find_particle("e-");
   auto [sx, sy, sz]    = n4::unpack(my.scint_size());
 
@@ -94,11 +96,11 @@ TEST_CASE("pointlike photon source generator", "[generator][photon][pointlike]")
   n4::test::default_run_manager().run(0);
 
   // override particle energy
-  my.particle_energy    = 1.234 * eV;
+  G4UImanager::GetUIpointer() -> ApplyCommand("/my/particle_energy 1.234 eV");
   auto n_phot_per_event = 9876;
   auto generator        = pointlike_photon_source();
   auto optical_photon   = n4::find_particle("opticalphoton");
-  auto is_given_energy  = WithinULP(my.particle_energy, 2);
+  auto is_given_energy  = WithinULP(my.particle_energy(), 2);
   auto [sx, sy, sz]     = n4::unpack(my.scint_size());
 
   G4UImanager::GetUIpointer() -> ApplyCommand("/source/nphotons " + std::to_string(n_phot_per_event));
@@ -142,6 +144,32 @@ TEST_CASE("pointlike photon source generator", "[generator][photon][pointlike]")
   CHECK(range.x() > sx * (1 - tol));
   CHECK(range.y() > sy * (1 - tol));
   CHECK(range.z() > sz * (1 - tol));
+}
+
+// Check particle energy distribution
+TEST_CASE("pointlike photon source generator spectrum", "[generator][photon][pointlike]") {
+  n4::test::default_run_manager().run(0);
+
+  auto n_phot_per_event = 1'000;
+  auto generator        = pointlike_photon_source();
+
+  G4UImanager::GetUIpointer() -> ApplyCommand("/my/fixed_energy false");
+  G4UImanager::GetUIpointer() -> ApplyCommand("/source/nphotons " + std::to_string(n_phot_per_event));
+
+  auto energies = n4::vec_with_capacity<double>(n_phot_per_event);
+
+  G4Event event{};
+  generator(&event);
+  REQUIRE(event.GetNumberOfPrimaryVertex() == 1);
+  auto vertex = event.GetPrimaryVertex(0);
+  REQUIRE(vertex -> GetNumberOfParticle() == n_phot_per_event);
+  for (auto j=0; j<n_phot_per_event; j++) { energies.push_back(vertex -> GetPrimary(j) -> GetTotalEnergy()); }
+
+  auto [e_min, e_max] = n4::stats::min_max(energies).value();
+  auto e_mean = n4::stats::mean(energies).value();
+  CHECK_THAT(e_mean / eV, WithinRel(3.73, 1e-2));
+  CHECK_THAT(e_min  / eV, WithinRel(2.70, 1e-2));
+  CHECK_THAT(e_max  / eV, WithinRel(4.76, 1e-2));
 }
 
 TEST_CASE("test selector", "[selector]") {

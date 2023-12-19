@@ -7,6 +7,7 @@
 #include <G4UnitsTable.hh>
 #include <Randomize.hh>
 
+#include <n4-random.hh>
 #include <n4-run-manager.hh>
 
 #include <cstdint>
@@ -41,12 +42,14 @@ config_type_enum string_to_config_type(std::string s);
 
 struct config {
 private:
+  using sampler = n4::random::piecewise_linear_distribution;
+
   scint_parameters        scint_params_;
   scint_overrides         overrides           =  {};
 public:
-  double                  sipm_thickness      =   1    * mm;
+  double                   gel_thickness      =   0.45 * mm;
+  double                  sipm_thickness      =   1    * mm - gel_thickness;
   double                  reflector_thickness =   0.25 * mm;
-  double                  particle_energy     = 511    * keV;
   int                     physics_verbosity   =   0;
   long                    seed                = 123456789;
   bool                    debug               = false ;
@@ -54,6 +57,8 @@ public:
   size_t                  event_threshold     = 1;
   size_t                   sipm_threshold     = 1;
   std::optional<double>   reflectivity        = std::nullopt;
+  bool                    absorbent_opposite  = true;
+  bool                    fixed_energy        = true;
   std::string             generator           = "gammas_from_outside_crystal";
   std::string             outfile             = "crystal-out.parquet";
   int64_t                 chunk_size          = 1024; // TODO find out what chuck_size default should be
@@ -61,6 +66,7 @@ public:
 
   config();
 
+  double particle_energy() const;
   G4ThreeVector scint_size() const;
   const std::vector<G4ThreeVector>& sipm_positions() const;
   const scint_parameters scint_params() const;
@@ -70,19 +76,22 @@ public:
 
 private:
 
-  void set_config_type(const std::string& s);
-  void set_scint      (const std::string& s) { overrides.scint = string_to_scintillator_type(s); }
-  void set_scint_depth(double   d)           { overrides.scint_depth = d; }
-  void set_n_sipms_x  (unsigned n)           { overrides.n_sipms_x   = n; sipm_positions_need_recalculating = true; }
-  void set_n_sipms_y  (unsigned n)           { overrides.n_sipms_y   = n; sipm_positions_need_recalculating = true; }
-  void set_n_sipms_xy (unsigned n)           { set_n_sipms_x(n); set_n_sipms_y(n); }
-  void set_sipm_size  (double   d)           { overrides.sipm_size   = d; sipm_positions_need_recalculating = true; }
+  void set_config_type    (const std::string& s);
+  void set_scint          (const std::string& s) { overrides.scint = string_to_scintillator_type(s); }
+  void set_scint_depth    (double   d)           { overrides.scint_depth = d; }
+  void set_particle_energy(double   e)           { particle_energy_ = e; }
+  void set_n_sipms_x      (unsigned n)           { overrides.n_sipms_x   = n; sipm_positions_need_recalculating = true; }
+  void set_n_sipms_y      (unsigned n)           { overrides.n_sipms_y   = n; sipm_positions_need_recalculating = true; }
+  void set_n_sipms_xy     (unsigned n)           { set_n_sipms_x(n); set_n_sipms_y(n); }
+  void set_sipm_size      (double   d)           { overrides.sipm_size   = d; sipm_positions_need_recalculating = true; }
 
   void set_scint_yield(double   y) { scint_yield = y; }
   void set_random_seed(long  seed) { G4Random::setTheSeed(seed); }
   void set_reflectivity(double  r) { reflectivity = r; }
   G4GenericMessenger* msg;
 
+  double                             particle_energy_ = 511 * keV;
+  mutable std::optional<sampler>     energy_spectrum  = {};
   mutable std::vector<G4ThreeVector> sipm_positions_;
   mutable bool                       sipm_positions_need_recalculating = true;
   void recalculate_sipm_positions() const;
