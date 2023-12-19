@@ -1,51 +1,46 @@
 #include <config.hh>
 #include <geometry.hh>
+#include <materials.hh>
 #include <physics-list.hh>
 
 #include <n4-all.hh>
 
-#include <G4Step.hh>
-#include <G4ThreeVector.hh>
-#include <G4TrackStatus.hh>
-
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 
-using Catch::Matchers::WithinAbs;
+using Catch::Matchers::WithinRel;
 
-
-auto blue_light_towards_sipm() {
-  auto optical_photon = n4::find_particle("opticalphoton");
-  auto energy    = 2.5 * eV;
-  auto isotropic = n4::random::direction{};
-  auto random_source_pos = [] () -> G4ThreeVector {
-    auto params = my.scint_params();
-    return {
-      n4::random::uniform_width(params.sipm_size),
-      n4::random::uniform_width(params.sipm_size),
-      -1 * um // almost zero distance to avoid optical absorption in scintillator
-    };
-  };
-
-  return [energy, random_source_pos, optical_photon, isotropic] (G4Event* event) {
-    auto particle = new G4PrimaryParticle{optical_photon, 0, 0, energy}; // along z axis
+auto photons_along_z(auto energy) {
+  auto particle_type = n4::find_particle("opticalphoton");
+  auto source_z      = my.gel_thickness / 2; // Generate photon inside gel to avoid crystal-gel interface
+  auto isotropic     = n4::random::direction{};
+  return [energy, source_z, particle_type, isotropic] (G4Event* event) {
+    auto particle = new G4PrimaryParticle{particle_type, 0, 0, energy};
+    auto vertex   = new G4PrimaryVertex{{0,0,source_z}, 0};
     particle -> SetPolarization(isotropic.get());
-    auto vertex   = new G4PrimaryVertex{random_source_pos(), 0};
     vertex -> SetPrimary(particle);
     event  -> AddPrimaryVertex(vertex);
   };
 }
 
-TEST_CASE("crystal sipm sensitive", "[sipm][sensitive]") {
-  unsigned n_shot     = 100000;
+void check_pde_at_energy(double energy) {
+  my.gel_thickness = 1 * nm; // Prevent absorption in gel from skewing the statistics
   run_stats stats;
+  auto N = 50'000;
+  auto [pde_energies, pde_values] = sipm_pde();
+  auto pde_at_energy = n4::interpolator(std::move(pde_energies), std::move(pde_values))(energy).value();
   n4::run_manager::create()
     .fake_ui()
     .physics(physics_list)
-    .geometry([&] { return crystal_geometry(stats); })
-    .actions(new n4::actions{blue_light_towards_sipm()})
-    .run(n_shot);
+    .geometry([&] {return crystal_geometry(stats);})
+    .actions(new n4::actions{photons_along_z(energy)})
+    .run(N);
 
-  auto fraction_detected = static_cast<double>(stats.n_detected_evt) / n_shot;
-  CHECK_THAT(fraction_detected, WithinAbs(1, 1e-6));
+  auto fraction_detected = static_cast<double>(stats.n_detected_at_sipm[0]) / N;
+  CHECK_THAT(fraction_detected, WithinRel(pde_at_energy, 1e-2));
 }
+
+TEST_CASE("sipm_sensitive_pde 2.5", "[sipm][sensitive][pde]") { check_pde_at_energy(2.5 * eV); }
+TEST_CASE("sipm_sensitive_pde 3.5", "[sipm][sensitive][pde]") { check_pde_at_energy(3.5 * eV); }
+TEST_CASE("sipm_sensitive_pde 4.0", "[sipm][sensitive][pde]") { check_pde_at_energy(4.0 * eV); }
+TEST_CASE("sipm_sensitive_pde 4.2", "[sipm][sensitive][pde]") { check_pde_at_energy(4.2 * eV); }
