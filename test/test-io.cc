@@ -66,7 +66,7 @@ TEST_CASE("io parquet reader", "[io][parquet][reader]") {
   read_and_check("data/reader-test.parquet", source_pos, sipm_ids, counts);
 }
 
-TEST_CASE("io parquet writer", "[io][parquet][writer]") {
+TEST_CASE("io parquet roundtrip", "[io][parquet][writer]") {
   // Needed for CLI metadata
   n4::test::default_run_manager().run(0);
 
@@ -161,7 +161,7 @@ TEST_CASE("io parquet reader metadata", "[io][parquet][reader][metadata]") {
   CHECK(! meta["ARROW:schema"].empty());
 }
 
-TEST_CASE("io parquet writer metadata", "[io][parquet][writer][metadata]") {
+TEST_CASE("io parquet roundtrip metadata", "[io][parquet][writer][metadata]") {
   std::string filename = std::tmpnam(nullptr);
   auto nevt = "2";
   auto args_list = std::initializer_list<std::string>{
