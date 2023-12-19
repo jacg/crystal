@@ -193,9 +193,7 @@ G4Material* optical_gel_with_properties() {
 }
 
 std::pair<std::vector<double>, std::vector<double>> sipm_pde() {
-  auto energies = n4::const_over(c4::hc/nm, { 908.37, 820.02, 730.61, 635.70, 470.29,
-                                              407.14, 364.92, 347.73, 304.17, 284.26});
-  auto pde      = n4::scale_by  (0.01     , {   3.49,   8.04,  15.79,  28.41,  49.74,
-                                               45.62,  35.37,  35.39,  26.60,   9.14});
+  auto energies = n4::const_over(c4::hc/nm, { 908.37, 820.02, 730.61, 635.70, 470.29, 407.14, 364.92, 347.73, 304.17, 284.26});
+  auto pde      = n4::scale_by  (0.01     , {   3.49,   8.04,  15.79,  28.41,  49.74,  45.62,  35.37,  35.39,  26.60,   9.14});
   return {energies, pde};
 }
