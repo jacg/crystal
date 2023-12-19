@@ -8,13 +8,19 @@
 #include <memory>
 #include <unordered_map>
 
+struct interaction {
+  float x, y, z;
+  float edep;
+  unsigned short type;
+};
+
 
 class parquet_writer {
 public:
   parquet_writer();
   ~parquet_writer();
 
-  arrow::Status append(const G4ThreeVector& pos, std::unordered_map<size_t, size_t> counts);
+  arrow::Status append(const G4ThreeVector& pos, const std::vector<interaction>& interactions, std::unordered_map<size_t, size_t> counts);
   arrow::Status write();
 
 private:
@@ -22,10 +28,11 @@ private:
   arrow::MemoryPool* pool;
 
   // Half float doesn't work
-  std::shared_ptr<arrow::FloatBuilder>               x_builder;
-  std::shared_ptr<arrow::FloatBuilder>               y_builder;
-  std::shared_ptr<arrow::FloatBuilder>               z_builder;
-  std::vector<std::shared_ptr<arrow::UInt32Builder>> counts_builder;
+  std::shared_ptr<arrow::FloatBuilder>         x_builder;
+  std::shared_ptr<arrow::FloatBuilder>         y_builder;
+  std::shared_ptr<arrow::FloatBuilder>         z_builder;
+  std::shared_ptr<arrow::ListBuilder>          interactions_builder;
+  std::shared_ptr<arrow::FixedSizeListBuilder> counts_builder;
 
   std::shared_ptr<arrow::Schema>               schema;
   std::unique_ptr<parquet::arrow::FileWriter>  writer;
@@ -34,13 +41,10 @@ private:
 };
 
 
-arrow::Result<
-  std::vector<
-    std::pair<
-      G4ThreeVector, std::unordered_map<size_t, size_t>
-      >
-    >
-  > read_entire_file(const std::string& filename);
+using EVENT = std::tuple<G4ThreeVector, std::vector<interaction>, std::unordered_map<size_t, size_t>>;
+using MAYBE_EVENTS = arrow::Result<std::vector<EVENT>>;
+
+MAYBE_EVENTS read_entire_file(const std::string& filename);
 
 arrow::Result<
   std::unordered_map<std::string, std::string>

@@ -29,7 +29,7 @@ void read_and_check(const auto& filename, const auto& source_pos, const auto& si
   REQUIRE(rows.size() == source_pos.size());
 
   for (auto i=0; i<rows.size(); i++) {
-    auto [pos, map] = rows[i];
+    auto [pos, TODO_interactions, map] = rows[i];
 
     CHECK_THAT(pos.x(), WithinULP(source_pos[i].x(), 1));
     CHECK_THAT(pos.y(), WithinULP(source_pos[i].y(), 1));
@@ -62,7 +62,6 @@ TEST_CASE("io parquet reader", "[io][parquet][reader]") {
                                              {        414,        411,        412,       408},
                                              {          0,          0,          0,         0}
   };
-
   read_and_check("data/reader-test.parquet", source_pos, sipm_ids, counts);
 }
 
@@ -88,11 +87,12 @@ TEST_CASE("io parquet roundtrip", "[io][parquet][writer]") {
     auto writer = parquet_writer();
     std::unordered_map<size_t, size_t> map;
     arrow::Status status;
+    std::vector<interaction> interactions;
     for (auto i=0; i<source_pos.size(); i++) {
       for (auto sipm_id : sipm_ids) {
         map[sipm_id] = counts[i][sipm_id];
       }
-      status = writer.append(source_pos[i], map);
+      status = writer.append(source_pos[i], interactions, map);
       REQUIRE(status.ok());
     }
   } // writer goes out of scope, file should be written
@@ -114,11 +114,11 @@ TEST_CASE("io parquet reader metadata", "[io][parquet][reader][metadata]") {
     {"-e", "/my/n_sipms_xy 2"},
     {"-g", "vis.mac"},
     {"-m", "macs:"},
-    {"commit-date", "2023-12-19 13:07:38 +0100"},
+    {"commit-date", "2023-12-15 16:02:39 +0100"},
     {"-n", "4"},
     {"-l", "NOT SET"},
-    {"commit-msg", "Unwrap lines in sipm_pde()"},
-    {"commit-hash", "db9f8b1e4b35aa02865e6cad65cadfaa8b7e017f"},
+    {"commit-msg", "Make primary positions non-nullable"},
+    {"commit-hash", "e0424f2e117b841ade0da9d2dcca137f593072e7"},
     {"debug", "0"},
     {"physics_verbosity", "0"},
     {"particle_energy", "511.000000 keV"},

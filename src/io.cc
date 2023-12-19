@@ -1,6 +1,8 @@
 #include "config.hh"
 #include "io.hh"
 
+#include <n4-sequences.hh>
+
 #include <arrow/io/api.h>
 
 #include <parquet/arrow/reader.h>
@@ -15,26 +17,41 @@
 #include <unordered_map>
 #include <vector>
 
+const bool NOT_NULLABLE = false;
+
+auto interaction_type = arrow::struct_({
+  arrow::field("x"   , arrow::float32(), NOT_NULLABLE),
+  arrow::field("y"   , arrow::float32(), NOT_NULLABLE),
+  arrow::field("z"   , arrow::float32(), NOT_NULLABLE),
+  arrow::field("edep", arrow::float32(), NOT_NULLABLE),
+  arrow::field("type", arrow:: uint32(), NOT_NULLABLE),
+});
+
 std::vector<std::shared_ptr<arrow::Field>> fields() {
-  std::vector<std::shared_ptr<arrow::Field>> fields;
-  auto n_sipms = my.n_sipms();
-  fields.reserve(n_sipms + 3);
-  fields.push_back(arrow::field("x", arrow::float32()));
-  fields.push_back(arrow::field("y", arrow::float32()));
-  fields.push_back(arrow::field("z", arrow::float32()));
-  for (size_t n=0; n<n_sipms; n++) {
-    fields.push_back(arrow::field("sipm_" + std::to_string(n), arrow::uint32()));
-  }
-  return fields;
+  return {
+    arrow::field("x", arrow::float32(), NOT_NULLABLE),
+    arrow::field("y", arrow::float32(), NOT_NULLABLE),
+    arrow::field("z", arrow::float32(), NOT_NULLABLE),
+    arrow::field("interactions"
+                , arrow::list(arrow::field( "interaction"
+                                          , interaction_type
+                                          , NOT_NULLABLE))
+                , NOT_NULLABLE),
+    arrow::field("photon_counts"
+                , arrow::fixed_size_list(arrow::field("photon_count"
+                                                     , arrow:: uint32()
+                                                     , NOT_NULLABLE
+)
+                                        , my.n_sipms())
+                , NOT_NULLABLE)
+  };
 }
 
-std::vector<std::shared_ptr<arrow::UInt32Builder>> counts(arrow::MemoryPool* pool) {
-  std::vector<std::shared_ptr<arrow::UInt32Builder>> counts;
-  counts.reserve(my.n_sipms());
-  for (size_t n=0; n<my.n_sipms(); n++) {
-    counts.push_back(std::make_shared<arrow::UInt32Builder>(pool));
-  }
-  return counts;
+std::shared_ptr<arrow::FixedSizeListBuilder> counts(arrow::MemoryPool* pool) {
+  auto single_count_type  = arrow::uint32();
+  auto single_count_field = std::make_shared<arrow::Field>("photon_count", single_count_type, NOT_NULLABLE);
+  auto counts_list_type   = arrow::fixed_size_list(single_count_field, my.n_sipms());
+  return std::make_shared<arrow::FixedSizeListBuilder>(pool, std::make_shared<arrow::UInt32Builder>(), counts_list_type);
 }
 
 #define EXIT(stuff) std::cerr << "\n\n    " << stuff << "\n\n\n"; std::exit(EXIT_FAILURE);
@@ -145,49 +162,82 @@ std::shared_ptr<arrow::Schema> make_schema() {
   return std::make_shared<arrow::Schema>(fields(), metadata());
 }
 
+auto make_interaction_builder() {
+  auto pool = arrow::default_memory_pool();
+  std::vector<std::shared_ptr<arrow::ArrayBuilder>> vec_of_builders {
+    std::make_shared<arrow:: FloatBuilder>(pool),
+    std::make_shared<arrow:: FloatBuilder>(pool),
+    std::make_shared<arrow:: FloatBuilder>(pool),
+    std::make_shared<arrow:: FloatBuilder>(pool),
+    std::make_shared<arrow::UInt32Builder>(pool)
+  };
+  return std::make_shared<arrow::StructBuilder>(interaction_type, pool, vec_of_builders);
+}
+
 parquet_writer::parquet_writer() :
-  pool          {arrow::default_memory_pool()}
-, x_builder     {std::make_shared<arrow::FloatBuilder>(pool)}
-, y_builder     {std::make_shared<arrow::FloatBuilder>(pool)}
-, z_builder     {std::make_shared<arrow::FloatBuilder>(pool)}
-, counts_builder{counts(pool)}
-, schema        {std::make_shared<arrow::Schema>(fields(), metadata())}
-, writer        {make_writer(schema, pool)}
+  pool                {arrow::default_memory_pool()}
+, x_builder           {std::make_shared<arrow::FloatBuilder>(pool)}
+, y_builder           {std::make_shared<arrow::FloatBuilder>(pool)}
+, z_builder           {std::make_shared<arrow::FloatBuilder>(pool)}
+, interactions_builder{std::make_shared<arrow:: ListBuilder>(pool, make_interaction_builder(), interaction_type)}
+, counts_builder      {counts(pool)}
+, schema              {std::make_shared<arrow::Schema>(fields(), metadata())}
+, writer              {make_writer(schema, pool)}
 {}
 
 parquet_writer::~parquet_writer() {
   arrow::Status status;
-  status = write();           if (! status.ok()) { std::cerr << "\nCould not write to file " << status.ToString() << std::endl; }
+  status = write();           if (! status.ok()) { std::cerr << "\nCould not write to file "           << status.ToString() << std::endl; }
   status = writer -> Close(); if (! status.ok()) { std::cerr << "\nCould not close the file properly " << status.ToString()  << std::endl; }
 }
 
 arrow::Result<std::shared_ptr<arrow::Table>> parquet_writer::make_table() {
-  auto n_sipms = my.n_sipms();
   std::vector<std::shared_ptr<arrow::Array>> arrays;
-  arrays.reserve(n_sipms);
+  arrays.reserve(5);
 
-  ARROW_ASSIGN_OR_RAISE(auto x_array, x_builder -> Finish()); arrays.push_back(x_array);
-  ARROW_ASSIGN_OR_RAISE(auto y_array, y_builder -> Finish()); arrays.push_back(y_array);
-  ARROW_ASSIGN_OR_RAISE(auto z_array, z_builder -> Finish()); arrays.push_back(z_array);
-
-  for (size_t n=0; n<n_sipms; n++) {
-    ARROW_ASSIGN_OR_RAISE(auto c_array, counts_builder[n] -> Finish());
-    arrays.push_back(c_array);
-  }
+  ARROW_ASSIGN_OR_RAISE(auto x_array      , x_builder      -> Finish()); arrays.push_back(x_array);
+  ARROW_ASSIGN_OR_RAISE(auto y_array      , y_builder      -> Finish()); arrays.push_back(y_array);
+  ARROW_ASSIGN_OR_RAISE(auto z_array      , z_builder      -> Finish()); arrays.push_back(z_array);
+  ARROW_ASSIGN_OR_RAISE(auto i_array, interactions_builder -> Finish()); arrays.push_back(i_array);
+  ARROW_ASSIGN_OR_RAISE(auto photon_counts, counts_builder -> Finish()); arrays.push_back(photon_counts);
 
   return arrow::Table::Make(schema, arrays);
 };
 
-arrow::Status parquet_writer::append(const G4ThreeVector& pos, std::unordered_map<size_t, size_t> counts) {
-  ARROW_RETURN_NOT_OK(x_builder -> Append(pos.x()));
-  ARROW_RETURN_NOT_OK(y_builder -> Append(pos.y()));
-  ARROW_RETURN_NOT_OK(z_builder -> Append(pos.z()));
+arrow::Status parquet_writer::append(const G4ThreeVector& pos, const std::vector<interaction>& interactions, std::unordered_map<size_t, size_t> counts) {
+  ARROW_RETURN_NOT_OK(x_builder            -> Append(pos.x()));
+  ARROW_RETURN_NOT_OK(y_builder            -> Append(pos.y()));
+  ARROW_RETURN_NOT_OK(z_builder            -> Append(pos.z()));
+  ARROW_RETURN_NOT_OK(interactions_builder -> Append());
+  ARROW_RETURN_NOT_OK(counts_builder       -> Append());
+
+  // ----- Interactions --------------------------------------------------------------------------------------
+  auto interaction_builder = static_cast<arrow::StructBuilder*>(interactions_builder -> value_builder());
+
+  auto ix_builder = static_cast<arrow:: FloatBuilder*>(interaction_builder -> field_builder(0));
+  auto iy_builder = static_cast<arrow:: FloatBuilder*>(interaction_builder -> field_builder(1));
+  auto iz_builder = static_cast<arrow:: FloatBuilder*>(interaction_builder -> field_builder(2));
+  auto ie_builder = static_cast<arrow:: FloatBuilder*>(interaction_builder -> field_builder(3));
+  auto it_builder = static_cast<arrow::UInt32Builder*>(interaction_builder -> field_builder(4));
+
+  for (const auto& i: interactions) {
+    ARROW_RETURN_NOT_OK(interaction_builder -> Append());
+    ARROW_RETURN_NOT_OK(ix_builder->Append(i.x));
+    ARROW_RETURN_NOT_OK(iy_builder->Append(i.y));
+    ARROW_RETURN_NOT_OK(iz_builder->Append(i.z));
+    ARROW_RETURN_NOT_OK(ie_builder->Append(i.edep));
+    ARROW_RETURN_NOT_OK(it_builder->Append(i.type));
+  }
+
+  // ----- SiPM photon counts --------------------------------------------------------------------------------
+  auto sipm_count_builder = static_cast<arrow::UInt32Builder*>(counts_builder -> value_builder());
 
   unsigned n;
   for (size_t i=0; i<my.n_sipms(); i++) {
     n = counts.contains(i) ? counts[i] : 0;
-    ARROW_RETURN_NOT_OK(counts_builder[i] -> Append(n));
+    ARROW_RETURN_NOT_OK(sipm_count_builder -> Append(n));
   }
+
   n_rows++;
   return n_rows == my.chunk_size ? write() : arrow::Status::OK();
 }
@@ -199,14 +249,7 @@ arrow::Status parquet_writer::write() {
   return arrow::Status::OK();
 }
 
-arrow::Result<
-  std::vector<
-    std::pair<
-      G4ThreeVector, std::unordered_map<size_t, size_t>
-    >
-  >
->
-read_entire_file(const std::string& filename) {
+MAYBE_EVENTS read_entire_file(const std::string& filename) {
   arrow::MemoryPool* pool = arrow::default_memory_pool();
   std::shared_ptr<arrow::io::RandomAccessFile> input;
   std::unique_ptr<parquet::arrow::FileReader> reader;
@@ -223,20 +266,35 @@ read_entire_file(const std::string& filename) {
   const auto* x = columns[0] -> data() -> GetValues<float>(1); // I do not understand the meaning of 1
   const auto* y = columns[1] -> data() -> GetValues<float>(1); // I do not understand the meaning of 1
   const auto* z = columns[2] -> data() -> GetValues<float>(1); // I do not understand the meaning of 1
-  std::vector<const uint32_t*> c;
-  c.reserve(table -> num_columns() - 3);
-  for (auto col=3; col<table -> num_columns(); col++) {
-    const auto* c_col = columns[col] -> data() -> GetValues<std::uint32_t>(1);
-    c.push_back(c_col);
-  }
 
-  std::vector<std::pair<G4ThreeVector, std::unordered_map<size_t, size_t>>> rows;
+  const auto  interactions_list   = static_pointer_cast<arrow::  ListArray>(columns[3]);
+  const auto  interactions_fields = static_pointer_cast<arrow::StructArray>(interactions_list -> values()) -> fields();
+  const auto* i_x    = interactions_fields[0] -> data() -> GetValues<float         >(1);
+  const auto* i_y    = interactions_fields[1] -> data() -> GetValues<float         >(1);
+  const auto* i_z    = interactions_fields[2] -> data() -> GetValues<float         >(1);
+  const auto* i_edep = interactions_fields[3] -> data() -> GetValues<float         >(1);
+  const auto* i_type = interactions_fields[4] -> data() -> GetValues<unsigned short>(1);
+
+  const auto counts_list  = static_pointer_cast<arrow::FixedSizeListArray>(columns[4]);
+  const auto counts_start = static_pointer_cast<arrow::UInt32Array>(counts_list -> values()) -> raw_values();
+
+  std::vector<EVENT> rows;
   for (auto row=0; row< table -> num_rows(); row++) {
-    std::unordered_map<size_t, size_t> map;
-    for (auto col=0; col<table -> num_columns() - 3; col++) {
-      map.insert({col, c[col][row]});
+    auto counts_vec = std::vector<uint32_t> ( counts_start + counts_list -> value_offset(row    )
+                                            , counts_start + counts_list -> value_offset(row + 1));
+
+    std::vector<interaction> interactions;
+    for (auto i = interactions_list -> value_offset(row    ) ;
+              i < interactions_list -> value_offset(row + 1) ;
+            ++i                                               )
+    {
+      interactions.emplace_back(i_x[i], i_y[i], i_z[i], i_edep[i], i_type[i]);
     }
-    rows.push_back({ {x[row], y[row], z[row]}, map });
+
+    std::unordered_map<size_t, size_t> counts_map;
+    for (auto [sipm_id, count] : n4::enumerate(counts_vec)) { counts_map.insert({sipm_id, count}); }
+
+    rows.push_back({ {x[row], y[row], z[row]}, interactions, counts_map });
   }
   return rows;
 }
