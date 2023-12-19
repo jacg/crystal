@@ -21,7 +21,7 @@ G4Colour       csi_colour{0.0, 0.0, 0.6, 0.3};
 G4Colour      lyso_colour{0.1, 0.7, 0.6, 0.3};
 G4Colour    teflon_colour{1.0, 1.0, 1.0, 0.3};
 G4Colour absorbent_colour{0.5, 0.3, 0.1, 0.3};
-G4Colour       gel_colour{0.0, 1.0, 1.0, 0.3};
+G4Colour       gel_colour{1.0, 1.0, 0.0, 0.3};
 
 G4Colour crystal_colour() {
   switch (my.scint_params().scint) {
