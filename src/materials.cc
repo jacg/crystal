@@ -14,6 +14,8 @@ std::pair<std::vector<double>, std::vector<double>> csi_scint_spectrum() {
   // From R. Soleti
   auto energies = n4::const_over(c4::hc/nm, {  460,   400,   380,   340,   320,   300,   280,   260}); // wl in nm
   auto spectrum = n4::scale_by  (0.01     , {    4,    10,    29,    67,    88,    29,    10,     2});
+  auto spectrum_norm = n4::stats::sum(spectrum);
+  spectrum = n4::map<double>([&] (auto s){return  s/spectrum_norm;}, spectrum);
   return {std::move(energies), std::move(spectrum)};
 }
 
