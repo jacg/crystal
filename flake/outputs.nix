@@ -43,7 +43,7 @@
       name = "crystal-clang-devenv";
       packages = nain4.deps.dev-shell-packages ++ [
         nain4.packages.clang_16 pkgs.arrow-cpp
-        (pkgs.python3.withPackages(ps: with ps; [parquet pandas ipython pyarrow torch matplotlib]))
+        (pkgs.python3.withPackages(ps: with ps; [parquet pandas ipython pyarrow torch matplotlib polars]))
       ];
     });
 
