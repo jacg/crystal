@@ -12,6 +12,10 @@ struct interaction {
   float x, y, z;
   float edep;
   unsigned short type;
+
+  interaction(float x, float y,  float z, float edep, unsigned short type)
+    : x{x}, y{y}, z{z}, edep{edep}, type{type}
+  {}
 };
 
 
