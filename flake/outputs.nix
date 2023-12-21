@@ -40,7 +40,7 @@
 
     # Utility for making Nix flake apps. A nix flake app allows "remote" execution of pre-packaged code.
     apps.josh = let app-package = pkgs.writeShellScriptBin "run-josh" ''
-        ${python-with-packages}/bin/ipython ${self}/analysis/josh.py $@
+        ${python-with-packages}/bin/python -- ${self}/analysis/josh.py $@
       '';
       in { type = "app"; program = "${app-package}/bin/${"run-josh"}"; };
 
