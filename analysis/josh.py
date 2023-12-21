@@ -26,12 +26,14 @@ class HackClick(Exception):
 @click.option("--max-files", default=None, help="Maximum number of files to read.", type=int)
 @click.option("--plot-event", help="Plot the specified event (plot will block)", type=int)
 @click.option("--epochs", default=10, help="Number of epoch to use during training")
-def parse_args(max_files, plot_event, data_dir, epochs):
+@click.option("--fig-filename", default='figs.png', help="Filename where figures should be written")
+def parse_args(max_files, plot_event, data_dir, epochs, fig_filename):
     """Train neural net from data in parquet files."""
-    opts['data_dir']   = data_dir
-    opts['max_files']  = max_files
-    opts['plot_event'] = plot_event
-    opts['epochs']     = epochs
+    opts['data_dir']     = data_dir
+    opts['max_files']    = max_files
+    opts['plot_event']   = plot_event
+    opts['epochs']       = epochs
+    opts['fig_filename'] = fig_filename
     raise HackClick
 
 try:
@@ -323,4 +325,5 @@ ax1.set_xlabel("Classical (True - Predicted) Positions",fontsize=14)
 ax1.set_ylabel("Counts/bin",fontsize=14)
 ax1.legend()
 
+plt.savefig(opts['fig_filename'])
 plt.show()
