@@ -7,7 +7,7 @@
   inherit (import ./helpers.nix { inherit nain4 pkgs self; }) shell-shared;
   inherit (nain4.deps) args-from-cli make-app;
 
-  python-with-packages = pkgs.python3.withPackages(ps: with ps; [parquet pandas ipython pyarrow torch matplotlib polars]);
+  python-with-packages = pkgs.python3.withPackages(ps: with ps; [parquet pandas ipython pyarrow torch matplotlib polars click]);
 
   in {
 
@@ -40,8 +40,7 @@
 
     # Utility for making Nix flake apps. A nix flake app allows "remote" execution of pre-packaged code.
     apps.josh = let app-package = pkgs.writeShellScriptBin "run-josh" ''
-        DATADIR=$1
-        ${python-with-packages}/bin/python3 ${self}/analysis/josh.py $DATADIR
+        ${python-with-packages}/bin/ipython ${self}/analysis/josh.py $@
       '';
       in { type = "app"; program = "${app-package}/bin/${"run-josh"}"; };
 

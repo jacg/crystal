@@ -14,10 +14,35 @@ import torch.nn.functional as F
 from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
 
+import click
+
+opts = {}
+
+class HackClick(Exception):
+    pass
+
+@click.command()
+@click.argument("data-dir")
+@click.option("--max-files", default=None, help="Maximum number of files to read.", type=int)
+@click.option("--plot-event", help="Plot the specified event (plot will block)", type=int)
+@click.option("--epochs", default=10, help="Number of epoch to use during training")
+def parse_args(max_files, plot_event, data_dir, epochs):
+    """Train neural net from data in parquet files."""
+    opts['data_dir']   = data_dir
+    opts['max_files']  = max_files
+    opts['plot_event'] = plot_event
+    opts['epochs']     = epochs
+    raise HackClick
+
+try:
+    parse_args()
+except HackClick:
+    pass
+
+epochs = opts['epochs']
+
 pixel_size = 6  # 6 mm x 6 mm pixels
 grid_size = 8   # 8x8 events
-
-_, datadir = argv
 
 # Basic CNN for (x,y,z) prediction
 
@@ -117,19 +142,14 @@ class SiPMDataset(Dataset):
         plt.colorbar()
         plt.show()
 
-
-
-# Load the data
-max_files = None  # Limit number of files to use
 batch_size = 1000  # Batch size
 
-dataset = SiPMDataset(datadir, max_files)
+dataset = SiPMDataset(opts['data_dir'], opts['max_files'])
 
-# Plot some events
-first_event = 42
-n_to_show = 1
-for evt_no in range(first_event, first_event + n_to_show):
-    dataset.plot_event(evt_no)
+# Plot an event
+plot_event = opts['plot_event']
+if plot_event is not None:
+    dataset.plot_event(plot_event)
 
 data_loader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
 ntot_evts = len(dataset)
@@ -166,7 +186,6 @@ optimizer = optim.Adam(model.parameters(), lr=0.001)
 criterion = nn.MSELoss()
 
 # Training loop
-epochs = 3
 train_losses, val_losses = [], []
 for epoch in range(epochs):
 
