@@ -6,6 +6,9 @@
   inherit (nixpkgs.legacyPackages) pkgs;
   inherit (import ./helpers.nix { inherit nain4 pkgs self; }) shell-shared;
   inherit (nain4.deps) args-from-cli make-app;
+
+  python-with-packages = pkgs.python3.withPackages(ps: with ps; [parquet pandas ipython pyarrow torch matplotlib polars]);
+
   in {
 
     packages.default = self.packages.crystal;
@@ -35,6 +38,13 @@
       package = self.packages.crystal;
     };
 
+    # Utility for making Nix flake apps. A nix flake app allows "remote" execution of pre-packaged code.
+    apps.josh = let app-package = pkgs.writeShellScriptBin "run-josh" ''
+        DATADIR=$1
+        ${python-with-packages}/bin/python3 ${self}/analysis/josh.py $DATADIR
+      '';
+      in { type = "app"; program = "${app-package}/bin/${"run-josh"}"; };
+
     # Used by `direnv` when entering this directory (also by `nix develop <URL to this flake>`)
     devShell = self.devShells.clang;
 
@@ -43,7 +53,7 @@
       name = "crystal-clang-devenv";
       packages = nain4.deps.dev-shell-packages ++ [
         nain4.packages.clang_16 pkgs.arrow-cpp
-        (pkgs.python3.withPackages(ps: with ps; [parquet pandas ipython pyarrow torch matplotlib polars]))
+        python-with-packages
       ];
     });
 

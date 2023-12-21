@@ -1,3 +1,5 @@
+from sys import argv
+
 from pathlib import Path
 import itertools as it
 
@@ -15,7 +17,7 @@ from torch.utils.data import DataLoader
 pixel_size = 6  # 6 mm x 6 mm pixels
 grid_size = 8   # 8x8 events
 
-datadir ='/tmp/compare-with-roberto/038685/data'
+_, datadir = argv
 
 # Basic CNN for (x,y,z) prediction
 
