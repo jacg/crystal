@@ -15,8 +15,7 @@ from torch.utils.data import DataLoader
 pixel_size = 6  # 6 mm x 6 mm pixels
 grid_size = 8   # 8x8 events
 
-datadir ='/tmp/compare-with-roberto'
-
+datadir ='/tmp/compare-with-roberto/038685/data'
 
 # Basic CNN for (x,y,z) prediction
 
@@ -78,7 +77,7 @@ def polars_images(df):
 class SiPMDataset(Dataset):
 
     def __init__(self, data_path, max_files=None):
-        self.data_path = Path(data_path)/'038685/data'
+        self.data_path = Path(data_path)
 
         positions = []
         images    = []
