@@ -20,34 +20,36 @@
       "inputs": {
         "flake-compat": "flake-compat",
         "nixpkgs": "nixpkgs",
-        "nosys": "nosys"
+        "nosys": "nosys",
+        "oldpkgs": "oldpkgs"
       },
       "locked": {
-        "lastModified": 1703358573,
-        "narHash": "sha256-6kc0H05cNO+X/5/qZ/DCh5N/ZbwVpsGcdPZ1DVsRSVk=",
+        "lastModified": 1704727516,
+        "narHash": "sha256-1pMQmaIME4jihoF4aEIWISJ/lOgVpS3IjdColcuPSnI=",
         "owner": "jacg",
         "repo": "nain4",
-        "rev": "b6224958f24056e8b4f9b320ab7cac301be6cfe4",
+        "rev": "7a6626e3d83ce4e89ea488e5e38eaf6864f2a548",
         "type": "github"
       },
       "original": {
         "owner": "jacg",
+        "ref": "nix-23.11-old-g4-qt",
         "repo": "nain4",
         "type": "github"
       }
     },
     "nixpkgs": {
       "locked": {
-        "lastModified": 1687829761,
-        "narHash": "sha256-QRe1Y8SS3M4GeC58F/6ajz6V0ZLUVWX3ZAMgov2N3/g=",
+        "lastModified": 1703068421,
+        "narHash": "sha256-WSw5Faqlw75McIflnl5v7qVD/B3S2sLh+968bpOGrWA=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "9790f3242da2152d5aa1976e3e4b8b414f4dd206",
+        "rev": "d65bceaee0fb1e64363f7871bc43dc1c6ecad99f",
         "type": "github"
       },
       "original": {
         "owner": "NixOS",
-        "ref": "nixos-23.05",
+        "ref": "nixos-23.11",
         "repo": "nixpkgs",
         "type": "github"
       }
@@ -64,6 +66,22 @@
       "original": {
         "owner": "divnix",
         "repo": "nosys",
+        "type": "github"
+      }
+    },
+    "oldpkgs": {
+      "locked": {
+        "lastModified": 1702350026,
+        "narHash": "sha256-A+GNZFZdfl4JdDphYKBJ5Ef1HOiFsP18vQe9mqjmUis=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "9463103069725474698139ab10f17a9d125da859",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "ref": "nixos-23.05",
+        "repo": "nixpkgs",
         "type": "github"
       }
     },
