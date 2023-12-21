@@ -1,7 +1,9 @@
+from pathlib import Path
+import itertools as it
+
 import numpy as np
 import matplotlib.pyplot as plt
-import pandas as pd
-import parquet as pq
+import polars as pl
 
 import torch
 import torch.nn as nn
@@ -13,10 +15,11 @@ from torch.utils.data import DataLoader
 pixel_size = 6  # 6 mm x 6 mm pixels
 grid_size = 8   # 8x8 events
 
-datadir ='/tmp/compare-with-roberto/038685/processed'
+datadir ='/tmp/compare-with-roberto'
 
-imgs = np.load(f"{datadir}/images_00.npy")
-mdata = pd.read_csv(f"{datadir}/metadata_00.csv")
+imgs = np.load     (f"{datadir}/038685/processed/images_00.npy")
+mdata = pd.read_csv(f"{datadir}/038685/processed/metadata_00.csv")
+
 
 # Pick an event to plot.
 ev = 11
@@ -75,47 +78,63 @@ class CNN_basic(nn.Module):
         return x
 
 
+def polars_primary_positions(df):
+    return (df.select("x y z".split())).to_numpy()
+
+def polars_images(df):
+    return (df.select(pl.col("photon_counts").flatten())
+              .to_numpy()
+              .flatten()
+              .reshape(len(df), 8, 8)
+              .astype(np.float32)
+            )
+
+
 class SiPMDataset(Dataset):
 
-    def __init__(self, data_path, total_files):
-        self.data_path = data_path
-        self.total_files = total_files
-        self.dataset = []
+    def __init__(self, data_path, max_files=None):
+        self.data_path = Path(data_path)/'038685/data'
 
-        for i in range(self.total_files):
-            images = np.load(f'{self.data_path}/images_{i:02}.npy')
-            metadata = pd.read_csv(f'{self.data_path}/metadata_{i:02}.csv')
-
-            for img, meta in zip(images, metadata.values):
-                self.dataset.append((img, meta[1:]))
+        positions = []
+        images    = []
+        for file in it.islice(self.data_path.glob('file-*.parquet'), max_files):
+            print(file)
+            table = pl.read_parquet(file, columns='x y z photon_counts'.split())
+            single_file_positions = polars_primary_positions(table)
+            single_file_images    = polars_images           (table)
+            positions.append(single_file_positions)
+            images   .append(single_file_images)
+        self.positions = np.concatenate(positions)
+        self.images    = np.concatenate(images)
 
     def __len__(self):
-        return len(self.dataset)
+        return self.positions.shape[0]
 
     def __getitem__(self, idx):
-        image, position = self.dataset[idx]
-        image = torch.tensor(image, dtype=torch.float).unsqueeze(0) # Add channel dimension
+        image    = self.images   [idx]
+        position = self.positions[idx]
+        image    = torch.tensor(image   , dtype=torch.float).unsqueeze(0) # Add channel dimension
         position = torch.tensor(position, dtype=torch.float)
 
         return image, position
 
 
 # Load the data
-total_files = 5  # Number of files to use
+max_files = None  # Limit number of files to use
 batch_size = 1000  # Batch size
 
-dataset = SiPMDataset(datadir, total_files)
+dataset = SiPMDataset(datadir, max_files)
 data_loader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
 ntot_evts = len(dataset)
 print(f"Loaded {len(dataset)} events")
 
 # Split the data into training, validation, and test sets
 train_size = int(0.7 * len(dataset))  # training
-val_size = int(0.2 * len(dataset))    # validation
+val_size   = int(0.2 * len(dataset))    # validation
 test_size = len(dataset) - train_size - val_size  # test
 train_indices = range(train_size)
-val_indices = range(train_size, train_size + val_size)
-test_indices = range(train_size + val_size, len(dataset))
+val_indices   = range(train_size, train_size + val_size)
+test_indices  = range(train_size + val_size, len(dataset))
 
 # Define subsets of the dataset
 train_dataset = torch.utils.data.Subset(dataset, train_indices)
@@ -127,8 +146,8 @@ print(f"{len(test_dataset)} test events ({100*len(test_dataset)/ntot_evts}%)")
 
 # Define DataLoaders
 train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
-val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
-test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
+val_loader   = DataLoader(val_dataset  , batch_size=batch_size, shuffle=False)
+test_loader  = DataLoader(test_dataset , batch_size=batch_size, shuffle=False)
 
 # Load the model.
 model = CNN_basic()
