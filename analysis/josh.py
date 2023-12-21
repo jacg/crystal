@@ -17,21 +17,6 @@ grid_size = 8   # 8x8 events
 
 datadir ='/tmp/compare-with-roberto'
 
-imgs = np.load     (f"{datadir}/038685/processed/images_00.npy")
-mdata = pd.read_csv(f"{datadir}/038685/processed/metadata_00.csv")
-
-
-# Pick an event to plot.
-ev = 11
-
-# Show the image.
-plt.imshow(imgs[ev,:,:])
-
-# Show the event location.
-x_evt = (mdata['initial_y'][ev] + pixel_size*grid_size/2)/pixel_size - 0.5
-y_evt = (mdata['initial_x'][ev] + pixel_size*grid_size/2)/pixel_size - 0.5
-plt.plot([x_evt],[y_evt],'o',color='red')
-plt.show()
 
 # Basic CNN for (x,y,z) prediction
 
@@ -118,12 +103,33 @@ class SiPMDataset(Dataset):
 
         return image, position
 
+    def plot_event(self, event_number):
+        # Show the image.
+        plt.imshow(self.images[event_number])
+
+        x,y,z = self.positions[event_number]
+        # Show the event location.
+        x_evt = (y + pixel_size*grid_size/2)/pixel_size - 0.5
+        y_evt = (x + pixel_size*grid_size/2)/pixel_size - 0.5
+        plt.plot([x_evt],[y_evt],'o',color='red')
+        plt.title(f'z = {z:.1f}')
+        plt.colorbar()
+        plt.show()
+
+
 
 # Load the data
 max_files = None  # Limit number of files to use
 batch_size = 1000  # Batch size
 
 dataset = SiPMDataset(datadir, max_files)
+
+# Plot some events
+first_event = 42
+n_to_show = 1
+for evt_no in range(first_event, first_event + n_to_show):
+    dataset.plot_event(evt_no)
+
 data_loader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
 ntot_evts = len(dataset)
 print(f"Loaded {len(dataset)} events")
