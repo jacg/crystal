@@ -104,16 +104,29 @@ G4PVPlacement* crystal_geometry(run_stats& stats) {
   }
 
   // TODO add abstraction for placing optical surface between volumes
-  auto
-  teflon_surface = new G4OpticalSurface("crystal_reflector_interface");
-  teflon_surface -> SetType(dielectric_LUT);
-  teflon_surface -> SetFinish(polishedteflonair);
-  teflon_surface -> SetModel(LUT);
+  auto teflon_surface = new G4OpticalSurface("crystal_reflector_interface");
   teflon_surface -> SetMaterialPropertiesTable(teflon_properties());
+  switch (my.teflon_model) {
+  case teflon_model_enum::lambertian:
+    teflon_surface -> SetType(dielectric_dielectric);
+    teflon_surface -> SetModel(unified);
+    teflon_surface -> SetFinish(groundfrontpainted);
+    break;
+  case teflon_model_enum::specular:
+    teflon_surface -> SetType(dielectric_dielectric);
+    teflon_surface -> SetModel(unified);
+    teflon_surface -> SetFinish(polishedfrontpainted);
+    break;
+  case teflon_model_enum::lut:
+    teflon_surface -> SetType(dielectric_LUT);
+    teflon_surface -> SetModel(LUT);
+    teflon_surface -> SetFinish(polishedteflonair);
+    break;
+  }
+
   new G4LogicalBorderSurface("crystal_reflector_interface", crystal, reflector, teflon_surface);
   if (! my.absorbent_opposite) {
     new G4LogicalBorderSurface("crystal_opposite_interface", crystal, opposite, teflon_surface);
   }
-
   return world;
 }

@@ -17,6 +17,7 @@
 
 enum class scintillator_type_enum { lyso, bgo, csi };
 enum class config_type_enum       { lyso, bgo, csi, csi_mono };
+enum class teflon_model_enum      { lambertian, specular, lut};
 
 struct scint_parameters {
   scintillator_type_enum scint;
@@ -40,6 +41,9 @@ scintillator_type_enum string_to_scintillator_type(std::string s);
 std::string config_type_to_string(config_type_enum s);
 config_type_enum string_to_config_type(std::string s);
 
+std::string teflon_model_enum_to_string(teflon_model_enum s);
+teflon_model_enum string_to_teflon_model_enum(std::string s);
+
 struct config {
 private:
   using sampler = n4::random::piecewise_linear_distribution;
@@ -54,6 +58,7 @@ public:
   long                    seed                = 123456789;
   bool                    debug               = false ;
   std::optional<G4double> scint_yield         = std::nullopt;
+  teflon_model_enum       teflon_model        = teflon_model_enum::lambertian;
   size_t                  event_threshold     = 1;
   size_t                   sipm_threshold     = 1;
   std::optional<double>   reflectivity        = std::nullopt;
@@ -77,6 +82,7 @@ public:
 private:
 
   void set_config_type    (const std::string& s);
+  void set_teflon_model   (const std::string& s) { teflon_model = string_to_teflon_model_enum(s); }
   void set_scint          (const std::string& s) { overrides.scint = string_to_scintillator_type(s); }
   void set_scint_depth    (double   d)           { overrides.scint_depth = d; }
   void set_particle_energy(double   e)           { particle_energy_ = e; }
