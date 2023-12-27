@@ -197,13 +197,14 @@ TEST_CASE("teflon reflectivity lut"       , "[teflon][reflectivity]") { check_co
 // Shoot photons from within crystal in random directions towards
 // teflon reflector (avoiding the SiPM face which is not covered by
 // teflon). Set the reflectivity to 0 and count how many photons reach
-// the sipm. It should be 0.
-TEST_CASE("csi teflon null reflectivity", "[csi][teflon][reflectivity]") {
+// the sipm. It should be 0 regardless of the teflon model.
+void test_null_reflectivity(const std::string& model) {
   run_stats stats;
 
   n4::run_manager::create()
     .fake_ui()
     .apply_command("/my/reflectivity 0")
+    .apply_command("/my/teflon_model " + model)
     .physics(physics_list)
     .geometry([&] {return crystal_geometry(stats);})
     .actions(new n4::actions{blue_light_towards_teflon()})
@@ -211,6 +212,10 @@ TEST_CASE("csi teflon null reflectivity", "[csi][teflon][reflectivity]") {
 
   CHECK(stats.n_detected_at_sipm.size() == 0);
 }
+
+TEST_CASE("csi teflon reflectivity lambertian null", "[csi][teflon][reflectivity]") { test_null_reflectivity("lambertian"); }
+TEST_CASE("csi teflon reflectivity lut        null", "[csi][teflon][reflectivity]") { test_null_reflectivity("specular"  ); }
+TEST_CASE("csi teflon reflectivity specular   null", "[csi][teflon][reflectivity]") { test_null_reflectivity("lut"       ); }
 
 TEST_CASE("CsI interaction length", "[material][csi][interaction_length]") {
   auto csi = csi_with_properties();
