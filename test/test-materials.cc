@@ -111,20 +111,7 @@ TEST_CASE("csi teflon reflectivity fraction", "[csi][teflon][reflectivity]") {
   CHECK_THAT(measured_reflectivity_percentage, WithinRel(teflon_reflectivity_percentage, 1e-3));
 }
 
-// Shoot photons from within crystal in random directions towards teflon
-// reflector (avoiding the SiPM face which is not covered by teflon). Ignore
-// events in which the photon does not reach the teflon in the first step or
-// does not get reflected in the second. Record the angle of incidence and angle
-// of reflection. Calculate the correlation between these angles and check that
-// it is ZERO.
-//
-// To see the test detecting non-Lambertian reflection, change
-//
-// - teflon_surface -> SetFinish(groundfrontpainted);    // Lambertian
-// + teflon_surface -> SetFinish(polishedfrontpainted);  // Specular
-//
-// in geometry.cc.
-TEST_CASE("teflon reflectivity lambertian", "[teflon][reflectivity]") {
+void check_correlation_between_in_out_angles(const std::string& model, const Catch::Matchers::WithinAbsMatcher& matcher) {
   std::vector<G4LogicalVolume*> step_volumes;
   std::vector<G4double> step_thetas;
   std::vector<G4double> thetas_in, thetas_out;
@@ -185,15 +172,27 @@ TEST_CASE("teflon reflectivity lambertian", "[teflon][reflectivity]") {
   run_stats stats;
   n4::run_manager::create()
     .fake_ui()
+    .apply_command("/my/teflon_model " + model)
     .physics(physics_list)
     .geometry([&] {return crystal_geometry(stats);})
     .actions(test_action)
     .run(100'000);
 
   auto corr = n4::stats::correlation(thetas_in, thetas_out).value();
-  std::cerr << "------------------------------ CORRELATION: " << corr << std::endl;
-  CHECK_THAT(corr, WithinAbs(0, 1e-2));
+  CHECK_THAT(corr, matcher);
 }
+
+// Shoot photons from within crystal in random directions towards teflon
+// reflector (avoiding the SiPM face which is not covered by teflon). Ignore
+// events in which the photon does not reach the teflon in the first step or
+// does not get reflected in the second. Record the angle of incidence and angle
+// of reflection. Calculate the correlation between these angles and  check that ...
+// 1) Lambertian: it is zero.
+// 2) Specular  : it is minus one.
+// 3) LUT : it is the expected value (taken from simulation validated against Roberto's)
+TEST_CASE("teflon reflectivity lambertian", "[teflon][reflectivity]") { check_correlation_between_in_out_angles("lambertian", WithinAbs( 0     , 1e-2)); }
+TEST_CASE("teflon reflectivity specular"  , "[teflon][reflectivity]") { check_correlation_between_in_out_angles("specular"  , WithinAbs(-1     , 1e-6)); }
+TEST_CASE("teflon reflectivity lut"       , "[teflon][reflectivity]") { check_correlation_between_in_out_angles("lut"       , WithinAbs(-0.9358, 1e-4)); }
 
 // Shoot photons from within crystal in random directions towards
 // teflon reflector (avoiding the SiPM face which is not covered by
