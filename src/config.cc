@@ -175,12 +175,11 @@ void config::set_config_type(const std::string& s) {
 }
 
 n4::random::piecewise_linear_distribution scint_spectrum() {
-  std::string msg{"Scintillation spectrum not implemented for scintillator "};
   std::pair<std::vector<double>, std::vector<double>> data;
   switch (my.scint_params().scint) {
     case scintillator_type_enum::csi : data =  csi_scint_spectrum(); break;
     case scintillator_type_enum::lyso: data = lyso_scint_spectrum(); break;
-    case scintillator_type_enum::bgo : throw std::runtime_error(msg +  "BGO");
+    case scintillator_type_enum::bgo : data =  bgo_scint_spectrum(); break;
   }
   return {std::move(data.first), std::move(data.second)};
 }

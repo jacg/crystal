@@ -29,6 +29,14 @@ std::pair<std::vector<double>, std::vector<double>> lyso_scint_spectrum() {
   return {std::move(energies), std::move(spectrum)};
 }
 
+std::pair<std::vector<double>, std::vector<double>> bgo_scint_spectrum() {
+  auto energies = n4::const_over(c4::hc/nm, {713, 638, 584  , 529  , 476  , 443  , 407  , 367});
+  auto spectrum = n4::scale_by  (0.01     , {  1,   3,   5.6,  10.3,  12.6,   9.6,   4.0,   7});
+  auto spectrum_norm = n4::stats::sum(spectrum);
+  spectrum = n4::map<double>([&] (auto s){return  s/spectrum_norm;}, spectrum);
+  return {std::move(energies), std::move(spectrum)};
+}
+
 G4Material* csi_with_properties() {
   auto csi = n4::material("G4_CESIUM_IODIDE");
   // rindex: values taken from "Optimization of Parameters for a CsI(Tl) Scintillator Detector Using GEANT4-Based Monte Carlo..." by Mitra et al (mainly page 3)
@@ -63,9 +71,9 @@ G4Material* csi_with_properties() {
 // Refractive index, scintillation spectrum and time constant taken from
 //   https://jnm.snmjournals.org/content/jnumed/41/6/1051.full.pdf
 G4Material* bgo_with_properties() {
-  auto bgo      = n4::material("G4_BGO");
-  auto energies = n4::const_over(c4::hc/nm, {650, 480, 390}); // wl in nm
-  auto spectrum = n4::scale_by  (0.01     , {  0, 100,   0});
+  auto bgo = n4::material("G4_BGO");
+
+  auto [energies, spectrum] = csi_scint_spectrum();
   //double scint_yield = my.scint_yield.value_or(8'500 / MeV); // According to Wikipedia
   double scint_yield = my.scint_yield.value_or(9'000 / MeV); // Roberto
   auto mpt = n4::material_properties()
