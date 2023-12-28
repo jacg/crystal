@@ -21,6 +21,15 @@ std::pair<std::vector<double>, std::vector<double>> csi_scint_spectrum() {
   return {std::move(energies), std::move(spectrum)};
 }
 
+std::pair<std::vector<double>, std::vector<double>> csi_tl_scint_spectrum() {
+  // From R. Soleti
+  auto energies = n4::const_over(c4::hc/nm, {722, 678, 611, 554, 523, 493, 437, 351}); // wl in nm
+  auto spectrum = n4::scale_by  (0.01     , { 12,  29,  70,  98,  87,  56,  19,   1});
+  auto spectrum_norm = n4::stats::sum(spectrum);
+  spectrum = n4::map<double>([&] (auto s){return  s/spectrum_norm;}, spectrum);
+  return {std::move(energies), std::move(spectrum)};
+}
+
 std::pair<std::vector<double>, std::vector<double>> lyso_scint_spectrum() {
   auto energies = n4::const_over(c4::hc/nm, {600  , 504  , 477  , 452  , 417, 410  , 402, 389  , 380});
   auto spectrum = n4::scale_by  (0.01     , {  0.7,   6.3,  16.9,  45.7,  96,  96.4,  95,  37.7,   0});
@@ -37,22 +46,27 @@ std::pair<std::vector<double>, std::vector<double>> bgo_scint_spectrum() {
   return {std::move(energies), std::move(spectrum)};
 }
 
+std::vector<double> csi_rindex() {
+  // rindex: values taken from "Optimization of Parameters for a
+  // CsI(Tl) Scintillator Detector Using GEANT4-Based Monte Carlo..."
+  // by Mitra et al (mainly page 3) latest numbers from
+  // https://refractiveindex.info/?shelf=main&book=CsI&page=Querry
+  return {1.766, 1.794, 1.806, 1.845, 1.867, 1.902, 1.955, 2.043};
+}
+
 G4Material* csi_with_properties() {
   auto csi = n4::material("G4_CESIUM_IODIDE");
-  // rindex: values taken from "Optimization of Parameters for a CsI(Tl) Scintillator Detector Using GEANT4-Based Monte Carlo..." by Mitra et al (mainly page 3)
   //  scint: values from Fig. 2 in "A New Scintillation Material: Pure CsI with 10ns Decay Time" by Kubota et al (these are approximate...)
   // must be in increasing ENERGY order (decreasing wavelength) for scintillation to work properly
 
   auto [energies, spectrum] = csi_scint_spectrum();
-  // latest numbers from https://refractiveindex.info/?shelf=main&book=CsI&page=Querry
-  auto rindex = n4::scale_by (1.0, {1.766, 1.794, 1.806, 1.845, 1.867, 1.902, 1.955, 2.043});
   // Values from "Temperature dependence of pure CsI: scintillation light yield and decay time" by Amsler et al
   // "cold" refers to ~77K, i.e. liquid nitrogen temperature
   double scint_yield = my.scint_yield.value_or(50'000 / MeV); // 50000 / MeV in cold
   double time_fast   =  1015 * ns; // only one component at cold temps!
   double time_slow   =  1015 * ns;
   auto mpt = n4::material_properties()
-    .add("RINDEX"                    , energies, rindex)
+    .add("RINDEX"                    , energies, csi_rindex())
     .add("SCINTILLATIONCOMPONENT1"   , energies, spectrum)
     .add("SCINTILLATIONCOMPONENT2"   , energies, spectrum)
     .add("ABSLENGTH"                 , energies, 5*m)
@@ -62,6 +76,25 @@ G4Material* csi_with_properties() {
     .add("SCINTILLATIONYIELD1"       ,     0.57   )
     .add("SCINTILLATIONYIELD2"       ,     0.43   )
     .add("RESOLUTIONSCALE"           ,     1.0    )
+    .done();
+  csi -> GetIonisation() -> SetBirksConstant(0.00152 * mm/MeV);
+  csi -> SetMaterialPropertiesTable(mpt);
+  return csi;
+}
+
+G4Material* csi_tl_with_properties() {
+  auto csi = n4::material("G4_CESIUM_IODIDE");
+  auto [energies, spectrum] = csi_tl_scint_spectrum();
+  double scint_yield = my.scint_yield.value_or(50'000 / MeV);
+  auto abslength     = n4::scale_by(cm, {42, 40, 37, 33, 31, 30, 26, 12});
+  auto mpt = n4::material_properties()
+    .add("RINDEX"                    , energies, csi_rindex())
+    .add("SCINTILLATIONCOMPONENT1"   , energies, spectrum)
+    .add("ABSLENGTH"                 , energies, abslength)
+    .add("SCINTILLATIONTIMECONSTANT1", 500 * ns)
+    .add("SCINTILLATIONYIELD"        , scint_yield)
+    .add("SCINTILLATIONYIELD1"       ,   1.0   )
+    .add("RESOLUTIONSCALE"           ,   1.0   )
     .done();
   csi -> GetIonisation() -> SetBirksConstant(0.00152 * mm/MeV);
   csi -> SetMaterialPropertiesTable(mpt);

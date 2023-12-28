@@ -15,7 +15,7 @@
 #include <unordered_map>
 
 
-enum class scintillator_type_enum { lyso, bgo, csi };
+enum class scintillator_type_enum { lyso, bgo, csi, csi_tl };
 enum class config_type_enum       { lyso, bgo, csi, csi_mono };
 enum class reflector_model_enum   { lambertian, specular, lut, davis };
 enum class wrapping_enum          { teflon, esr, none };
