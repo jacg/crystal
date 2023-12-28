@@ -61,7 +61,8 @@ G4Material* bgo_with_properties() {
   //double scint_yield = my.scint_yield.value_or(8'500 / MeV); // According to Wikipedia
   double scint_yield = my.scint_yield.value_or(9'000 / MeV); // Roberto
   auto mpt = n4::material_properties()
-    .add("RINDEX"                    , energies, 2.15)
+    .add("RINDEX"                    , OPTPHOT_ENERGY_RANGE, 2.15)
+    .add("ABSLENGTH"                 , OPTPHOT_ENERGY_RANGE, 0.5*m)
     .add("SCINTILLATIONCOMPONENT1"   , energies, spectrum)
     .add("SCINTILLATIONTIMECONSTANT1", 300 * ns)
     .add("SCINTILLATIONYIELD"        , scint_yield)
@@ -89,7 +90,8 @@ G4Material* lyso_with_properties() {
   auto spectrum = n4::scale_by  (0.01     , {  0, 100,   0});
   double scint_yield = my.scint_yield.value_or(25'000 / MeV); // Roberto
   auto mpt = n4::material_properties()
-    .add("RINDEX"                    , energies, 1.82)
+    .add("RINDEX"                    , OPTPHOT_ENERGY_RANGE, 1.82)
+    .add("ABSLENGTH"                 , OPTPHOT_ENERGY_RANGE, 0.5*m)
     .add("SCINTILLATIONCOMPONENT1"   , energies, spectrum)
     .add("SCINTILLATIONTIMECONSTANT1", 40 * ns)
     .add("SCINTILLATIONYIELD"        , scint_yield)
