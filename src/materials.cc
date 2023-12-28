@@ -21,6 +21,14 @@ std::pair<std::vector<double>, std::vector<double>> csi_scint_spectrum() {
   return {std::move(energies), std::move(spectrum)};
 }
 
+std::pair<std::vector<double>, std::vector<double>> lyso_scint_spectrum() {
+  auto energies = n4::const_over(c4::hc/nm, {600  , 504  , 477  , 452  , 417, 410  , 402, 389  , 380});
+  auto spectrum = n4::scale_by  (0.01     , {  0.7,   6.3,  16.9,  45.7,  96,  96.4,  95,  37.7,   0});
+  auto spectrum_norm = n4::stats::sum(spectrum);
+  spectrum = n4::map<double>([&] (auto s){return  s/spectrum_norm;}, spectrum);
+  return {std::move(energies), std::move(spectrum)};
+}
+
 G4Material* csi_with_properties() {
   auto csi = n4::material("G4_CESIUM_IODIDE");
   // rindex: values taken from "Optimization of Parameters for a CsI(Tl) Scintillator Detector Using GEANT4-Based Monte Carlo..." by Mitra et al (mainly page 3)
@@ -85,10 +93,9 @@ G4Material* lyso_material() {
 // TODO get better LYSO material property data
 // https://arxiv.org/pdf/2207.06696.pdf
 G4Material* lyso_with_properties() {
-  auto lyso = lyso_material();
-  auto energies = n4::const_over(c4::hc/nm, {600, 420, 200}); // wl in nm
-  auto spectrum = n4::scale_by  (0.01     , {  0, 100,   0});
-  double scint_yield = my.scint_yield.value_or(25'000 / MeV); // Roberto
+  auto lyso                 = lyso_material();
+  auto [energies, spectrum] = lyso_scint_spectrum();
+  double scint_yield        = my.scint_yield.value_or(25'000 / MeV); // Roberto
   auto mpt = n4::material_properties()
     .add("RINDEX"                    , OPTPHOT_ENERGY_RANGE, 1.82)
     .add("ABSLENGTH"                 , OPTPHOT_ENERGY_RANGE, 0.5*m)
