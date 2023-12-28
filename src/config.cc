@@ -258,6 +258,7 @@ std::unordered_map<std::string, std::string> config::as_map() {
   it["n_sipms_y"          ] = std::to_string(params.n_sipms_y);
   it["sipm_size"          ] = std::to_string(params.sipm_size/mm) + " mm";
   it["sipm_thickness"     ] = std::to_string(my.sipm_thickness/mm) + " mm";
+  it[ "gel_thickness"     ] = std::to_string(my. gel_thickness/mm) + " mm";
   it["reflector_thickness"] = std::to_string(my.reflector_thickness/mm) + " mm";
   it["particle_energy"    ] = std::to_string(my.particle_energy_/keV) + " keV";
   it["fixed_energy"       ] = std::to_string(my.fixed_energy);
