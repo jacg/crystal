@@ -59,7 +59,7 @@ G4Material* bgo_with_properties() {
   auto energies = n4::const_over(c4::hc/nm, {650, 480, 390}); // wl in nm
   auto spectrum = n4::scale_by  (0.01     , {  0, 100,   0});
   //double scint_yield = my.scint_yield.value_or(8'500 / MeV); // According to Wikipedia
-  double scint_yield = my.scint_yield.value_or(6'000 / MeV); // https://wiki.app.uib.no/ift/images/c/c2/Characterization_of_Scintillation_Crystals_for_Positron_Emission_Tomography.pdf
+  double scint_yield = my.scint_yield.value_or(9'000 / MeV); // Roberto
   auto mpt = n4::material_properties()
     .add("RINDEX"                    , energies, 2.15)
     .add("SCINTILLATIONCOMPONENT1"   , energies, spectrum)
@@ -87,7 +87,7 @@ G4Material* lyso_with_properties() {
   auto lyso = lyso_material();
   auto energies = n4::const_over(c4::hc/nm, {600, 420, 200}); // wl in nm
   auto spectrum = n4::scale_by  (0.01     , {  0, 100,   0});
-  double scint_yield = my.scint_yield.value_or(30'000 / MeV);
+  double scint_yield = my.scint_yield.value_or(25'000 / MeV); // Roberto
   auto mpt = n4::material_properties()
     .add("RINDEX"                    , energies, 1.82)
     .add("SCINTILLATIONCOMPONENT1"   , energies, spectrum)
