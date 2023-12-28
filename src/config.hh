@@ -55,7 +55,7 @@ private:
   scint_parameters        scint_params_;
   scint_overrides         overrides           =  {};
 public:
-  double                   gel_thickness      =   0.45 * mm;
+  double                   gel_thickness      =   0.15 * mm;
   double                  sipm_thickness      =   1    * mm - gel_thickness;
   double                  reflector_thickness =   0.25 * mm;
   wrapping_enum           wrapping            = wrapping_enum::teflon;
