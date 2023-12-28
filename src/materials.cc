@@ -8,6 +8,8 @@
 
 const             double  OPTPHOT_MIN_ENERGY  {1.00*eV};
 const             double  OPTPHOT_MAX_ENERGY  {8.21*eV};
+const             double  OPTPHOT_MIN_WL      {c4::hc / OPTPHOT_MAX_ENERGY};
+const             double  OPTPHOT_MAX_WL      {c4::hc / OPTPHOT_MIN_ENERGY};
 const std::vector<double> OPTPHOT_ENERGY_RANGE{OPTPHOT_MIN_ENERGY, OPTPHOT_MAX_ENERGY};
 
 std::pair<std::vector<double>, std::vector<double>> csi_scint_spectrum() {
@@ -212,7 +214,10 @@ G4Material* optical_gel_with_properties() {
 }
 
 std::pair<std::vector<double>, std::vector<double>> sipm_pde() {
-  auto energies = n4::const_over(c4::hc/nm, { 908.37, 820.02, 730.61, 635.70, 470.29, 407.14, 364.92, 347.73, 304.17, 284.26, 260.00});
-  auto pde      = n4::scale_by  (0.01     , {   3.49,   8.04,  15.79,  28.41,  49.74,  45.62,  35.37,  35.39,  26.60,   9.14,   0.00});
+  auto energies = n4::const_over(c4::hc/nm, {OPTPHOT_MAX_WL/nm, 809.722, 675.000, 587.500, 494.444, 455.556, 422.222, 395.833,
+                                                       366.667, 344.444, 311.111, 293.056, 288.889, 279.167, OPTPHOT_MIN_WL/nm});
+  auto pde      = n4::scale_by  (0.01     , {                0,   0.87 ,  19.2  ,  31.1  ,  46.7  ,  51.1  ,  50.2  ,  46.9  ,
+                                                        40.6  ,  39.3  ,  32.4  ,  18.0  ,   4.8  ,   2.0  ,                 0});
+
   return {energies, pde};
 }
