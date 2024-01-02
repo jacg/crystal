@@ -193,6 +193,7 @@ void check_correlation_between_in_out_angles(const std::string& model, const Cat
 TEST_CASE("csi teflon reflectivity lambertian", "[teflon][reflectivity]") { check_correlation_between_in_out_angles("lambertian", WithinAbs( 0     , 1e-2)); }
 TEST_CASE("csi teflon reflectivity specular"  , "[teflon][reflectivity]") { check_correlation_between_in_out_angles("specular"  , WithinAbs(-1     , 1e-6)); }
 TEST_CASE("csi teflon reflectivity lut"       , "[teflon][reflectivity]") { check_correlation_between_in_out_angles("lut"       , WithinAbs(-0.9358, 1e-4)); }
+TEST_CASE("csi teflon reflectivity davis"     , "[teflon][reflectivity]") { check_correlation_between_in_out_angles("davis"     , WithinAbs(-0.9358, 1e-4)); }
 
 // Shoot photons from within crystal in random directions towards
 // teflon reflector (avoiding the SiPM face which is not covered by
@@ -214,8 +215,9 @@ void test_null_reflectivity(const std::string& model) {
 }
 
 TEST_CASE("csi teflon reflectivity lambertian null", "[csi][teflon][reflectivity]") { test_null_reflectivity("lambertian"); }
-TEST_CASE("csi teflon reflectivity lut        null", "[csi][teflon][reflectivity]") { test_null_reflectivity("specular"  ); }
 TEST_CASE("csi teflon reflectivity specular   null", "[csi][teflon][reflectivity]") { test_null_reflectivity("lut"       ); }
+TEST_CASE("csi teflon reflectivity lut        null", "[csi][teflon][reflectivity]") { test_null_reflectivity("specular"  ); }
+TEST_CASE("csi teflon reflectivity davis      null", "[csi][teflon][reflectivity]") { test_null_reflectivity("davis"     ); }
 
 TEST_CASE("CsI interaction length", "[material][csi][interaction_length]") {
   auto csi = csi_with_properties();
