@@ -104,18 +104,34 @@ G4PVPlacement* crystal_geometry(run_stats& stats) {
   }
 
   // TODO add abstraction for placing optical surface between volumes
-  auto
-  teflon_surface = new G4OpticalSurface("teflon_surface");
-  teflon_surface -> SetType(dielectric_dielectric);
-  teflon_surface -> SetModel(unified);
-  teflon_surface -> SetFinish(groundfrontpainted);     // Lambertian
-  //teflon_surface -> SetFinish(polishedfrontpainted); // Specular
-  teflon_surface -> SetSigmaAlpha(0.0);
+  auto teflon_surface = new G4OpticalSurface("crystal_reflector_interface");
   teflon_surface -> SetMaterialPropertiesTable(teflon_properties());
-  new G4LogicalBorderSurface("teflon_surface", crystal, reflector, teflon_surface);
-  if (! my.absorbent_opposite) {
-    new G4LogicalBorderSurface("teflon_surface", crystal, opposite , teflon_surface);
+  switch (my.teflon_model) {
+  case teflon_model_enum::lambertian:
+    teflon_surface -> SetType(dielectric_dielectric);
+    teflon_surface -> SetModel(unified);
+    teflon_surface -> SetFinish(groundfrontpainted);
+    break;
+  case teflon_model_enum::specular:
+    teflon_surface -> SetType(dielectric_dielectric);
+    teflon_surface -> SetModel(unified);
+    teflon_surface -> SetFinish(polishedfrontpainted);
+    break;
+  case teflon_model_enum::lut:
+    teflon_surface -> SetType(dielectric_LUT);
+    teflon_surface -> SetFinish(groundteflonair);
+    teflon_surface -> SetModel(LUT);
+    break;
+  case teflon_model_enum::davis:
+    teflon_surface -> SetType(dielectric_LUTDAVIS);
+    teflon_surface -> SetFinish(RoughTeflon_LUT);
+    teflon_surface -> SetModel(DAVIS);
+    break;
   }
 
+  new G4LogicalBorderSurface("crystal_reflector_interface", crystal, reflector, teflon_surface);
+  if (! my.absorbent_opposite) {
+    new G4LogicalBorderSurface("crystal_opposite_interface", crystal, opposite, teflon_surface);
+  }
   return world;
 }

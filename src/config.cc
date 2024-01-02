@@ -64,6 +64,7 @@ config::config()
   msg -> DeclareMethod          ("seed"                ,          &config::set_random_seed    );
   msg -> DeclareProperty        ("debug"               ,           debug                      );
   msg -> DeclareMethodWithUnit  ("scint_yield"         , "1/MeV", &config::set_scint_yield    );
+  msg -> DeclareMethod          ("teflon_model"        ,          &config::set_teflon_model   );
   msg -> DeclareProperty        ("event_threshold"     ,           event_threshold            );
   msg -> DeclareProperty        ( "sipm_threshold"     ,            sipm_threshold            );
   msg -> DeclareMethod          ("reflectivity"        ,          &config::set_reflectivity   );
@@ -119,6 +120,26 @@ config_type_enum string_to_config_type(std::string s) {
   if (s == "csi-mono") { return config_type_enum::csi_mono; }
   if (s == "csi_mono") { return config_type_enum::csi_mono; }
   std::cerr << "\n\n\n\n         ERROR in string_to_config_type: unknown config '" << s << "'\n\n\n\n" << std::endl;
+  throw "up"; // TODO think about failure propagation out of string_to_scintillator_type
+}
+
+std::string teflon_model_enum_to_string(teflon_model_enum s) {
+  switch (s) {
+    case teflon_model_enum ::lambertian: return "Lambertian";
+    case teflon_model_enum ::specular  : return "Specular"  ;
+    case teflon_model_enum ::lut       : return "LUT"       ;
+    case teflon_model_enum ::davis     : return "DAVIS"     ;
+  }
+  return "unreachable!";
+}
+
+teflon_model_enum string_to_teflon_model_enum(std::string s) {
+  for (auto& c: s) { c = std::tolower(c); }
+  if (s == "lambertian") { return teflon_model_enum::lambertian;}
+  if (s == "specular"  ) { return teflon_model_enum::specular;  }
+  if (s == "lut"       ) { return teflon_model_enum::lut;       }
+  if (s == "davis"     ) { return teflon_model_enum::davis;     }
+  std::cerr << "\n\n\n\n         ERROR in string_to_teflon_model: unknown model '" << s << "'\n\n\n\n" << std::endl;
   throw "up"; // TODO think about failure propagation out of string_to_scintillator_type
 }
 
