@@ -107,10 +107,28 @@ G4Material* air_with_properties() {
   return air;
 }
 
+G4Material* esr_with_properties() {
+  auto esr = n4::material("G4_POLYVINYL_ALCOHOL");
+  esr -> SetMaterialPropertiesTable(esr_properties());
+  return esr;
+}
+
 G4Material* teflon_with_properties() {
   auto teflon = n4::material("G4_TEFLON");
   teflon -> SetMaterialPropertiesTable(teflon_properties());
   return teflon;
+}
+
+G4MaterialPropertiesTable* esr_properties() {
+  auto reflectivity = my.reflectivity.has_value() ? my.reflectivity.value() : 0.99;
+
+  return n4::material_properties()
+    .add("RINDEX"               , OPTPHOT_ENERGY_RANGE, 1.41)
+    .add("REFLECTIVITY"         , OPTPHOT_ENERGY_RANGE, reflectivity)
+    .add("SPECULARLOBECONSTANT" , OPTPHOT_ENERGY_RANGE, 0.0)
+    .add("SPECULARSPIKECONSTANT", OPTPHOT_ENERGY_RANGE, 0.0)
+    .add("BACKSCATTERCONSTANT"  , OPTPHOT_ENERGY_RANGE, 0.0)
+    .done();
 }
 
 G4MaterialPropertiesTable* teflon_properties() {
