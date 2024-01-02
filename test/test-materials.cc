@@ -190,7 +190,7 @@ void check_correlation_between_in_out_angles(const std::string& model, const Cat
 // 3) LUT : it is the expected value (taken from simulation validated against Roberto's)
 TEST_CASE("csi teflon reflectivity lambertian", "[teflon][reflectivity]") { check_correlation_between_in_out_angles("lambertian", WithinAbs( 0     , 1e-2)); }
 TEST_CASE("csi teflon reflectivity specular"  , "[teflon][reflectivity]") { check_correlation_between_in_out_angles("specular"  , WithinAbs(-1     , 1e-6)); }
-TEST_CASE("csi teflon reflectivity lut"       , "[teflon][reflectivity]") { check_correlation_between_in_out_angles("lut"       , WithinAbs(-0.9358, 1e-4)); }
+TEST_CASE("csi teflon reflectivity lut"       , "[teflon][reflectivity]") { check_correlation_between_in_out_angles("lut"       , WithinAbs(-0.1062, 1e-4)); }
 TEST_CASE("csi teflon reflectivity davis"     , "[teflon][reflectivity]") { check_correlation_between_in_out_angles("davis"     , WithinAbs(-0.3830, 1e-4)); }
 
 // Shoot photons from within crystal in random directions towards

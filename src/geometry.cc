@@ -119,8 +119,8 @@ G4PVPlacement* crystal_geometry(run_stats& stats) {
     break;
   case teflon_model_enum::lut:
     teflon_surface -> SetType(dielectric_LUT);
+    teflon_surface -> SetFinish(groundteflonair);
     teflon_surface -> SetModel(LUT);
-    teflon_surface -> SetFinish(polishedteflonair);
     break;
   case teflon_model_enum::davis:
     teflon_surface -> SetType(dielectric_LUTDAVIS);
