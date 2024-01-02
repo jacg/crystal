@@ -99,11 +99,7 @@ G4Material* lyso_with_properties() {
 
 G4Material* air_with_properties() {
   auto air = n4::material("G4_AIR");
-  std::vector<double> x{1., 2.};
-  auto mpt = n4::material_properties()
-      .add("RINDEX", x, x)
-      .done();
-  air -> SetMaterialPropertiesTable(mpt);
+  air -> SetMaterialPropertiesTable(air_properties());
   return air;
 }
 
@@ -119,6 +115,11 @@ G4Material* teflon_with_properties() {
   return teflon;
 }
 
+G4MaterialPropertiesTable* air_properties() {
+  return n4::material_properties()
+    .add("RINDEX", OPTPHOT_ENERGY_RANGE, 1.)
+    .done();
+}
 G4MaterialPropertiesTable* esr_properties() {
   auto reflectivity = my.reflectivity.has_value() ? my.reflectivity.value() : 0.99;
 

@@ -17,7 +17,8 @@
 
 enum class scintillator_type_enum { lyso, bgo, csi };
 enum class config_type_enum       { lyso, bgo, csi, csi_mono };
-enum class teflon_model_enum      { lambertian, specular, lut, davis};
+enum class reflector_model_enum   { lambertian, specular, lut, davis };
+enum class reflector_kind_enum    { teflon, esr, none };
 
 struct scint_parameters {
   scintillator_type_enum scint;
@@ -41,8 +42,11 @@ scintillator_type_enum string_to_scintillator_type(std::string s);
 std::string config_type_to_string(config_type_enum s);
 config_type_enum string_to_config_type(std::string s);
 
-std::string teflon_model_enum_to_string(teflon_model_enum s);
-teflon_model_enum string_to_teflon_model_enum(std::string s);
+std::string reflector_model_enum_to_string(reflector_model_enum s);
+reflector_model_enum string_to_reflector_model_enum(std::string s);
+
+std::string reflector_kind_enum_to_string(reflector_kind_enum s);
+reflector_kind_enum string_to_reflector_kind_enum(std::string s);
 
 struct config {
 private:
@@ -54,11 +58,12 @@ public:
   double                   gel_thickness      =   0.45 * mm;
   double                  sipm_thickness      =   1    * mm - gel_thickness;
   double                  reflector_thickness =   0.25 * mm;
+  reflector_kind_enum     reflector_kind      = reflector_kind_enum::teflon;
   int                     physics_verbosity   =   0;
   long                    seed                = 123456789;
   bool                    debug               = false ;
   std::optional<G4double> scint_yield         = std::nullopt;
-  teflon_model_enum       teflon_model        = teflon_model_enum::lambertian;
+  reflector_model_enum    reflector_model     = reflector_model_enum::lambertian;
   size_t                  event_threshold     = 1;
   size_t                   sipm_threshold     = 1;
   std::optional<double>   reflectivity        = std::nullopt;
@@ -82,7 +87,8 @@ public:
 private:
 
   void set_config_type    (const std::string& s);
-  void set_teflon_model   (const std::string& s) { teflon_model = string_to_teflon_model_enum(s); }
+  void set_reflector_model(const std::string& s) { reflector_model = string_to_reflector_model_enum(s); }
+  void set_reflector_kind (const std::string& s) { reflector_kind  = string_to_reflector_kind_enum(s) ; }
   void set_scint          (const std::string& s) { overrides.scint = string_to_scintillator_type(s); }
   void set_scint_depth    (double   d)           { overrides.scint_depth = d; }
   void set_particle_energy(double   e)           { particle_energy_ = e; }

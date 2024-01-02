@@ -37,6 +37,46 @@ G4Colour reflector_colour() {
   return r.has_value() && r.value() == 0 ? absorbent_colour : teflon_colour;
 }
 
+G4OpticalSurface* make_reflector_optical_surface() {
+  auto reflector_surface = new G4OpticalSurface("crystal_reflector_interface");
+  switch (my.reflector_kind) {
+  case reflector_kind_enum::teflon: reflector_surface -> SetMaterialPropertiesTable(teflon_properties()); break;
+  case reflector_kind_enum::esr   : reflector_surface -> SetMaterialPropertiesTable(   esr_properties()); break;
+  case reflector_kind_enum::none  : reflector_surface -> SetMaterialPropertiesTable(   air_properties()); break;
+  }
+
+  switch (my.reflector_model) {
+  case reflector_model_enum::lambertian:
+    reflector_surface -> SetType(dielectric_dielectric);
+    reflector_surface -> SetModel(unified);
+    reflector_surface -> SetFinish(groundfrontpainted);
+    break;
+  case reflector_model_enum::specular:
+    reflector_surface -> SetType(dielectric_dielectric);
+    reflector_surface -> SetModel(unified);
+    reflector_surface -> SetFinish(polishedfrontpainted);
+    break;
+  case reflector_model_enum::lut:
+    reflector_surface -> SetType(dielectric_LUT);
+    reflector_surface -> SetModel(LUT);
+    switch (my.reflector_kind) {
+    case reflector_kind_enum::teflon: reflector_surface -> SetFinish(groundteflonair); break;
+    case reflector_kind_enum::esr   : reflector_surface -> SetFinish(groundvm2000air); break;
+    case reflector_kind_enum::none  :                                                  break;
+    }
+    break;
+  case reflector_model_enum::davis:
+    reflector_surface -> SetType(dielectric_LUTDAVIS);
+    reflector_surface -> SetModel(DAVIS);
+    switch (my.reflector_kind) {
+    case reflector_kind_enum::teflon: reflector_surface -> SetFinish(RoughTeflon_LUT); break;
+    case reflector_kind_enum::esr   : reflector_surface -> SetFinish(RoughESR_LUT)   ; break;
+    case reflector_kind_enum::none  :                                                  break;
+    }
+    break;
+  }
+  return reflector_surface;
+}
 
 G4PVPlacement* crystal_geometry(run_stats& stats) {
   auto scintillator = scintillator_material(my.scint_params().scint);
@@ -104,34 +144,11 @@ G4PVPlacement* crystal_geometry(run_stats& stats) {
   }
 
   // TODO add abstraction for placing optical surface between volumes
-  auto teflon_surface = new G4OpticalSurface("crystal_reflector_interface");
-  teflon_surface -> SetMaterialPropertiesTable(teflon_properties());
-  switch (my.teflon_model) {
-  case teflon_model_enum::lambertian:
-    teflon_surface -> SetType(dielectric_dielectric);
-    teflon_surface -> SetModel(unified);
-    teflon_surface -> SetFinish(groundfrontpainted);
-    break;
-  case teflon_model_enum::specular:
-    teflon_surface -> SetType(dielectric_dielectric);
-    teflon_surface -> SetModel(unified);
-    teflon_surface -> SetFinish(polishedfrontpainted);
-    break;
-  case teflon_model_enum::lut:
-    teflon_surface -> SetType(dielectric_LUT);
-    teflon_surface -> SetFinish(groundteflonair);
-    teflon_surface -> SetModel(LUT);
-    break;
-  case teflon_model_enum::davis:
-    teflon_surface -> SetType(dielectric_LUTDAVIS);
-    teflon_surface -> SetFinish(RoughTeflon_LUT);
-    teflon_surface -> SetModel(DAVIS);
-    break;
-  }
+  auto reflector_surface = make_reflector_optical_surface();
 
-  new G4LogicalBorderSurface("crystal_reflector_interface", crystal, reflector, teflon_surface);
+  new G4LogicalBorderSurface("crystal_reflector_interface", crystal, reflector, reflector_surface);
   if (! my.absorbent_opposite) {
-    new G4LogicalBorderSurface("crystal_opposite_interface", crystal, opposite, teflon_surface);
+    new G4LogicalBorderSurface("crystal_opposite_interface", crystal, opposite, reflector_surface);
   }
   return world;
 }

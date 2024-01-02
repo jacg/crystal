@@ -15,6 +15,7 @@ G4Material*      teflon_with_properties();
 G4Material*     silicon_with_properties();
 G4Material* optical_gel_with_properties();
 
+G4MaterialPropertiesTable*         air_properties();
 G4MaterialPropertiesTable*         esr_properties();
 G4MaterialPropertiesTable*      teflon_properties();
 G4MaterialPropertiesTable* optical_gel_properties();
