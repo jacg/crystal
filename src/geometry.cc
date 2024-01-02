@@ -122,6 +122,11 @@ G4PVPlacement* crystal_geometry(run_stats& stats) {
     teflon_surface -> SetModel(LUT);
     teflon_surface -> SetFinish(polishedteflonair);
     break;
+  case teflon_model_enum::davis:
+    teflon_surface -> SetType(dielectric_LUTDAVIS);
+    teflon_surface -> SetFinish(RoughTeflon_LUT);
+    teflon_surface -> SetModel(DAVIS);
+    break;
   }
 
   new G4LogicalBorderSurface("crystal_reflector_interface", crystal, reflector, teflon_surface);

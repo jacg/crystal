@@ -128,6 +128,7 @@ std::string teflon_model_enum_to_string(teflon_model_enum s) {
     case teflon_model_enum ::lambertian: return "Lambertian";
     case teflon_model_enum ::specular  : return "Specular"  ;
     case teflon_model_enum ::lut       : return "LUT"       ;
+    case teflon_model_enum ::davis     : return "DAVIS"     ;
   }
   return "unreachable!";
 }
@@ -137,6 +138,7 @@ teflon_model_enum string_to_teflon_model_enum(std::string s) {
   if (s == "lambertian") { return teflon_model_enum::lambertian;}
   if (s == "specular"  ) { return teflon_model_enum::specular;  }
   if (s == "lut"       ) { return teflon_model_enum::lut;       }
+  if (s == "davis"     ) { return teflon_model_enum::davis;     }
   std::cerr << "\n\n\n\n         ERROR in string_to_teflon_model: unknown model '" << s << "'\n\n\n\n" << std::endl;
   throw "up"; // TODO think about failure propagation out of string_to_scintillator_type
 }

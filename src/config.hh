@@ -17,7 +17,7 @@
 
 enum class scintillator_type_enum { lyso, bgo, csi };
 enum class config_type_enum       { lyso, bgo, csi, csi_mono };
-enum class teflon_model_enum      { lambertian, specular, lut};
+enum class teflon_model_enum      { lambertian, specular, lut, davis};
 
 struct scint_parameters {
   scintillator_type_enum scint;
