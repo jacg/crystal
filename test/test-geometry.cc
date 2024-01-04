@@ -123,7 +123,7 @@ TEST_CASE("geometry crystal size", "[geometry][default]") {
 TEST_CASE("optical surface selector", "[selector]") {
   SECTION("lambertian") {
     my.reflector_model = reflector_model_enum::lambertian;
-    my.reflector_kind  = reflector_kind_enum::teflon;
+    my.wrapping  = wrapping_enum::teflon;
     auto surf = make_reflector_optical_surface();
     CHECK(surf -> GetType  () == dielectric_dielectric);
     CHECK(surf -> GetModel () == unified);
@@ -131,7 +131,7 @@ TEST_CASE("optical surface selector", "[selector]") {
   }
   SECTION("specular") {
     my.reflector_model = reflector_model_enum::specular;
-    my.reflector_kind  = reflector_kind_enum::teflon;
+    my.wrapping  = wrapping_enum::teflon;
     auto surf = make_reflector_optical_surface();
     CHECK(surf -> GetType  () == dielectric_dielectric);
     CHECK(surf -> GetModel () == unified);
@@ -139,7 +139,7 @@ TEST_CASE("optical surface selector", "[selector]") {
   }
   SECTION("lut teflon") {
     my.reflector_model = reflector_model_enum::lut;
-    my.reflector_kind  = reflector_kind_enum::teflon;
+    my.wrapping  = wrapping_enum::teflon;
     auto surf = make_reflector_optical_surface();
     CHECK(surf -> GetType  () == dielectric_LUT);
     CHECK(surf -> GetModel () == LUT);
@@ -147,7 +147,7 @@ TEST_CASE("optical surface selector", "[selector]") {
   }
   SECTION("lut esr") {
     my.reflector_model = reflector_model_enum::lut;
-    my.reflector_kind  = reflector_kind_enum::esr;
+    my.wrapping  = wrapping_enum::esr;
     auto surf = make_reflector_optical_surface();
     CHECK(surf -> GetType  () == dielectric_LUT);
     CHECK(surf -> GetModel () == LUT);
@@ -155,7 +155,7 @@ TEST_CASE("optical surface selector", "[selector]") {
   }
   SECTION("davis teflon") {
     my.reflector_model = reflector_model_enum::davis;
-    my.reflector_kind  = reflector_kind_enum::teflon;
+    my.wrapping  = wrapping_enum::teflon;
     auto surf = make_reflector_optical_surface();
     CHECK(surf -> GetType  () == dielectric_LUTDAVIS);
     CHECK(surf -> GetModel () == DAVIS);
@@ -163,7 +163,7 @@ TEST_CASE("optical surface selector", "[selector]") {
   }
   SECTION("davis esr") {
     my.reflector_model = reflector_model_enum::davis;
-    my.reflector_kind  = reflector_kind_enum::esr;
+    my.wrapping  = wrapping_enum::esr;
     auto surf = make_reflector_optical_surface();
     CHECK(surf -> GetType  () == dielectric_LUTDAVIS);
     CHECK(surf -> GetModel () == DAVIS);

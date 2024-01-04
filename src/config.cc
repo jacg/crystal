@@ -65,7 +65,7 @@ config::config()
   msg -> DeclareProperty        ("debug"               ,           debug                      );
   msg -> DeclareMethodWithUnit  ("scint_yield"         , "1/MeV", &config::set_scint_yield    );
   msg -> DeclareMethod          ("reflector_model"     ,          &config::set_reflector_model);
-  msg -> DeclareMethod          ("reflector_kind"      ,          &config::set_reflector_kind );
+  msg -> DeclareMethod          ("wrapping"            ,          &config::set_wrapping       );
   msg -> DeclareProperty        ("event_threshold"     ,           event_threshold            );
   msg -> DeclareProperty        ( "sipm_threshold"     ,            sipm_threshold            );
   msg -> DeclareMethod          ("reflectivity"        ,          &config::set_reflectivity   );
@@ -144,20 +144,20 @@ reflector_model_enum string_to_reflector_model_enum(std::string s) {
   throw "up"; // TODO think about failure propagation out of string_to_scintillator_type
 }
 
-reflector_kind_enum string_to_reflector_kind_enum(std::string s) {
+wrapping_enum string_to_wrapping_enum(std::string s) {
   for (auto& c: s) { c = std::tolower(c); }
-  if (s == "teflon") { return reflector_kind_enum::teflon; }
-  if (s == "esr"   ) { return reflector_kind_enum::esr   ; }
-  if (s == "none"  ) { return reflector_kind_enum::none  ; }
-  std::cerr << "\n\n\n\n         ERROR in string_to_reflector_kind_enum: unknown kind '" << s << "'\n\n\n\n" << std::endl;
+  if (s == "teflon") { return wrapping_enum::teflon; }
+  if (s == "esr"   ) { return wrapping_enum::esr   ; }
+  if (s == "none"  ) { return wrapping_enum::none  ; }
+  std::cerr << "\n\n\n\n         ERROR in string_to_wrapping_enum: unknown kind '" << s << "'\n\n\n\n" << std::endl;
   throw "up"; // TODO think about failure propagation out of string_to_scintillator_type
 }
 
-std::string reflector_kind_enum_to_string(reflector_kind_enum s) {
+std::string wrapping_enum_to_string(wrapping_enum s) {
   switch (s) {
-    case reflector_kind_enum ::teflon: return "teflon";
-    case reflector_kind_enum ::esr   : return "esr"   ;
-    case reflector_kind_enum ::none  : return "none"  ;
+    case wrapping_enum ::teflon: return "teflon";
+    case wrapping_enum ::esr   : return "esr"   ;
+    case wrapping_enum ::none  : return "none"  ;
   }
   return "unreachable!";
 }

@@ -18,7 +18,7 @@
 enum class scintillator_type_enum { lyso, bgo, csi };
 enum class config_type_enum       { lyso, bgo, csi, csi_mono };
 enum class reflector_model_enum   { lambertian, specular, lut, davis };
-enum class reflector_kind_enum    { teflon, esr, none };
+enum class wrapping_enum          { teflon, esr, none };
 
 struct scint_parameters {
   scintillator_type_enum scint;
@@ -45,8 +45,8 @@ config_type_enum string_to_config_type(std::string s);
 std::string reflector_model_enum_to_string(reflector_model_enum s);
 reflector_model_enum string_to_reflector_model_enum(std::string s);
 
-std::string reflector_kind_enum_to_string(reflector_kind_enum s);
-reflector_kind_enum string_to_reflector_kind_enum(std::string s);
+std::string wrapping_enum_to_string(wrapping_enum s);
+wrapping_enum string_to_wrapping_enum(std::string s);
 
 struct config {
 private:
@@ -58,7 +58,7 @@ public:
   double                   gel_thickness      =   0.45 * mm;
   double                  sipm_thickness      =   1    * mm - gel_thickness;
   double                  reflector_thickness =   0.25 * mm;
-  reflector_kind_enum     reflector_kind      = reflector_kind_enum::teflon;
+  wrapping_enum           wrapping            = wrapping_enum::teflon;
   int                     physics_verbosity   =   0;
   long                    seed                = 123456789;
   bool                    debug               = false ;
@@ -88,7 +88,7 @@ private:
 
   void set_config_type    (const std::string& s);
   void set_reflector_model(const std::string& s) { reflector_model = string_to_reflector_model_enum(s); }
-  void set_reflector_kind (const std::string& s) { reflector_kind  = string_to_reflector_kind_enum(s) ; }
+  void set_wrapping       (const std::string& s) { wrapping  = string_to_wrapping_enum(s) ; }
   void set_scint          (const std::string& s) { overrides.scint = string_to_scintillator_type(s); }
   void set_scint_depth    (double   d)           { overrides.scint_depth = d; }
   void set_particle_energy(double   e)           { particle_energy_ = e; }

@@ -39,10 +39,10 @@ G4Colour reflector_colour() {
 
 G4OpticalSurface* make_reflector_optical_surface() {
   auto reflector_surface = new G4OpticalSurface("crystal_reflector_interface");
-  switch (my.reflector_kind) {
-  case reflector_kind_enum::teflon: reflector_surface -> SetMaterialPropertiesTable(teflon_properties()); break;
-  case reflector_kind_enum::esr   : reflector_surface -> SetMaterialPropertiesTable(   esr_properties()); break;
-  case reflector_kind_enum::none  : reflector_surface -> SetMaterialPropertiesTable(   air_properties()); break;
+  switch (my.wrapping) {
+  case wrapping_enum::teflon: reflector_surface -> SetMaterialPropertiesTable(teflon_properties()); break;
+  case wrapping_enum::esr   : reflector_surface -> SetMaterialPropertiesTable(   esr_properties()); break;
+  case wrapping_enum::none  : reflector_surface -> SetMaterialPropertiesTable(   air_properties()); break;
   }
 
   switch (my.reflector_model) {
@@ -59,19 +59,19 @@ G4OpticalSurface* make_reflector_optical_surface() {
   case reflector_model_enum::lut:
     reflector_surface -> SetType(dielectric_LUT);
     reflector_surface -> SetModel(LUT);
-    switch (my.reflector_kind) {
-    case reflector_kind_enum::teflon: reflector_surface -> SetFinish(groundteflonair); break;
-    case reflector_kind_enum::esr   : reflector_surface -> SetFinish(groundvm2000air); break;
-    case reflector_kind_enum::none  :                                                  break;
+    switch (my.wrapping) {
+    case wrapping_enum::teflon: reflector_surface -> SetFinish(groundteflonair); break;
+    case wrapping_enum::esr   : reflector_surface -> SetFinish(groundvm2000air); break;
+    case wrapping_enum::none  :                                                  break;
     }
     break;
   case reflector_model_enum::davis:
     reflector_surface -> SetType(dielectric_LUTDAVIS);
     reflector_surface -> SetModel(DAVIS);
-    switch (my.reflector_kind) {
-    case reflector_kind_enum::teflon: reflector_surface -> SetFinish(RoughTeflon_LUT); break;
-    case reflector_kind_enum::esr   : reflector_surface -> SetFinish(RoughESR_LUT)   ; break;
-    case reflector_kind_enum::none  :                                                  break;
+    switch (my.wrapping) {
+    case wrapping_enum::teflon: reflector_surface -> SetFinish(RoughTeflon_LUT); break;
+    case wrapping_enum::esr   : reflector_surface -> SetFinish(RoughESR_LUT)   ; break;
+    case wrapping_enum::none  :                                                  break;
     }
     break;
   }
