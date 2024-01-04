@@ -15,7 +15,7 @@
 #include <unordered_map>
 
 
-enum class scintillator_type_enum { lyso, bgo, csi };
+enum class scintillator_type_enum { lyso, bgo, csi, csi_tl };
 enum class config_type_enum       { lyso, bgo, csi, csi_mono };
 enum class reflector_model_enum   { lambertian, specular, lut, davis };
 enum class wrapping_enum          { teflon, esr, none };
@@ -55,7 +55,7 @@ private:
   scint_parameters        scint_params_;
   scint_overrides         overrides           =  {};
 public:
-  double                   gel_thickness      =   0.45 * mm;
+  double                   gel_thickness      =   0.15 * mm;
   double                  sipm_thickness      =   1    * mm - gel_thickness;
   double                  reflector_thickness =   0.25 * mm;
   wrapping_enum           wrapping            = wrapping_enum::teflon;

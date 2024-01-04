@@ -88,18 +88,22 @@ config::config()
 
 std::string scintillator_type_to_string(scintillator_type_enum s) {
   switch (s) {
-    case scintillator_type_enum::lyso: return "LYSO";
-    case scintillator_type_enum::bgo : return "BGO" ;
-    case scintillator_type_enum::csi : return "CsI" ;
+    case scintillator_type_enum::lyso  : return "LYSO";
+    case scintillator_type_enum::bgo   : return "BGO" ;
+    case scintillator_type_enum::csi   : return "CsI" ;
+    case scintillator_type_enum::csi_tl: return "CsI(Tl)";
   }
   return "unreachable!";
 }
 
 scintillator_type_enum string_to_scintillator_type(std::string s) {
   for (auto& c: s) { c = std::tolower(c); }
-  if (s == "lyso") { return scintillator_type_enum::lyso; }
-  if (s == "bgo" ) { return scintillator_type_enum::bgo;  }
-  if (s == "csi" ) { return scintillator_type_enum::csi;  }
+  if (s == "lyso"  ) { return scintillator_type_enum::lyso; }
+  if (s == "bgo"   ) { return scintillator_type_enum::bgo;  }
+  if (s == "csi"   ) { return scintillator_type_enum::csi;  }
+  if (s == "csitl" ) { return scintillator_type_enum::csi_tl;}
+  if (s == "csi-tl") { return scintillator_type_enum::csi_tl;}
+  if (s == "csi_tl") { return scintillator_type_enum::csi_tl;}
   throw "up"; // TODO think about failure propagation out of string_to_scintillator_type
 }
 
@@ -175,12 +179,12 @@ void config::set_config_type(const std::string& s) {
 }
 
 n4::random::piecewise_linear_distribution scint_spectrum() {
-  std::string msg{"Scintillation spectrum not implemented for scintillator "};
   std::pair<std::vector<double>, std::vector<double>> data;
   switch (my.scint_params().scint) {
-    case scintillator_type_enum::csi : data = csi_scint_spectrum(); break;
-    case scintillator_type_enum::lyso: throw std::runtime_error(msg + "LYSO");
-    case scintillator_type_enum::bgo : throw std::runtime_error(msg +  "BGO");
+    case scintillator_type_enum::csi   : data =    csi_scint_spectrum(); break;
+    case scintillator_type_enum::csi_tl: data = csi_tl_scint_spectrum(); break;
+    case scintillator_type_enum::lyso  : data =   lyso_scint_spectrum(); break;
+    case scintillator_type_enum::bgo   : data =    bgo_scint_spectrum(); break;
   }
   return {std::move(data.first), std::move(data.second)};
 }
@@ -201,9 +205,10 @@ G4ThreeVector config::scint_size() const {
 
 G4Material* scintillator_material(scintillator_type_enum type) {
   switch (type) {
-    case scintillator_type_enum::csi : return  csi_with_properties();
-    case scintillator_type_enum::lyso: return lyso_with_properties();
-    case scintillator_type_enum::bgo : return  bgo_with_properties();
+    case scintillator_type_enum::csi   : return     csi_with_properties();
+    case scintillator_type_enum::csi_tl: return  csi_tl_with_properties();
+    case scintillator_type_enum::lyso  : return    lyso_with_properties();
+    case scintillator_type_enum::bgo   : return     bgo_with_properties();
   }
   return nullptr; // unreachable
 }
@@ -258,6 +263,7 @@ std::unordered_map<std::string, std::string> config::as_map() {
   it["n_sipms_y"          ] = std::to_string(params.n_sipms_y);
   it["sipm_size"          ] = std::to_string(params.sipm_size/mm) + " mm";
   it["sipm_thickness"     ] = std::to_string(my.sipm_thickness/mm) + " mm";
+  it[ "gel_thickness"     ] = std::to_string(my. gel_thickness/mm) + " mm";
   it["reflector_thickness"] = std::to_string(my.reflector_thickness/mm) + " mm";
   it["particle_energy"    ] = std::to_string(my.particle_energy_/keV) + " keV";
   it["fixed_energy"       ] = std::to_string(my.fixed_energy);

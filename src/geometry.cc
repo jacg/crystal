@@ -18,6 +18,7 @@
 
 G4Colour       bgo_colour{0.9, 0.6, 0.1, 0.3};
 G4Colour       csi_colour{0.0, 0.0, 0.6, 0.3};
+G4Colour    csi_tl_colour{0.0, 0.4, 0.6, 0.3};
 G4Colour      lyso_colour{0.1, 0.7, 0.6, 0.3};
 G4Colour    teflon_colour{1.0, 1.0, 1.0, 0.3};
 G4Colour absorbent_colour{0.5, 0.3, 0.1, 0.3};
@@ -25,9 +26,10 @@ G4Colour       gel_colour{1.0, 1.0, 0.0, 0.3};
 
 G4Colour crystal_colour() {
   switch (my.scint_params().scint) {
-    case scintillator_type_enum::bgo:  return  bgo_colour;
-    case scintillator_type_enum::csi:  return  csi_colour;
-    case scintillator_type_enum::lyso: return lyso_colour;
+    case scintillator_type_enum::bgo   : return     bgo_colour;
+    case scintillator_type_enum::csi   : return     csi_colour;
+    case scintillator_type_enum::csi_tl: return  csi_tl_colour;
+    case scintillator_type_enum::lyso  : return    lyso_colour;
   }
   return csi_colour; // Unreachable, but GCC complains
 }

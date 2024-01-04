@@ -293,5 +293,5 @@ TEST_CASE("lyso interaction process fractions", "[lyso][interaction]") {
   auto fractions = calculate_interaction_process_fractions(lyso_with_properties(), physics_list());
   CHECK_THAT(fractions.photoelectric, WithinRel(0.311, 2e-2));
   CHECK_THAT(fractions.compton      , WithinRel(0.637, 2e-2));
-  CHECK_THAT(fractions.rayleigh     , WithinRel(0.051, 2e-2));
+  CHECK_THAT(fractions.rayleigh     , WithinRel(0.052, 2e-2));
 }

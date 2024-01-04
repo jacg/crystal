@@ -8,33 +8,65 @@
 
 const             double  OPTPHOT_MIN_ENERGY  {1.00*eV};
 const             double  OPTPHOT_MAX_ENERGY  {8.21*eV};
+const             double  OPTPHOT_MIN_WL      {c4::hc / OPTPHOT_MAX_ENERGY};
+const             double  OPTPHOT_MAX_WL      {c4::hc / OPTPHOT_MIN_ENERGY};
 const std::vector<double> OPTPHOT_ENERGY_RANGE{OPTPHOT_MIN_ENERGY, OPTPHOT_MAX_ENERGY};
 
 std::pair<std::vector<double>, std::vector<double>> csi_scint_spectrum() {
   // From R. Soleti
-  auto energies = n4::const_over(c4::hc/nm, {  460,   400,   380,   340,   320,   300,   280,   260}); // wl in nm
-  auto spectrum = n4::scale_by  (0.01     , {    4,    10,    29,    67,    88,    29,    10,     2});
+  auto energies = n4::const_over(c4::hc/nm, {460,   400,   380,   340,   320,   300,   280,   260}); // wl in nm
+  auto spectrum = n4::scale_by  (0.01     , {  4,    10,    29,    67,    88,    29,    10,     2});
   auto spectrum_norm = n4::stats::sum(spectrum);
   spectrum = n4::map<double>([&] (auto s){return  s/spectrum_norm;}, spectrum);
   return {std::move(energies), std::move(spectrum)};
 }
 
+std::pair<std::vector<double>, std::vector<double>> csi_tl_scint_spectrum() {
+  // From R. Soleti
+  auto energies = n4::const_over(c4::hc/nm, {722, 678, 611, 554, 523, 493, 437, 351}); // wl in nm
+  auto spectrum = n4::scale_by  (0.01     , { 12,  29,  70,  98,  87,  56,  19,   1});
+  auto spectrum_norm = n4::stats::sum(spectrum);
+  spectrum = n4::map<double>([&] (auto s){return  s/spectrum_norm;}, spectrum);
+  return {std::move(energies), std::move(spectrum)};
+}
+
+std::pair<std::vector<double>, std::vector<double>> lyso_scint_spectrum() {
+  auto energies = n4::const_over(c4::hc/nm, {600  , 504  , 477  , 452  , 417, 410  , 402, 389  , 380});
+  auto spectrum = n4::scale_by  (0.01     , {  0.7,   6.3,  16.9,  45.7,  96,  96.4,  95,  37.7,   0});
+  auto spectrum_norm = n4::stats::sum(spectrum);
+  spectrum = n4::map<double>([&] (auto s){return  s/spectrum_norm;}, spectrum);
+  return {std::move(energies), std::move(spectrum)};
+}
+
+std::pair<std::vector<double>, std::vector<double>> bgo_scint_spectrum() {
+  auto energies = n4::const_over(c4::hc/nm, {713, 638, 584  , 529  , 476  , 443  , 407  , 367});
+  auto spectrum = n4::scale_by  (0.01     , {  1,   3,   5.6,  10.3,  12.6,   9.6,   4.0,   7});
+  auto spectrum_norm = n4::stats::sum(spectrum);
+  spectrum = n4::map<double>([&] (auto s){return  s/spectrum_norm;}, spectrum);
+  return {std::move(energies), std::move(spectrum)};
+}
+
+std::vector<double> csi_rindex() {
+  // rindex: values taken from "Optimization of Parameters for a
+  // CsI(Tl) Scintillator Detector Using GEANT4-Based Monte Carlo..."
+  // by Mitra et al (mainly page 3) latest numbers from
+  // https://refractiveindex.info/?shelf=main&book=CsI&page=Querry
+  return {1.766, 1.794, 1.806, 1.845, 1.867, 1.902, 1.955, 2.043};
+}
+
 G4Material* csi_with_properties() {
   auto csi = n4::material("G4_CESIUM_IODIDE");
-  // rindex: values taken from "Optimization of Parameters for a CsI(Tl) Scintillator Detector Using GEANT4-Based Monte Carlo..." by Mitra et al (mainly page 3)
   //  scint: values from Fig. 2 in "A New Scintillation Material: Pure CsI with 10ns Decay Time" by Kubota et al (these are approximate...)
   // must be in increasing ENERGY order (decreasing wavelength) for scintillation to work properly
 
   auto [energies, spectrum] = csi_scint_spectrum();
-  // latest numbers from https://refractiveindex.info/?shelf=main&book=CsI&page=Querry
-  auto rindex = n4::scale_by (1.0, {1.766, 1.794, 1.806, 1.845, 1.867, 1.902, 1.955, 2.043});
   // Values from "Temperature dependence of pure CsI: scintillation light yield and decay time" by Amsler et al
   // "cold" refers to ~77K, i.e. liquid nitrogen temperature
   double scint_yield = my.scint_yield.value_or(50'000 / MeV); // 50000 / MeV in cold
   double time_fast   =  1015 * ns; // only one component at cold temps!
   double time_slow   =  1015 * ns;
   auto mpt = n4::material_properties()
-    .add("RINDEX"                    , energies, rindex)
+    .add("RINDEX"                    , energies, csi_rindex())
     .add("SCINTILLATIONCOMPONENT1"   , energies, spectrum)
     .add("SCINTILLATIONCOMPONENT2"   , energies, spectrum)
     .add("ABSLENGTH"                 , energies, 5*m)
@@ -50,16 +82,36 @@ G4Material* csi_with_properties() {
   return csi;
 }
 
+G4Material* csi_tl_with_properties() {
+  auto csi = n4::material("G4_CESIUM_IODIDE");
+  auto [energies, spectrum] = csi_tl_scint_spectrum();
+  double scint_yield = my.scint_yield.value_or(50'000 / MeV);
+  auto abslength     = n4::scale_by(cm, {42, 40, 37, 33, 31, 30, 26, 12});
+  auto mpt = n4::material_properties()
+    .add("RINDEX"                    , energies, csi_rindex())
+    .add("SCINTILLATIONCOMPONENT1"   , energies, spectrum)
+    .add("ABSLENGTH"                 , energies, abslength)
+    .add("SCINTILLATIONTIMECONSTANT1", 500 * ns)
+    .add("SCINTILLATIONYIELD"        , scint_yield)
+    .add("SCINTILLATIONYIELD1"       ,   1.0   )
+    .add("RESOLUTIONSCALE"           ,   1.0   )
+    .done();
+  csi -> GetIonisation() -> SetBirksConstant(0.00152 * mm/MeV);
+  csi -> SetMaterialPropertiesTable(mpt);
+  return csi;
+}
+
 // Refractive index, scintillation spectrum and time constant taken from
 //   https://jnm.snmjournals.org/content/jnumed/41/6/1051.full.pdf
 G4Material* bgo_with_properties() {
-  auto bgo      = n4::material("G4_BGO");
-  auto energies = n4::const_over(c4::hc/nm, {650, 480, 390}); // wl in nm
-  auto spectrum = n4::scale_by  (0.01     , {  0, 100,   0});
+  auto bgo = n4::material("G4_BGO");
+
+  auto [energies, spectrum] = csi_scint_spectrum();
   //double scint_yield = my.scint_yield.value_or(8'500 / MeV); // According to Wikipedia
-  double scint_yield = my.scint_yield.value_or(6'000 / MeV); // https://wiki.app.uib.no/ift/images/c/c2/Characterization_of_Scintillation_Crystals_for_Positron_Emission_Tomography.pdf
+  double scint_yield = my.scint_yield.value_or(9'000 / MeV); // Roberto
   auto mpt = n4::material_properties()
-    .add("RINDEX"                    , energies, 2.15)
+    .add("RINDEX"                    , OPTPHOT_ENERGY_RANGE, 2.15)
+    .add("ABSLENGTH"                 , OPTPHOT_ENERGY_RANGE, 0.5*m)
     .add("SCINTILLATIONCOMPONENT1"   , energies, spectrum)
     .add("SCINTILLATIONTIMECONSTANT1", 300 * ns)
     .add("SCINTILLATIONYIELD"        , scint_yield)
@@ -82,12 +134,12 @@ G4Material* lyso_material() {
 // TODO get better LYSO material property data
 // https://arxiv.org/pdf/2207.06696.pdf
 G4Material* lyso_with_properties() {
-  auto lyso = lyso_material();
-  auto energies = n4::const_over(c4::hc/nm, {600, 420, 200}); // wl in nm
-  auto spectrum = n4::scale_by  (0.01     , {  0, 100,   0});
-  double scint_yield = my.scint_yield.value_or(30'000 / MeV);
+  auto lyso                 = lyso_material();
+  auto [energies, spectrum] = lyso_scint_spectrum();
+  double scint_yield        = my.scint_yield.value_or(25'000 / MeV); // Roberto
   auto mpt = n4::material_properties()
-    .add("RINDEX"                    , energies, 1.82)
+    .add("RINDEX"                    , OPTPHOT_ENERGY_RANGE, 1.82)
+    .add("ABSLENGTH"                 , OPTPHOT_ENERGY_RANGE, 0.5*m)
     .add("SCINTILLATIONCOMPONENT1"   , energies, spectrum)
     .add("SCINTILLATIONTIMECONSTANT1", 40 * ns)
     .add("SCINTILLATIONYIELD"        , scint_yield)
@@ -212,7 +264,10 @@ G4Material* optical_gel_with_properties() {
 }
 
 std::pair<std::vector<double>, std::vector<double>> sipm_pde() {
-  auto energies = n4::const_over(c4::hc/nm, { 908.37, 820.02, 730.61, 635.70, 470.29, 407.14, 364.92, 347.73, 304.17, 284.26, 260.00});
-  auto pde      = n4::scale_by  (0.01     , {   3.49,   8.04,  15.79,  28.41,  49.74,  45.62,  35.37,  35.39,  26.60,   9.14,   0.00});
+  auto energies = n4::const_over(c4::hc/nm, {OPTPHOT_MAX_WL/nm, 809.722, 675.000, 587.500, 494.444, 455.556, 422.222, 395.833,
+                                                       366.667, 344.444, 311.111, 293.056, 288.889, 279.167, OPTPHOT_MIN_WL/nm});
+  auto pde      = n4::scale_by  (0.01     , {                0,   0.87 ,  19.2  ,  31.1  ,  46.7  ,  51.1  ,  50.2  ,  46.9  ,
+                                                        40.6  ,  39.3  ,  32.4  ,  18.0  ,   4.8  ,   2.0  ,                 0});
+
   return {energies, pde};
 }
