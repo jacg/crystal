@@ -170,7 +170,7 @@ void check_correlation_between_in_out_angles(const std::string& model, const Cat
   run_stats stats;
   n4::run_manager::create()
     .fake_ui()
-    .apply_command("/my/teflon_model " + model)
+    .apply_command("/my/reflector_model " + model)
     .physics(physics_list)
     .geometry([&] {return crystal_geometry(stats);})
     .actions(test_action)
@@ -203,7 +203,7 @@ void test_null_reflectivity(const std::string& model) {
   n4::run_manager::create()
     .fake_ui()
     .apply_command("/my/reflectivity 0")
-    .apply_command("/my/teflon_model " + model)
+    .apply_command("/my/reflector_model " + model)
     .physics(physics_list)
     .geometry([&] {return crystal_geometry(stats);})
     .actions(new n4::actions{blue_light_towards_teflon()})

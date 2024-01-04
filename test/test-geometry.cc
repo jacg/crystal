@@ -118,3 +118,55 @@ TEST_CASE("geometry crystal size", "[geometry][default]") {
   }
 
 }
+
+
+TEST_CASE("optical surface selector", "[selector]") {
+  SECTION("lambertian") {
+    my.reflector_model = reflector_model_enum::lambertian;
+    my.wrapping  = wrapping_enum::teflon;
+    auto surf = make_reflector_optical_surface();
+    CHECK(surf -> GetType  () == dielectric_dielectric);
+    CHECK(surf -> GetModel () == unified);
+    CHECK(surf -> GetFinish() == groundfrontpainted);
+  }
+  SECTION("specular") {
+    my.reflector_model = reflector_model_enum::specular;
+    my.wrapping  = wrapping_enum::teflon;
+    auto surf = make_reflector_optical_surface();
+    CHECK(surf -> GetType  () == dielectric_dielectric);
+    CHECK(surf -> GetModel () == unified);
+    CHECK(surf -> GetFinish() == polishedfrontpainted);
+  }
+  SECTION("lut teflon") {
+    my.reflector_model = reflector_model_enum::lut;
+    my.wrapping  = wrapping_enum::teflon;
+    auto surf = make_reflector_optical_surface();
+    CHECK(surf -> GetType  () == dielectric_LUT);
+    CHECK(surf -> GetModel () == LUT);
+    CHECK(surf -> GetFinish() == groundteflonair);
+  }
+  SECTION("lut esr") {
+    my.reflector_model = reflector_model_enum::lut;
+    my.wrapping  = wrapping_enum::esr;
+    auto surf = make_reflector_optical_surface();
+    CHECK(surf -> GetType  () == dielectric_LUT);
+    CHECK(surf -> GetModel () == LUT);
+    CHECK(surf -> GetFinish() == groundvm2000air);
+  }
+  SECTION("davis teflon") {
+    my.reflector_model = reflector_model_enum::davis;
+    my.wrapping  = wrapping_enum::teflon;
+    auto surf = make_reflector_optical_surface();
+    CHECK(surf -> GetType  () == dielectric_LUTDAVIS);
+    CHECK(surf -> GetModel () == DAVIS);
+    CHECK(surf -> GetFinish() == RoughTeflon_LUT);
+  }
+  SECTION("davis esr") {
+    my.reflector_model = reflector_model_enum::davis;
+    my.wrapping  = wrapping_enum::esr;
+    auto surf = make_reflector_optical_surface();
+    CHECK(surf -> GetType  () == dielectric_LUTDAVIS);
+    CHECK(surf -> GetModel () == DAVIS);
+    CHECK(surf -> GetFinish() == RoughESR_LUT);
+  }
+}
