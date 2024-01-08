@@ -11,7 +11,7 @@
   inherit (import ./helpers.nix { inherit nain4 pkgs self; }) shell-shared;
   inherit (nain4.deps) args-from-cli make-app;
 
-  python-with-packages = pkgs.python3.withPackages(ps: with ps; [parquet pandas ipython pyarrow torch matplotlib polars click]);
+  python-with-packages = pkgs.python3.withPackages(ps: with ps; [parquet pandas ipython pyarrow torch-bin matplotlib polars click]);
 
   in {
 
