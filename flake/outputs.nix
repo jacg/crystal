@@ -5,7 +5,12 @@
 }: let
   pkgs = import nixpkgs {
     inherit (nixpkgs.legacyPackages) system;
-    config.allowUnfree = true;
+    config.allowUnfreePredicate = pkg: builtins.elem (pkg.pname) [
+      "triton"
+      "cuda_cudart"
+      "cuda_nvtx"
+      "torch"
+    ];
   };
 
   inherit (import ./helpers.nix { inherit nain4 pkgs self; }) shell-shared;
