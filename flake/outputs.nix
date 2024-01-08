@@ -3,7 +3,11 @@
 , nain4
 , ...
 }: let
-  inherit (nixpkgs.legacyPackages) pkgs;
+  pkgs = import nixpkgs {
+    inherit (nixpkgs.legacyPackages) system;
+    config.allowUnfree = true;
+  };
+
   inherit (import ./helpers.nix { inherit nain4 pkgs self; }) shell-shared;
   inherit (nain4.deps) args-from-cli make-app;
 
