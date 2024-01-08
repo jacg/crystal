@@ -5,7 +5,7 @@
 }: let
   pkgs = import nixpkgs {
     inherit (nixpkgs.legacyPackages) system;
-    config.allowUnfreePredicate = pkg: builtins.elem (pkg.pname) [
+    config.allowUnfreePredicate = pkg: builtins.elem (nixpkgs.lib.getName pkg) [
       "triton"
       "cuda_cudart"
       "cuda_nvtx"
