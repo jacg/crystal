@@ -5,7 +5,6 @@ import itertools as it
 
 import numpy as np
 import matplotlib.pyplot as plt
-import polars as pl
 
 import torch
 import torch.nn as nn
@@ -27,19 +26,27 @@ class HackClick(Exception):
 @click.option("--plot-event", help="Plot the specified event (plot will block)", type=int)
 @click.option("--epochs", default=10, help="Number of epoch to use during training")
 @click.option("--fig-filename", default='figs.png', help="Filename where figures should be written")
-def parse_args(max_files, plot_event, data_dir, epochs, fig_filename):
+@click.option("--data-type", default='parquet', help="Type of data to read (parquet | csv-npy)")
+def parse_args(max_files, plot_event, data_dir, epochs, fig_filename, data_type):
     """Train neural net from data in parquet files."""
     opts['data_dir']     = data_dir
     opts['max_files']    = max_files
     opts['plot_event']   = plot_event
     opts['epochs']       = epochs
     opts['fig_filename'] = fig_filename
+    opts['data_type']    = data_type
     raise HackClick
 
 try:
     parse_args()
 except HackClick:
     pass
+
+INPUT_TYPE = opts['data_type']
+if   INPUT_TYPE == 'parquet': import polars as pl
+elif INPUT_TYPE == 'csv-npy': import pandas as pd
+else: raise ValueError(f"Unknown input data type: '{INPUT_TYPE}'. Should be one of 'parquet' or 'csv-npy'")
+
 
 epochs = opts['epochs']
 
@@ -102,23 +109,38 @@ def polars_images(df):
               .astype(np.float32)
             )
 
+def read_parquet(data_path, max_files):
+    positions = []
+    images    = []
+    for file in it.islice(data_path.glob('file-*.parquet'), max_files):
+        print(file)
+        table = pl.read_parquet(file, columns='x y z photon_counts'.split())
+        single_file_positions = polars_primary_positions(table)
+        single_file_images    = polars_images           (table)
+        positions.append(single_file_positions)
+        images   .append(single_file_images)
+    return np.concatenate(positions), np.concatenate(images)
+
+def read_csv_npy(data_path, max_files):
+    positions = []
+    images    = []
+
+    csv_files = sorted(data_path.glob('metadata_*.csv'))
+    npy_files = sorted(data_path.glob(  'images_*.npy'))
+    for csv_file, npy_file in it.islice(zip(csv_files, npy_files), max_files):
+        single_file_images    = np.load    (npy_file)
+        single_file_positions = pd.read_csv(csv_file)
+        positions.append(single_file_positions.values[:,1:])
+        images   .append(single_file_images)
+    return np.concatenate(positions), np.concatenate(images)
+
 
 class SiPMDataset(Dataset):
 
     def __init__(self, data_path, max_files=None):
-        self.data_path = Path(data_path)
-
-        positions = []
-        images    = []
-        for file in it.islice(self.data_path.glob('file-*.parquet'), max_files):
-            print(file)
-            table = pl.read_parquet(file, columns='x y z photon_counts'.split())
-            single_file_positions = polars_primary_positions(table)
-            single_file_images    = polars_images           (table)
-            positions.append(single_file_positions)
-            images   .append(single_file_images)
-        self.positions = np.concatenate(positions)
-        self.images    = np.concatenate(images)
+        if   INPUT_TYPE == 'parquet': self.positions, self.images = read_parquet(Path(data_path), max_files)
+        elif INPUT_TYPE == 'csv-npy': self.positions, self.images = read_csv_npy(Path(data_path), max_files)
+        else: raise ValueError(f"Unknown input data type: '{input_type}'. Should be one of 'parquet' or 'csv-npy'")
 
     def __len__(self):
         return self.positions.shape[0]
