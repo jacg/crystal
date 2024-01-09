@@ -15,6 +15,8 @@ from torch.utils.data import DataLoader
 
 import click
 
+torch.manual_seed(666)
+
 opts = {}
 
 class HackClick(Exception):
