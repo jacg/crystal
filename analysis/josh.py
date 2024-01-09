@@ -114,7 +114,7 @@ def polars_images(df):
 def read_parquet(data_path, max_files):
     positions = []
     images    = []
-    for file in it.islice(data_path.glob('file-*.parquet'), max_files):
+    for file in it.islice(sorted(data_path.glob('file-*.parquet')), max_files):
         print(file)
         table = pl.read_parquet(file, columns='x y z photon_counts'.split())
         single_file_positions = polars_primary_positions(table)
