@@ -349,5 +349,6 @@ ax1.set_xlabel("Classical (True - Predicted) Positions",fontsize=14)
 ax1.set_ylabel("Counts/bin",fontsize=14)
 ax1.legend()
 
+plt.suptitle(f'{opts["data_dir"]} - {INPUT_TYPE}')
 plt.savefig(opts['fig_filename'])
 plt.show()
