@@ -336,6 +336,8 @@ fig, axes = plt.subplots(1, 2, figsize=(14, 4))
 flat_axes = axes.ravel()
 ax0, ax1 = flat_axes[0], flat_axes[1]
 
+print(f"NN: σx {np.std(delta_x_NN):.2f}  σy {np.std(delta_y_NN):.2f}  σz {np.std(delta_z_NN):.2f}   classical: σx {np.std(delta_x_classical):.2f}  σy {np.std(delta_y_classical):.2f}")
+
 ax0.hist(delta_x_NN, bins=nbins, label=f"x ($\sigma$ = {np.std(delta_x_NN):.2f})", alpha=0.7)
 ax0.hist(delta_y_NN, bins=nbins, label=f"y ($\sigma$ = {np.std(delta_y_NN):.2f})", alpha=0.7)
 ax0.hist(delta_z_NN, bins=nbins, label=f"z ($\sigma$ = {np.std(delta_z_NN):.2f})", alpha=0.7)
