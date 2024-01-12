@@ -86,4 +86,12 @@
       memSize = 5120;
     };
 
+    packages.singularity-josh = pkgs.singularity-tools.buildImage {
+      name = "crystal";
+      contents = [ self.apps.josh.program ];
+      runScript = "${self.apps.josh.program} $@";
+      diskSize = 1024 * 32;
+      memSize = 5120;
+    };
+
   }
