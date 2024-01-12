@@ -15,6 +15,9 @@ from torch.utils.data import DataLoader
 
 import click
 
+if torch.cuda.is_available(): print("CUDA available CUDA available CUDA available CUDA available CUDA available")
+else                        : print("cuda NOT available cuda NOT available cuda NOT available cuda NOT available ")
+
 torch.manual_seed(666)
 
 opts = {}
