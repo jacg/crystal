@@ -1,0 +1,18 @@
+<!-- <img src="./images/nema7-_S.png" width="300"> -->
+
+| Nexus                                                                   | nain4 processed                                                         | nain4 unprocessed                                                          |
+|-------------------------------------------------------------------------|-------------------------------------------------------------------------|----------------------------------------------------------------------------|
+| <img src="./images/BGO_6x6_fullwrap_4.5k_2MHzDC_ESR_LUTDAVIS_NX.png">   | <img src="./images/BGO_6x6_fullwrap_4.5k_2MHzDC_ESR_LUTDAVIS_N4.png">   | <img src="./images/n4-BGO_6x6_fullwrap_4.5k_2MHzDC_ESR_LUTDAVIS_N4.png">   |
+| <img src="./images/BGO_6x6_fullwrap_4.5k_2MHzDC_ESR_LUT_NX.png">        | <img src="./images/BGO_6x6_fullwrap_4.5k_2MHzDC_ESR_LUT_N4.png">        | <img src="./images/n4-BGO_6x6_fullwrap_4.5k_2MHzDC_ESR_LUT_N4.png">        |
+| <img src="./images/BGO_6x6_fullwrap_4.5k_2MHzDC_PTFE_LUTDAVIS_NX.png">  | <img src="./images/BGO_6x6_fullwrap_4.5k_2MHzDC_PTFE_LUTDAVIS_N4.png">  | <img src="./images/n4-BGO_6x6_fullwrap_4.5k_2MHzDC_PTFE_LUTDAVIS_N4.png">  |
+| <img src="./images/BGO_6x6_fullwrap_4.5k_2MHzDC_PTFE_LUT_NX.png">       | <img src="./images/BGO_6x6_fullwrap_4.5k_2MHzDC_PTFE_LUT_N4.png">       | <img src="./images/n4-BGO_6x6_fullwrap_4.5k_2MHzDC_PTFE_LUT_N4.png">       |
+| <img src="./images/CsITl_6x6_fullwrap_25k_2MHzDC_ESR_LUTDAVIS_NX.png">  | <img src="./images/CsITl_6x6_fullwrap_25k_2MHzDC_ESR_LUTDAVIS_N4.png">  | <img src="./images/n4-CsITl_6x6_fullwrap_25k_2MHzDC_ESR_LUTDAVIS_N4.png">  |
+| <img src="./images/CsITl_6x6_fullwrap_25k_2MHzDC_ESR_LUT_NX.png">       | <img src="./images/CsITl_6x6_fullwrap_25k_2MHzDC_ESR_LUT_N4.png">       | <img src="./images/n4-CsITl_6x6_fullwrap_25k_2MHzDC_ESR_LUT_N4.png">       |
+| <img src="./images/CsITl_6x6_fullwrap_25k_2MHzDC_PTFE_LUTDAVIS_NX.png"> | <img src="./images/CsITl_6x6_fullwrap_25k_2MHzDC_PTFE_LUTDAVIS_N4.png"> | <img src="./images/n4-CsITl_6x6_fullwrap_25k_2MHzDC_PTFE_LUTDAVIS_N4.png"> |
+| <img src="./images/CsITl_6x6_fullwrap_25k_2MHzDC_PTFE_LUT_NX.png">      | <img src="./images/CsITl_6x6_fullwrap_25k_2MHzDC_PTFE_LUT_N4.png">      | <img src="./images/n4-CsITl_6x6_fullwrap_25k_2MHzDC_PTFE_LUT_N4.png">      |
+| <img src="./images/CsI_6x6_fullwrap_50k_0MHzDC_PTFE_LUTDAVIS_NX.png">   | <img src="./images/CsI_6x6_fullwrap_50k_0MHzDC_PTFE_LUTDAVIS_N4.png">   | <img src="./images/n4-CsI_6x6_fullwrap_50k_0MHzDC_PTFE_LUTDAVIS_N4.png">   |
+| <img src="./images/CsI_6x6_fullwrap_50k_0MHzDC_PTFE_LUT_NX.png">        | <img src="./images/CsI_6x6_fullwrap_50k_0MHzDC_PTFE_LUT_N4.png">        | <img src="./images/n4-CsI_6x6_fullwrap_50k_0MHzDC_PTFE_LUT_N4.png">        |
+| <img src="./images/LYSO_6x6_fullwrap_4.5k_2MHzDC_ESR_LUTDAVIS_NX.png">  | <img src="./images/LYSO_6x6_fullwrap_4.5k_2MHzDC_ESR_LUTDAVIS_N4.png">  | <img src="./images/n4-LYSO_6x6_fullwrap_4.5k_2MHzDC_ESR_LUTDAVIS_N4.png">  |
+| <img src="./images/LYSO_6x6_fullwrap_4.5k_2MHzDC_ESR_LUT_NX.png">       | <img src="./images/LYSO_6x6_fullwrap_4.5k_2MHzDC_ESR_LUT_N4.png">       | <img src="./images/n4-LYSO_6x6_fullwrap_4.5k_2MHzDC_ESR_LUT_N4.png">       |
+| <img src="./images/LYSO_6x6_fullwrap_4.5k_2MHzDC_PTFE_LUTDAVIS_NX.png"> | <img src="./images/LYSO_6x6_fullwrap_4.5k_2MHzDC_PTFE_LUTDAVIS_N4.png"> | <img src="./images/n4-LYSO_6x6_fullwrap_4.5k_2MHzDC_PTFE_LUTDAVIS_N4.png"> |
+| <img src="./images/LYSO_6x6_fullwrap_4.5k_2MHzDC_PTFE_LUT_NX.png">      | <img src="./images/LYSO_6x6_fullwrap_4.5k_2MHzDC_PTFE_LUT_N4.png">      | <img src="./images/n4-LYSO_6x6_fullwrap_4.5k_2MHzDC_PTFE_LUT_N4.png">      |
