@@ -1,6 +1,7 @@
 { self
 , nixpkgs # <---- This `nixpkgs` has systems removed e.g. legacyPackages.zlib
 , nain4
+, nix-gl-host
 , ...
 }: let
   pkgs = import nixpkgs {
@@ -34,6 +35,8 @@
       buildInputs = [ nain4.packages.nain4 pkgs.arrow-cpp];
     };
 
+    packages.nix-gl-host = nix-gl-host.defaultPackage;
+
     # Executed by `nix run <URL of this flake> -- <args?>`
     apps.default = self.apps.crystal;
 
@@ -64,7 +67,7 @@
     devShells.clang = pkgs.mkShell.override { stdenv = nain4.packages.clang_16.stdenv; } (shell-shared // {
       name = "crystal-clang-devenv";
       packages = nain4.deps.dev-shell-packages ++ [
-        nain4.packages.clang_16 pkgs.arrow-cpp
+        nain4.packages.clang_16 pkgs.arrow-cpp self.packages.nix-gl-host
         python-with-packages
       ];
     });

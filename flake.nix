@@ -2,9 +2,10 @@
   description = "Monte Carlo for PET crystal studies";
 
   inputs = {
-    nain4  .url     = "github:jacg/nain4?ref=nix-23.11-old-g4-qt";
-    nosys  .follows = "nain4/nosys";
-    nixpkgs.follows = "nain4/nixpkgs";
+    nain4      .url     = "github:jacg/nain4?ref=nix-23.11-old-g4-qt";
+    nosys      .follows = "nain4/nosys";
+    nixpkgs    .follows = "nain4/nixpkgs";
+    nix-gl-host.url     = "github:numtide/nix-gl-host";
   };
 
   outputs = inputs @ {
