@@ -339,7 +339,11 @@ fig, axes = plt.subplots(1, 2, figsize=(14, 4))
 flat_axes = axes.ravel()
 ax0, ax1 = flat_axes[0], flat_axes[1]
 
-print(f"NN: σx {np.std(delta_x_NN):.2f}  σy {np.std(delta_y_NN):.2f}  σz {np.std(delta_z_NN):.2f}   classical: σx {np.std(delta_x_classical):.2f}  σy {np.std(delta_y_classical):.2f}")
+report_sigmas_string = f"NN: σx {np.std(delta_x_NN):.2f}  σy {np.std(delta_y_NN):.2f}  σz {np.std(delta_z_NN):.2f}   classical: σx {np.std(delta_x_classical):.2f}  σy {np.std(delta_y_classical):.2f}"
+print(report_sigmas_string)
+with open(opts['fig_filename']+'.sigmas', 'w') as write_sigmas:
+    print(report_sigmas_string, file=write_sigmas)
+
 
 ax0.hist(delta_x_NN, bins=nbins, label=f"x ($\sigma$ = {np.std(delta_x_NN):.2f})", alpha=0.7)
 ax0.hist(delta_y_NN, bins=nbins, label=f"y ($\sigma$ = {np.std(delta_y_NN):.2f})", alpha=0.7)
