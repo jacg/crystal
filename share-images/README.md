@@ -1,5 +1,19 @@
 <!-- <img src="./images/nema7-_S.png" width="300"> -->
 
+# Quick comparison
+
+The following image should cycle through 3 different versions of the same bar chart:
+
++ Nexus
++ n4 raw
++ n4 processed (Gonzalo can give exact details)
+
+If it does not cycle, try to use a different browser.
+
+<img src="./images/compare-nexus-n4-animated.png">
+
+# Detailed results
+
 | Nexus                                                                   | nain4 processed                                                         | nain4 unprocessed                                                          |
 |-------------------------------------------------------------------------|-------------------------------------------------------------------------|----------------------------------------------------------------------------|
 | <img src="./images/BGO_6x6_fullwrap_4.5k_2MHzDC_ESR_LUTDAVIS_NX.png">   | <img src="./images/BGO_6x6_fullwrap_4.5k_2MHzDC_ESR_LUTDAVIS_N4.png">   | <img src="./images/n4-BGO_6x6_fullwrap_4.5k_2MHzDC_ESR_LUTDAVIS_N4.png">   |
