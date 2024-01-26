@@ -1,7 +1,9 @@
 #include "actions.hh"
 #include "config.hh"
 #include "geometry.hh"
-#include "materials.hh"
+#include "sipm.hh"
+
+#include <pet-materials.hh>
 
 #include <n4-inspect.hh>
 #include <n4-material.hh>
@@ -40,11 +42,13 @@ G4Colour reflector_colour() {
 }
 
 G4OpticalSurface* make_reflector_optical_surface() {
+  using namespace petmat;
+
   auto reflector_surface = new G4OpticalSurface("crystal_reflector_interface");
   switch (my.wrapping) {
-  case wrapping_enum::teflon: reflector_surface -> SetMaterialPropertiesTable(teflon_properties()); break;
-  case wrapping_enum::esr   : reflector_surface -> SetMaterialPropertiesTable(   esr_properties()); break;
-  case wrapping_enum::none  : reflector_surface -> SetMaterialPropertiesTable(   air_properties()); break;
+  case wrapping_enum::teflon: reflector_surface -> SetMaterialPropertiesTable(teflon_properties(my.reflectivity)); break;
+  case wrapping_enum::esr   : reflector_surface -> SetMaterialPropertiesTable(   esr_properties(my.reflectivity)); break;
+  case wrapping_enum::none  : reflector_surface -> SetMaterialPropertiesTable(   air_properties(               )); break;
   }
 
   switch (my.reflector_model) {
@@ -84,9 +88,9 @@ G4PVPlacement* crystal_geometry(run_stats& stats) {
   auto scintillator = scintillator_material(my.scint_params().scint);
   auto air     = n4::material("G4_AIR");
   auto vacuum  = n4::material("G4_Galactic");
-  auto silicon =     silicon_with_properties();
-  auto teflon  =      teflon_with_properties();
-  auto gel     = optical_gel_with_properties();
+  auto silicon = petmat::    silicon_with_properties();
+  auto teflon  = petmat::     teflon_with_properties(my.reflectivity);
+  auto gel     = petmat::optical_gel_with_properties();
   auto [sx, sy, sz] = n4::unpack(my.scint_size());
 
   auto world  = n4::box("world").xyz(sx*1.5, sy*1.5, sz*2.5).place(air).now();

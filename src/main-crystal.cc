@@ -1,7 +1,6 @@
 #include "actions.hh"
 #include "config.hh"
 #include "geometry.hh"
-#include "materials.hh"
 #include "physics-list.hh"
 
 #include <iomanip>

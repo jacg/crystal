@@ -1,6 +1,6 @@
 #include <config.hh>
 #include <geometry.hh>
-#include <materials.hh>
+#include <sipm.hh>
 #include <physics-list.hh>
 
 #include <n4-all.hh>

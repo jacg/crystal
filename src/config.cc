@@ -1,13 +1,14 @@
 #include "config.hh"
-#include "materials.hh"
 #include "n4-random.hh"
 
-#include <cstdlib>
+#include <pet-materials.hh>
+
 #include <n4-sequences.hh>
 
 #include <G4ThreeVector.hh>
 
 #include <cctype>
+#include <cstdlib>
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
@@ -179,6 +180,7 @@ void config::set_config_type(const std::string& s) {
 }
 
 n4::random::piecewise_linear_distribution scint_spectrum() {
+  using namespace petmat;
   std::pair<std::vector<double>, std::vector<double>> data;
   switch (my.scint_params().scint) {
     case scintillator_type_enum::csi   : data =    csi_scint_spectrum(); break;
@@ -204,11 +206,12 @@ G4ThreeVector config::scint_size() const {
 }
 
 G4Material* scintillator_material(scintillator_type_enum type) {
+  using namespace petmat;
   switch (type) {
-    case scintillator_type_enum::csi   : return     csi_with_properties();
-    case scintillator_type_enum::csi_tl: return  csi_tl_with_properties();
-    case scintillator_type_enum::lyso  : return    lyso_with_properties();
-    case scintillator_type_enum::bgo   : return     bgo_with_properties();
+    case scintillator_type_enum::csi   : return     csi_with_properties(my.scint_yield);
+    case scintillator_type_enum::csi_tl: return  csi_tl_with_properties(my.scint_yield);
+    case scintillator_type_enum::lyso  : return    lyso_with_properties(my.scint_yield);
+    case scintillator_type_enum::bgo   : return     bgo_with_properties(my.scint_yield);
   }
   return nullptr; // unreachable
 }

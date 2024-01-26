@@ -1,5 +1,6 @@
-#include <materials.hh>
 #include <physics-list.hh>
+
+#include <pet-materials.hh>
 
 #include <n4-sequences.hh>
 #include <n4-stats.hh>
@@ -73,9 +74,9 @@ int main(int argc, char** argv) {
   std::string name;
   G4Material* material = nullptr;
 
-  if      (material_choice == "csi" ) { name = "CsI" ; material =  csi_with_properties(); }
-  else if (material_choice == "bgo" ) { name = "BGO" ; material =  bgo_with_properties(); }
-  else if (material_choice == "lyso") { name = "LYSO"; material = lyso_with_properties(); }
+  if      (material_choice == "csi" ) { name = "CsI" ; material = petmat:: csi_with_properties(std::nullopt); }
+  else if (material_choice == "bgo" ) { name = "BGO" ; material = petmat:: bgo_with_properties(std::nullopt); }
+  else if (material_choice == "lyso") { name = "LYSO"; material = petmat::lyso_with_properties(std::nullopt); }
   else                                { std::cerr << "Unknown material " << material_choice << std::endl; usage(); }
 
   auto task_choice = downcase(argv[1]);

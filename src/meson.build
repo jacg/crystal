@@ -15,6 +15,11 @@ nain4  = dependency( 'nain4'
                    , required: true
                    )
 
+petmat = dependency( 'pet-materials'
+                   , method  : 'pkg-config'
+                   , required: true
+                   )
+
 geant4 = dependency( 'Geant4'
                    , method  : 'cmake'
                    , required: true
@@ -43,24 +48,25 @@ parquet = dependency('parquet'
                     , required : true
                     )
 
-crystal_deps     = [nain4, geant4, arrow, parquet]
+crystal_deps     = [nain4, petmat, geant4, arrow, parquet]
 crystal_include  = include_directories('.')
-crystal_sources  = ['actions.cc', 'config.cc', 'geometry.cc', 'io.cc', 'materials.cc', 'run_stats.cc', 'physics-list.cc']
-crystal_includes = ['actions.hh', 'config.hh', 'geometry.hh', 'io.hh', 'materials.hh', 'run_stats.hh', 'physics-list.hh']
+crystal_sources  = ['actions.cc', 'config.cc', 'geometry.cc', 'io.cc', 'run_stats.cc', 'physics-list.cc', 'sipm.cc']
+crystal_includes = ['actions.hh', 'config.hh', 'geometry.hh', 'io.hh', 'run_stats.hh', 'physics-list.hh', 'sipm.hh']
 
 geant4_include = geant4.get_variable(cmake    : 'Geant4_INCLUDE_DIRS')
 nain4_include  =  nain4.get_variable(pkgconfig: 'includedir'         )
+petmat_include = petmat.get_variable(pkgconfig: 'includedir'         )
 
 crystal_lib = shared_library( 'crystal'
                             , crystal_sources
-                            , include_directories: [crystal_include, geant4_include]
+                            , include_directories: [crystal_include, petmat_include, geant4_include]
                             , dependencies       : crystal_deps
                             , install            : true
                             )
 
 crystal_exe = executable( 'crystal'
                         , ['main-crystal.cc']
-                        , include_directories: [crystal_include, nain4_include, geant4_include]
+                        , include_directories: [crystal_include, nain4_include, petmat_include, geant4_include]
                         , dependencies       : crystal_deps
                         , link_with          : crystal_lib
                         , install            : true
@@ -68,7 +74,7 @@ crystal_exe = executable( 'crystal'
 
 stats_exe = executable( 'stats'
                       , ['main-stats.cc']
-                      , include_directories: [crystal_include, nain4_include, geant4_include]
+                      , include_directories: [crystal_include, nain4_include, petmat_include, geant4_include]
                       , dependencies       : crystal_deps
                       , link_with          : crystal_lib
                       , install            : true

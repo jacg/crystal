@@ -22,6 +22,11 @@ nain4  = dependency( 'nain4'
                    , required: true
                    )
 
+petmat = dependency( 'pet-materials'
+                   , method  : 'pkg-config'
+                   , required: true
+                   )
+
 geant4 = dependency( 'Geant4'
                    , method  : 'cmake'
                    , required: true
@@ -48,12 +53,13 @@ arrow = dependency( 'arrow'
                   , method   : 'pkg-config'
                   , required : true)
 
-crystal_test_deps    = [crystal, nain4, geant4, catch2, arrow]
+crystal_test_deps    = [crystal, nain4, petmat, geant4, catch2, arrow]
 crystal_test_sources = ['catch2-main-test.cc', 'test-actions.cc', 'test-config.cc', 'test-geometry.cc', 'test-io.cc', 'test-materials.cc'  , 'test-sensitive.cc']
 catch2_demo_sources  = ['catch2-main-test.cc', 'test-catch2-demo.cc']
 
 geant4_include  =  geant4.get_variable(cmake    : 'Geant4_INCLUDE_DIRS')
 nain4_include   =   nain4.get_variable(pkgconfig: 'includedir'         )
+petmat_include  =  petmat.get_variable(pkgconfig: 'includedir'         )
 crystal_include = crystal.get_variable(pkgconfig: 'includedir'         )
 
 test_executable = 'crystal-test'
@@ -61,7 +67,7 @@ demo_executable = 'catch2-demo-test'
 
 crystal_test_exe = executable( test_executable
                              , crystal_test_sources
-                             , include_directories: [nain4_include, geant4_include]
+                             , include_directories: [nain4_include, petmat_include, geant4_include]
                              , dependencies       : crystal_test_deps
                              , install            : true
                              )

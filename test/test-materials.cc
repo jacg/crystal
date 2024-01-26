@@ -1,7 +1,9 @@
 #include <config.hh>
 #include <geometry.hh>
-#include <materials.hh>
+#include <optional>
 #include <physics-list.hh>
+
+#include <pet-materials.hh>
 
 #include <n4-all.hh>
 #include <n4-will-become-external-lib.hh>
@@ -218,7 +220,7 @@ TEST_CASE("csi teflon reflectivity lut        null", "[csi][teflon][reflectivity
 //TEST_CASE("csi teflon reflectivity davis      null", "[csi][teflon][reflectivity]") { test_null_reflectivity("davis"     ); }
 
 TEST_CASE("CsI interaction length", "[material][csi][interaction_length]") {
-  auto csi = csi_with_properties();
+  auto csi = petmat::csi_with_properties(std::nullopt);
   CHECK_THAT( csi -> GetDensity() / (g / cm3), WithinRel(4.51, 1e-6));
 
   interaction_length_config config{ .physics         = physics_list()
@@ -239,7 +241,7 @@ TEST_CASE("CsI interaction length", "[material][csi][interaction_length]") {
 
 
 TEST_CASE("BGO interaction length", "[material][bgo][interaction_length]") {
-  auto bgo = bgo_with_properties();
+  auto bgo = petmat::bgo_with_properties(std::nullopt);
   CHECK_THAT( bgo -> GetDensity() / (g / cm3), WithinRel(7.13, 1e-6));
 
   interaction_length_config config{ .physics         = physics_list()
@@ -258,7 +260,7 @@ TEST_CASE("BGO interaction length", "[material][bgo][interaction_length]") {
 }
 
 TEST_CASE("LYSO interaction length", "[material][lyso][interaction_length]") {
-  auto lyso = lyso_with_properties();
+  auto lyso = petmat::lyso_with_properties(std::nullopt);
   CHECK_THAT( lyso -> GetDensity() / (g / cm3), WithinRel(7.1, 1e-6));
 
   interaction_length_config config{ .physics         = physics_list()
@@ -276,21 +278,21 @@ TEST_CASE("LYSO interaction length", "[material][lyso][interaction_length]") {
 }
 
 TEST_CASE("csi interaction process fractions", "[csi][interaction]") {
-  auto fractions = calculate_interaction_process_fractions(csi_with_properties(), physics_list());
+  auto fractions = calculate_interaction_process_fractions(petmat::csi_with_properties(std::nullopt), physics_list());
   CHECK_THAT(fractions.photoelectric, WithinRel(0.207, 2e-2));
   CHECK_THAT(fractions.compton      , WithinRel(0.740, 2e-2));
   CHECK_THAT(fractions.rayleigh     , WithinRel(0.053, 2e-2));
 }
 
 TEST_CASE("bgo interaction process fractions", "[bgo][interaction]") {
-  auto fractions = calculate_interaction_process_fractions(bgo_with_properties(), physics_list());
+  auto fractions = calculate_interaction_process_fractions(petmat::bgo_with_properties(std::nullopt), physics_list());
   CHECK_THAT(fractions.photoelectric, WithinRel(0.414, 2e-2));
   CHECK_THAT(fractions.compton      , WithinRel(0.532, 2e-2));
   CHECK_THAT(fractions.rayleigh     , WithinRel(0.054, 2e-2));
 }
 
 TEST_CASE("lyso interaction process fractions", "[lyso][interaction]") {
-  auto fractions = calculate_interaction_process_fractions(lyso_with_properties(), physics_list());
+  auto fractions = calculate_interaction_process_fractions(petmat::lyso_with_properties(std::nullopt), physics_list());
   CHECK_THAT(fractions.photoelectric, WithinRel(0.311, 2e-2));
   CHECK_THAT(fractions.compton      , WithinRel(0.637, 2e-2));
   CHECK_THAT(fractions.rayleigh     , WithinRel(0.052, 2e-2));
